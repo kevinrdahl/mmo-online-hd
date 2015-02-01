@@ -11,10 +11,23 @@
         }
     </style>
     <script src="js/lib/pixi.js"></script>
-    <script src="js/game.js"></script>
+
+    <script src="ts/client.js"></script>
+    <script src="ts/connection.js"></script>
+    <script src="ts/game.js"></script>
 </head>
 
 <body onload="initGame();">
+    <script>
+        var serverURL = "localhost";
+        var serverPort = 8999;
+        var clientParent = document.body;
+        var client;
+
+        function initGame() {
+            client = new MMOO.Client(serverURL, serverPort, clientParent);
+        }
+    </script>
 </body>
 
 </html>

@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title></title>
+</head>
+<body>
+
+<script>
+    var ws = new WebSocket("ws://localhost:8999");
+    ws.addEventListener('close', function () { console.log('DISCONNECTED'); });
+    ws.addEventListener('error', function () { console.log('DISCONNECTED'); });
+    ws.addEventListener('message', onMessage);
+
+    function onMessage(message) {
+        console.log(message.data);
+    }
+
+</script>
+
+</body>
+</html>
