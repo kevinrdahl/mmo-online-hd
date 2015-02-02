@@ -2,9 +2,12 @@
   <library name="Generated files" type="javaScript">
     <properties>
       <sourceFilesUrls>
+        <item url="file://$PROJECT_DIR$/node/node_modules/typescript-require/test/assets/ship.js" />
         <item url="file://$PROJECT_DIR$/node/oldserver.js" />
         <item url="file://$PROJECT_DIR$/node/server.js" />
         <item url="file://$PROJECT_DIR$/www/ts/game.js" />
+        <item url="file://$PROJECT_DIR$/node/game/player.js" />
+        <item url="file://$PROJECT_DIR$/node/game/game.js" />
         <item url="file://$PROJECT_DIR$/www/ts/connection.js" />
         <item url="file://$PROJECT_DIR$/www/ts/init.js" />
         <item url="file://$PROJECT_DIR$/www/ts/client.js" />
@@ -13,10 +16,13 @@
     </properties>
     <CLASSES>
       <root url="file://$PROJECT_DIR$/node/servermain.js" />
+      <root url="file://$PROJECT_DIR$/node/node_modules/typescript-require/test/assets/ship.js" />
       <root url="file://$PROJECT_DIR$/node/oldserver.js" />
       <root url="file://$PROJECT_DIR$/node/server.js" />
       <root url="file://$PROJECT_DIR$/www/ts/game.js" />
+      <root url="file://$PROJECT_DIR$/node/game/player.js" />
       <root url="file://$PROJECT_DIR$/www/ts/connection.js" />
+      <root url="file://$PROJECT_DIR$/node/game/game.js" />
       <root url="file://$PROJECT_DIR$/www/ts/init.js" />
       <root url="file://$PROJECT_DIR$/www/js/lib/pixi.js" />
       <root url="file://$PROJECT_DIR$/www/ts/client.js" />
