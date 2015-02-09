@@ -1,12 +1,19 @@
 /**
  * Created by Kevin on 01/02/2015.
  */
+var LinAlg = require('../../www/js/linalg');
+
 var Messages = {};
 module.exports = Messages;
 
 
-Messages.ping = function(step) {
-    var msg = {type:'ping', step:step};
+Messages.ping = function() {
+    var msg = {type:'ping'};
+    return this.abbreviate(msg);
+};
+
+Messages.step = function(step) {
+    var msg = {type:'step', step:step};
     return this.abbreviate(msg);
 };
 
@@ -21,7 +28,10 @@ Messages.chat = function(id, text) {
 };
 
 Messages.dict = function() {
-    return JSON.stringify(this.abbreviations);
+    return JSON.stringify({
+        type:'dict',
+        dict:this.abbreviations
+    });
 };
 
 var terms = [
@@ -34,7 +44,11 @@ var terms = [
     'chat',
     'move',
     'stop',
-    'position'
+    'position',
+    'point',
+    'see',
+    'unit',
+    'order'
 ];
 var badAbbrevs = [
     'x',
@@ -60,17 +74,26 @@ for (var i = 0; i < terms.length; i++) {
     Messages.expansions[abbrev] = terms[i];
 }
 
+
+function reviver(key, value) {
+    if (typeof value === 'object' && 'x' in value && 'y' in value) {
+        return new LinAlg.Vector2(value.x/10, value.y/10);
+    } else {
+        return value;
+    }
+}
+
 Messages.abbreviate = function(o) {
     var s = JSON.stringify(o);
     for (var prop in this.abbreviations) {
-        s = String.replace(s, '"'+prop+'"', '"'+this.abbreviations[prop]+'"');
+        s = s.split('"'+prop+'"').join('"'+this.abbreviations[prop]+'"');
     }
     return s;
 };
 
 Messages.expand = function(s) {
     for (var prop in this.expansions) {
-        s = String.replace(s, '"'+prop+'"', '"'+this.expansions[prop]+'"');
+        s = s.split('"'+prop+'"').join('"'+this.expansions[prop]+'"');
     }
-    return JSON.parse(s);
+    return JSON.parse(s, reviver);
 };

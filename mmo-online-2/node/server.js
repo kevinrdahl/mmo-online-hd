@@ -3,6 +3,7 @@
  */
 var ws = require('ws');
 var game = require('./game/game');
+var Messages = require('./game/messages');
 
 
 var Server = function(port) {
@@ -33,18 +34,38 @@ var Server = function(port) {
 
     this.onDisconnect = function(id) {
         delete this.clients[id];
+        this.game.onDisconnect(id);
         console.log(id + ' DISCONNECTED');
     };
 
     this.onMessage = function(id, data) {
-        console.log(id + ': ' + data);
+
+        var msg = Messages.expand(data);
+        /*try {
+            msg = Messages.expand(data);
+        } catch (e) {
+            console.log('ERROR: malformed message from ' + id + ', "' + data + '"');
+            return;
+        }*/
+
+        if (msg.type === 'dict') {
+            this.sendMessage(id, Messages.dict());
+        } else if (msg.type === 'sync') {
+            this.game.onConnect(id);
+        } else if (msg.type === 'ping') {
+            this.sendMessage(id, Messages.ping());
+        } else {
+            this.game.onMessage(id, msg);
+        }
     };
 
     this.sendMessage = function(id, message) {
+        //console.log('to ' + id + ': ' + message);
         if (typeof this.clients[id] !== 'undefined') {
             try {
                 this.clients[id].send(message);
             } catch (e) {
+                console.log(e);
                 //nop
             }
         }

@@ -12,9 +12,12 @@
     </style>
     <script src="js/lib/pixi.js"></script>
 
-    <script src="ts/client.js"></script>
-    <script src="ts/connection.js"></script>
-    <script src="ts/game.js"></script>
+    <script src="js/client.js"></script>
+    <script src="js/connection.js"></script>
+    <script src="js/game.js"></script>
+    <script src="js/linalg.js"></script>
+    <script src="js/units.js"></script>
+    <script src="js/textures.js"></script>
 </head>
 
 <body onload="initGame();">
@@ -25,7 +28,7 @@
         var client;
 
         function initGame() {
-            client = new MMOO.Client(serverURL, serverPort, clientParent);
+            client = new Client(serverURL, serverPort, clientParent);
         }
     </script>
 </body>

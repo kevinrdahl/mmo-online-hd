@@ -60,16 +60,28 @@ LinAlg.Vector2 = function(x,y) {
         return new LinAlg.Vector2(this.x, this.y);
     };
 
-    this.toJSON = function(places) {
+    //don't want to send huge useless floats to clients
+    /*this.toJSON = function(places) {
         var x = LinAlg.cutFloat(this.x, places);
         var y = LinAlg.cutFloat(this.y, places);
-        return '{"x":'+ x + ',"y":' + y + '}';
-    };
+        var json = '{"x":'+ x + ',"y":' + y + '}';
+        console.log('JSON: ' + json);
+        console.log(x);
+        console.log(y);
+        return json;
+    };*/
+
+    this.toJSON = function() {
+        return {
+            x:Math.round(this.x*10),
+            y:Math.round(this.y*10)
+        };
+    }
 };
 
 //returns toString of a number to a certain precision
 LinAlg.cutFloat = function(f, places) {
-    places = (typeof places === 'undefined') ? 0 : places;
+    places = places|0;
     f = Math.round(f * Math.pow(10, places)).toString();
     if (places > 0) {
         f = f.slice(0, f.length-places) + '.' + f.slice(f.length-places, f.length);
@@ -83,14 +95,6 @@ LinAlg.toRadians = function(angle) {
 
 LinAlg.toDegrees = function(angle) {
     return (angle*180)/Math.PI;
-};
-
-LinAlg.vector2FromObj = function(o) {
-    if (typeof o.x === 'number' && typeof o.y === 'number') {
-        return new LinAlg.Vector2(o.x, o.y);
-    } else {
-        return null;
-    }
 };
 
 //v flipped across the line x=i
