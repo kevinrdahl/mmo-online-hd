@@ -12,7 +12,11 @@ var Client = function (serverURL, port, parentElement) {
     this.stage = new PIXI.Stage(0x333333);
     this.stage.interactive = true;
     this.renderer = PIXI.autoDetectRenderer(800, 600);
+    this.renderer.view.setAttribute('z-index','0');
     parentElement.appendChild(this.renderer.view);
+
+    //UI
+    UI.init();
 
     //Connection
     this.connection = new Connection(serverURL, port, this);

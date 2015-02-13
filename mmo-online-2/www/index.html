@@ -2,14 +2,19 @@
 
 <html>
 <head>
-    <title>pixi.js example 1</title>
+    <title>MMO Online HD</title>
     <style>
         body {
             margin: 0;
             padding: 0;
             background-color: #000000;
         }
+        #gameDiv {
+            position: absolute;
+            z-index: 0;
+        }
     </style>
+    <link rel="stylesheet" type="text/css" href="css/ui.css">
     <script src="js/lib/pixi.js"></script>
 
     <script src="js/client.js"></script>
@@ -18,13 +23,37 @@
     <script src="js/linalg.js"></script>
     <script src="js/units.js"></script>
     <script src="js/textures.js"></script>
+    <script src="js/ui.js"></script>
 </head>
 
 <body onload="initGame();">
+    <div id="gameDiv">
+    </div>
     <script>
-        var serverURL = "localhost";
-        var serverPort = 8999;
-        var clientParent = document.body;
+        var QueryString = function () {
+            var query_string = {};
+            var query = window.location.search.substring(1);
+            var vars = query.split("&");
+            for (var i=0;i<vars.length;i++) {
+                var pair = vars[i].split("=");
+                // If first entry with this name
+                if (typeof query_string[pair[0]] === "undefined") {
+                    query_string[pair[0]] = pair[1];
+                    // If second entry with this name
+                } else if (typeof query_string[pair[0]] === "string") {
+                    var arr = [ query_string[pair[0]], pair[1] ];
+                    query_string[pair[0]] = arr;
+                    // If third or later entry with this name
+                } else {
+                    query_string[pair[0]].push(pair[1]);
+                }
+            }
+            return query_string;
+        } ();
+
+        var serverURL = (typeof QueryString.server !== 'undefined') ? QueryString.server : document.domain;
+        var serverPort = QueryString.port | 8999;
+        var clientParent = document.getElementById('gameDiv');
         var client;
 
         function initGame() {

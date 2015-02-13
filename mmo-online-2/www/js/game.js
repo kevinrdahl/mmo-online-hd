@@ -7,7 +7,32 @@ var Game = function (connection, stage) {
 
     this.connection = connection;
     this.stage = stage;
+    this.graphics = new PIXI.Graphics();
+    this.spriteContainer = new PIXI.DisplayObjectContainer();
+    this.stage.addChild(this.spriteContainer);
+    this.stage.addChild(this.graphics);
+
     this.textureManager = new Textures.TextureManager();
+
+    var pane = new UI.Pane(300, 100);
+    var actionBar = new UI.ActionBar(0,0,1,5);
+    var action = {
+        name:'makeunit',
+        cursor:'crosshair'
+    };
+    var action2 = {
+        name:'other',
+        cursor:'help'
+    };
+    actionBar.addElement(new UI.ActionButton('img/icon/teleport.png', 50, 50, action),0,0);
+    actionBar.slots[0][0].button.onClick = function() {UI.mouseAction = 'makeunit'; UI.setCursor('crosshair');};
+    actionBar.addElement(new UI.ActionButton('img/icon/backstab.png', 50, 50, action2),0,1);
+    pane.addElement(actionBar);
+    pane.div.style.top = 'auto';
+    pane.div.style.left = '0';
+    pane.div.style.bottom = '0';
+
+    UI.addElement(pane);
 
     this.currentStep = connection.syncStep;
     this.tickLen = 100;
@@ -26,6 +51,14 @@ var Game = function (connection, stage) {
     this.states = {};
     this.states[this.currentStep] = JSON.stringify(this.state);
     this.sprites = {};
+
+    UI.leftMouseClick = function(v) {
+        if (UI.mouseAction != null) {
+            console.log(UI.mouseAction + ' at ' + JSON.stringify(v.scaled(0.1)));
+            UI.mouseAction = null;
+            UI.setCursor('auto');
+        }
+    };
 
     this.onTick = function() {
         var _this = this;
@@ -78,7 +111,7 @@ var Game = function (connection, stage) {
             step: this.currentStep,
             ping: Math.round(this.connection.meanPing),
             targetDelay: Math.round(this.connection.targetDelay),
-            simSpeed: Math.round((this.nextStepTime-this.lastStepTime)/this.tickLen*100),
+            simSpeed: Math.round(this.tickLen/(this.nextStepTime-this.lastStepTime)*100),
             numMsgs: Object.keys(this.messages).length
         });
 
@@ -89,6 +122,15 @@ var Game = function (connection, stage) {
     this.draw = function() {
         var currentTime = new Date().getTime();
         var stepProgress = (currentTime-this.lastStepTime)/this.tickLen;
+
+        this.graphics.clear();
+        if (UI.mouseAction == null && UI.leftMouseDragging) {
+            var v1 = UI.leftMouseDown;
+            var v2 = UI.mousePosition;
+            this.graphics.lineStyle(1, 0x00aa00, 1);
+            this.graphics.drawRect(v1.x, v1.y, v2.x-v1.x, v2.y-v1.y);
+        }
+
         for (var id in this.state.units) {
             if (id in this.sprites) {
                 var unit = this.state.units[id];
@@ -146,7 +188,7 @@ var Game = function (connection, stage) {
             sprite.anchor.y = 0.5;
             sprite.position.x = unit.position.x;
             sprite.position.y = unit.position.y;
-            this.stage.addChild(sprite);
+            this.spriteContainer.addChild(sprite);
             this.sprites[unit.id] = sprite;
         }
         this.state.units[unit.id] = unit;
