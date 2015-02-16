@@ -16,71 +16,54 @@
         }
     </style>
     <link rel="stylesheet" type="text/css" href="css/ui.css">
-    <script src="https://code.createjs.com/preloadjs-0.6.0.min.js"></script>
-    <script>
-        window.onload = function(){preload();};
-
-        function preload () {
-            var numLoaded = 0;
-            var toLoad = [
-                'js/lib/pixi.js',
-                'js/ui.js',
-                'js/keys.js',
-                'js/hud.js',
-                'js/client.js',
-                'js/connection.js',
-                'js/game.js',
-                'js/linalg.js',
-                'js/units.js',
-                'js/textures.js'
-            ];
-
-            var onFileLoaded = function(event) {
-                numLoaded++;
-                if (numLoaded == toLoad.length) {
-                    client = new Client(serverURL, serverPort, clientParent);
-                }
-            };
-
-            var loadQueue = new createjs.LoadQueue();
-            loadQueue.addEventListener("fileload", onFileLoaded);
-            for (var i = 0; i < toLoad.length; i++) {
-                loadQueue.loadFile(toLoad[i]);
-            }
-        }
-    </script>
 </head>
 
-<body>
-    <div id="gameDiv">
-    </div>
-    <script>
-        var QueryString = function () {
-            var query_string = {};
-            var query = window.location.search.substring(1);
-            var vars = query.split("&");
-            for (var i=0;i<vars.length;i++) {
-                var pair = vars[i].split("=");
-                // If first entry with this name
-                if (typeof query_string[pair[0]] === "undefined") {
-                    query_string[pair[0]] = pair[1];
-                    // If second entry with this name
-                } else if (typeof query_string[pair[0]] === "string") {
-                    var arr = [ query_string[pair[0]], pair[1] ];
-                    query_string[pair[0]] = arr;
-                    // If third or later entry with this name
-                } else {
-                    query_string[pair[0]].push(pair[1]);
-                }
+<body onload="initGame();">
+<div id="gameDiv">
+</div>
+<script>
+    var QueryString = function () {
+        var query_string = {};
+        var query = window.location.search.substring(1);
+        var vars = query.split("&");
+        for (var i=0;i<vars.length;i++) {
+            var pair = vars[i].split("=");
+            // If first entry with this name
+            if (typeof query_string[pair[0]] === "undefined") {
+                query_string[pair[0]] = pair[1];
+                // If second entry with this name
+            } else if (typeof query_string[pair[0]] === "string") {
+                var arr = [ query_string[pair[0]], pair[1] ];
+                query_string[pair[0]] = arr;
+                // If third or later entry with this name
+            } else {
+                query_string[pair[0]].push(pair[1]);
             }
-            return query_string;
-        } ();
+        }
+        return query_string;
+    } ();
 
-        var serverURL = (typeof QueryString.server !== 'undefined') ? QueryString.server : document.domain;
-        var serverPort = QueryString.port | 8999;
-        var clientParent = document.getElementById('gameDiv');
-        var client;
-    </script>
+    var serverURL = (typeof QueryString.server !== 'undefined') ? QueryString.server : document.domain;
+    var serverPort = QueryString.port | 8999;
+    var clientParent = document.getElementById('gameDiv');
+    var client;
+
+
+    function initGame() {
+        client = new Client(serverURL, serverPort, clientParent);
+    }
+</script>
+
+<script src="js/lib/pixi.js"></script>
+<script src="js/keys.js"></script>
+<script src="js/linalg.js"></script>
+<script src="js/hud.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/client.js"></script>
+<script src="js/connection.js"></script>
+<script src="js/game.js"></script>
+<script src="js/units.js"></script>
+<script src="js/textures.js"></script>
 </body>
 
 </html>

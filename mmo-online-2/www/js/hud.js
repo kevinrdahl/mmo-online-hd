@@ -49,6 +49,7 @@ HUD.fromRGB = function(rgb) {
 };
 
 HUD.Bar = function(w, h, color, val, maxVal) {
+    console.log(w + ' ' + h);
     this.w = Math.max(w,3);
     this.h = Math.max(h,3);
     this.color = color;
