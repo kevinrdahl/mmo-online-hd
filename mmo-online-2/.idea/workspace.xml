@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="876e2273-8840-4eb4-80e2-91f0a45e6bf0" name="Default" comment="sick actionbar UI">
+    <list default="true" id="876e2273-8840-4eb4-80e2-91f0a45e6bf0" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/www/index.html" afterPath="$PROJECT_DIR$/www/index.html" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
     </list>
@@ -30,8 +30,8 @@
       <file leaf-file-name="index.html" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/www/index.html">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="1.1092077" vertical-offset="52" max-vertical-offset="1241">
-              <caret line="64" column="37" selection-start-line="64" selection-start-column="37" selection-end-line="64" selection-end-column="37" />
+            <state vertical-scroll-proportion="0.40042827" vertical-offset="102" max-vertical-offset="1275">
+              <caret line="28" column="17" selection-start-line="28" selection-start-column="17" selection-end-line="28" selection-end-column="17" />
               <folding />
             </state>
           </provider>
@@ -567,7 +567,13 @@
       <option name="project" value="LOCAL" />
       <updated>1424065434502</updated>
     </task>
-    <option name="localTasksCounter" value="9" />
+    <task id="LOCAL-00009" summary="moved scripts from head to body">
+      <created>1424074616968</created>
+      <option name="number" value="00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1424074616968</updated>
+    </task>
+    <option name="localTasksCounter" value="10" />
     <servers />
   </component>
   <component name="ToolWindowManager">
@@ -617,7 +623,8 @@
     <MESSAGE value="guy.gif" />
     <MESSAGE value="textures.js" />
     <MESSAGE value="sick actionbar UI" />
-    <option name="LAST_COMMIT_MESSAGE" value="sick actionbar UI" />
+    <MESSAGE value="moved scripts from head to body" />
+    <option name="LAST_COMMIT_MESSAGE" value="moved scripts from head to body" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager />
@@ -977,8 +984,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/www/index.html">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="1.1092077" vertical-offset="52" max-vertical-offset="1241">
-          <caret line="64" column="37" selection-start-line="64" selection-start-column="37" selection-end-line="64" selection-end-column="37" />
+        <state vertical-scroll-proportion="0.40042827" vertical-offset="102" max-vertical-offset="1275">
+          <caret line="28" column="17" selection-start-line="28" selection-start-column="17" selection-end-line="28" selection-end-column="17" />
           <folding />
         </state>
       </provider>
