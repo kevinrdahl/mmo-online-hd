@@ -1,22 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="876e2273-8840-4eb4-80e2-91f0a45e6bf0" name="Default" comment="">
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/www/js/hud.js" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/www/js/keys.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/www/img/guy.gif" afterPath="$PROJECT_DIR$/www/img/guy.gif" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/www/js/client.js" afterPath="$PROJECT_DIR$/www/js/client.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/www/js/connection.js" afterPath="$PROJECT_DIR$/www/js/connection.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/node/game/game.js" afterPath="$PROJECT_DIR$/node/game/game.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/www/js/game.js" afterPath="$PROJECT_DIR$/www/js/game.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/www/index.html" afterPath="$PROJECT_DIR$/www/index.html" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/node/game/messages.js" afterPath="$PROJECT_DIR$/node/game/messages.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/www/js/lib/pixi.js" afterPath="$PROJECT_DIR$/www/js/lib/pixi.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/www/css/ui.css" afterPath="$PROJECT_DIR$/www/css/ui.css" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/www/js/ui.js" afterPath="$PROJECT_DIR$/www/js/ui.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/node/game/units.js" afterPath="$PROJECT_DIR$/node/game/units.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/www/js/units.js" afterPath="$PROJECT_DIR$/www/js/units.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/node/node_modules/util/util.js" afterPath="$PROJECT_DIR$/node/node_modules/util/util.js" />
+    <list default="true" id="876e2273-8840-4eb4-80e2-91f0a45e6bf0" name="Default" comment="sick actionbar UI">
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/www/img/icon/backstab.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/www/favicon.ico" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/www/img/icon/teleport.png" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/node/fileserver.js" afterPath="$PROJECT_DIR$/node/fileserver.js" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
     </list>
     <ignored path="mmo-online-2.iws" />
@@ -41,10 +30,10 @@
   </component>
   <component name="FileEditorManager">
     <leaf>
-      <file leaf-file-name="index.html" pinned="false" current-in-tab="false">
+      <file leaf-file-name="index.html" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/www/index.html">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="-1.3076923" vertical-offset="255" max-vertical-offset="1241">
+            <state vertical-scroll-proportion="0.03640257" vertical-offset="255" max-vertical-offset="1241">
               <caret line="17" column="61" selection-start-line="17" selection-start-column="61" selection-end-line="17" selection-end-column="61" />
               <folding />
             </state>
@@ -85,14 +74,24 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="hud.js" pinned="false" current-in-tab="true">
+      <file leaf-file-name="hud.js" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/www/js/hud.js">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.9291667" vertical-offset="961" max-vertical-offset="1955">
-              <caret line="111" column="2" selection-start-line="111" selection-start-column="2" selection-end-line="111" selection-end-column="2" />
+            <state vertical-scroll-proportion="0.0" vertical-offset="961" max-vertical-offset="1955">
+              <caret line="111" column="16" selection-start-line="111" selection-start-column="16" selection-end-line="111" selection-end-column="16" />
               <folding>
                 <element signature="e#0#42#0" expanded="false" />
               </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="fileserver.js" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/node/fileserver.js">
+          <provider selected="true" editor-type-id="text-editor">
+            <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="272">
+              <caret line="10" column="39" selection-start-line="10" selection-start-column="39" selection-end-line="10" selection-end-column="39" />
+              <folding />
             </state>
           </provider>
         </entry>
@@ -155,7 +154,6 @@
       <list>
         <option value="$PROJECT_DIR$/index.html" />
         <option value="$PROJECT_DIR$/js/game.js" />
-        <option value="$PROJECT_DIR$/node/fileserver.js" />
         <option value="$PROJECT_DIR$/www/ts/game.ts" />
         <option value="$PROJECT_DIR$/www/ts/init.ts" />
         <option value="$PROJECT_DIR$/www/ts/connection.ts" />
@@ -199,6 +197,7 @@
         <option value="$PROJECT_DIR$/www/js/bars.js" />
         <option value="$PROJECT_DIR$/www/js/game.js" />
         <option value="$PROJECT_DIR$/www/js/hud.js" />
+        <option value="$PROJECT_DIR$/node/fileserver.js" />
       </list>
     </option>
   </component>
@@ -559,7 +558,13 @@
       <option name="project" value="LOCAL" />
       <updated>1423790682168</updated>
     </task>
-    <option name="localTasksCounter" value="7" />
+    <task id="LOCAL-00007" summary="sick actionbar UI">
+      <created>1424064350530</created>
+      <option name="number" value="00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1424064350530</updated>
+    </task>
+    <option name="localTasksCounter" value="8" />
     <servers />
   </component>
   <component name="ToolWindowManager">
@@ -779,14 +784,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/node/fileserver.js">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.053125" vertical-offset="0" max-vertical-offset="960">
-          <caret line="3" column="21" selection-start-line="3" selection-start-column="21" selection-end-line="3" selection-end-column="21" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/www/img/dude.png">
       <provider selected="true" editor-type-id="images">
         <state />
@@ -947,14 +944,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/www/index.html">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="-1.3076923" vertical-offset="255" max-vertical-offset="1241">
-          <caret line="17" column="61" selection-start-line="17" selection-start-column="61" selection-end-line="17" selection-end-column="61" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/www/js/units.js">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0" vertical-offset="128" max-vertical-offset="1088">
@@ -967,11 +956,27 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/www/js/hud.js">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.9291667" vertical-offset="961" max-vertical-offset="1955">
-          <caret line="111" column="2" selection-start-line="111" selection-start-column="2" selection-end-line="111" selection-end-column="2" />
+        <state vertical-scroll-proportion="0.0" vertical-offset="961" max-vertical-offset="1955">
+          <caret line="111" column="16" selection-start-line="111" selection-start-column="16" selection-end-line="111" selection-end-column="16" />
           <folding>
             <element signature="e#0#42#0" expanded="false" />
           </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/node/fileserver.js">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="272">
+          <caret line="10" column="39" selection-start-line="10" selection-start-column="39" selection-end-line="10" selection-end-column="39" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/www/index.html">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.03640257" vertical-offset="255" max-vertical-offset="1241">
+          <caret line="17" column="61" selection-start-line="17" selection-start-column="61" selection-end-line="17" selection-end-column="61" />
+          <folding />
         </state>
       </provider>
     </entry>
