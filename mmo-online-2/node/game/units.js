@@ -5,11 +5,13 @@ var LinAlg = require('../../www/js/linalg');
 var Orders = require('./orders');
 var UnitTypes = require('./unit-types');
 
-var Units = {};
+var Units = {
+    unitNum:0
+};
 module.exports = Units;
 
-Units.Unit = function(id, owner, type, position) {
-    this.id = id;
+Units.Unit = function(owner, type, position) {
+    this.id = (Units.unitNum++).toString();
     this.owner = owner;
     this.position = position;
     this.nextPosition = position.copy();
@@ -94,6 +96,7 @@ Units.Unit = function(id, owner, type, position) {
                 this.messages.push({
                     type:'order',
                     position:this.position,
+                    unit:this.id,
                     order:{
                         type:'stop'
                     }

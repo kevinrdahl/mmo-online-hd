@@ -45,7 +45,7 @@ var Game = function(sendMessage) {
         //update units
         if (this.currentStep % 20 == 0) {
             var point = new LinAlg.Vector2(Math.round(Math.random()*700+50), Math.round(Math.random()*500+50));
-            this.units['1'].issueOrder(new Orders.MoveOrder(point, 0, null));
+            this.units['0'].issueOrder(new Orders.MoveOrder(point, 0, null));
         }
         for (var unitName in this.units) {
             var unit = this.units[unitName];
@@ -84,7 +84,7 @@ var Game = function(sendMessage) {
         this.nextStepTime = this.startTime;
         this.update();
 
-        this.addUnit(new Units.Unit('1', 'me', 'default', new LinAlg.Vector2(300,100)));
+        this.addUnit(new Units.Unit('me', 'default', new LinAlg.Vector2(300,100)));
     };
 
     this.onConnect = function(id) {
@@ -94,7 +94,7 @@ var Game = function(sendMessage) {
 
         this.players[id] = new Player(id);
         var currentTime = new Date().getTime();
-        this.sendMessage(id, Messages.sync(this.currentStep, currentTime - this.lastStepTime));
+        this.sendMessage(id, Messages.sync(id, this.currentStep, currentTime - this.lastStepTime));
         this.vision.addObserver(id);
     };
 
@@ -114,27 +114,38 @@ var Game = function(sendMessage) {
                 this.sendMessage(playerId, s, true);
             }
         } else if (msg.type == 'order') {
-            this.onOrder(id, msg.order);
+            this.onOrder(id, msg.unit, msg.order);
         }
     };
 
-    this.onOrder = function(id, order) {
-        var unit = order.unit;
-        if (!(unit in this.units)) {
-            return;
-        }
-        unit = units[unit];
-        if (unit.owner != id) {
-            return;
-        }
-        if (order.type == 'move') {
-            unit.issueOrder(new Orders.MoveOrder(order.target, 0, null));
+    this.onOrder = function(id, unit, order) {
+        if (unit == 'global') {
+            //global actions (these should be few)
+            if (order.type === 'makeunit' && order.point instanceof LinAlg.Vector2) {
+                this.addUnit(new Units.Unit(id, 'default', order.point));
+            } else if (order.type === 'kill' && order.unit && order.unit in this.units && this.units[order.unit].owner == id) {
+                this.removeUnit(order.unit);
+            }
+        } else if (unit in this.units && this.units[unit].owner == id) {
+            //unit actions
+            if (order.type === 'move') {
+                var clear = false;
+                if (order.clear === true) {
+                    clear = true;
+                }
+                this.units[unit].issueOrder(new Orders.MoveOrder(order.target, 0, null), clear);
+            }
         }
     };
 
     this.addUnit = function(unit) {
         this.units[unit.id] = unit;
         this.vision.addUnit(unit.id);
+    };
+
+    this.removeUnit = function(id) {
+        this.vision.removeUnit(id);
+        delete this.units[id];
     };
 }; module.exports.Game = Game;
 

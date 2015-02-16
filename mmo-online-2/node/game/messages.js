@@ -17,8 +17,8 @@ Messages.step = function(step) {
     return this.abbreviate(msg);
 };
 
-Messages.sync = function(step, timeSince) {
-    var msg = {type:'sync', step:step, timeSince:timeSince};
+Messages.sync = function(id, step, timeSince) {
+    var msg = {id:id, type:'sync', step:step, timeSince:timeSince};
     return this.abbreviate(msg);
 };
 
@@ -48,7 +48,10 @@ var terms = [
     'point',
     'see',
     'unit',
-    'order'
+    'order',
+    'makeunit',
+    'global',
+    'kill'
 ];
 var badAbbrevs = [
     'x',

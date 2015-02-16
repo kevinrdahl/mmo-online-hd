@@ -1558,7 +1558,7 @@
      * @param resolution {Number} The resolution of the texture being generated
      * @param scaleMode {Number} See {{#crossLink "PIXI/scaleModes:property"}}PIXI.scaleModes{{/crossLink}} for possible values
      * @param renderer {CanvasRenderer|WebGLRenderer} The renderer used to generate the texture.
-     * @return {Texture} a texture of the graphics object
+     * @return {Texture} a texture of the graphicsOverlay object
      */
     PIXI.DisplayObject.prototype.generateTexture = function(resolution, scaleMode, renderer)
     {
@@ -6747,7 +6747,7 @@
      */
 
     /**
-     * A set of functions used by the webGL renderer to draw the primitive graphics data
+     * A set of functions used by the webGL renderer to draw the primitive graphicsOverlay data
      *
      * @class WebGLGraphics
      * @private
@@ -6758,7 +6758,7 @@
     };
 
     /**
-     * Renders the graphics object
+     * Renders the graphicsOverlay object
      *
      * @static
      * @private
@@ -6828,27 +6828,27 @@
     };
 
     /**
-     * Updates the graphics object
+     * Updates the graphicsOverlay object
      *
      * @static
      * @private
      * @method updateGraphics
-     * @param graphicsData {Graphics} The graphics object to update
+     * @param graphicsData {Graphics} The graphicsOverlay object to update
      * @param gl {WebGLContext} the current WebGL drawing context
      */
     PIXI.WebGLGraphics.updateGraphics = function(graphics, gl)
     {
-        // get the contexts graphics object
+        // get the contexts graphicsOverlay object
         var webGL = graphics._webGL[gl.id];
-        // if the graphics object does not exist in the webGL context time to create it!
+        // if the graphicsOverlay object does not exist in the webGL context time to create it!
         if(!webGL)webGL = graphics._webGL[gl.id] = {lastIndex:0, data:[], gl:gl};
 
-        // flag the graphics as not dirty as we are about to update it...
+        // flag the graphicsOverlay as not dirty as we are about to update it...
         graphics.dirty = false;
 
         var i;
 
-        // if the user cleared the graphics object we will need to clear every object
+        // if the user cleared the graphicsOverlay object we will need to clear every object
         if(graphics.clearDirty)
         {
             graphics.clearDirty = false;
@@ -6868,16 +6868,16 @@
 
         var webGLData;
 
-        // loop through the graphics datas and construct each one..
+        // loop through the graphicsOverlay datas and construct each one..
         // if the object is a complex fill then the new stencil buffer technique will be used
-        // other wise graphics objects will be pushed into a batch..
+        // other wise graphicsOverlay objects will be pushed into a batch..
         for (i = webGL.lastIndex; i < graphics.graphicsData.length; i++)
         {
             var data = graphics.graphicsData[i];
 
             if(data.type === PIXI.Graphics.POLY)
             {
-                // need to add the points the the graphics object..
+                // need to add the points the the graphicsOverlay object..
                 data.points = data.shape.points.slice();
                 if(data.shape.closed)
                 {
@@ -6992,7 +6992,7 @@
      * @static
      * @private
      * @method buildRectangle
-     * @param graphicsData {Graphics} The graphics object containing all the necessary properties
+     * @param graphicsData {Graphics} The graphicsOverlay object containing all the necessary properties
      * @param webGLData {Object}
      */
     PIXI.WebGLGraphics.buildRectangle = function(graphicsData, webGLData)
@@ -7060,7 +7060,7 @@
      * @static
      * @private
      * @method buildRoundedRectangle
-     * @param graphicsData {Graphics} The graphics object containing all the necessary properties
+     * @param graphicsData {Graphics} The graphicsOverlay object containing all the necessary properties
      * @param webGLData {Object}
      */
     PIXI.WebGLGraphics.buildRoundedRectangle = function(graphicsData, webGLData)
@@ -7183,7 +7183,7 @@
      * @static
      * @private
      * @method buildCircle
-     * @param graphicsData {Graphics} The graphics object to draw
+     * @param graphicsData {Graphics} The graphicsOverlay object to draw
      * @param webGLData {Object}
      */
     PIXI.WebGLGraphics.buildCircle = function(graphicsData, webGLData)
@@ -7266,7 +7266,7 @@
      * @static
      * @private
      * @method buildLine
-     * @param graphicsData {Graphics} The graphics object containing all the necessary properties
+     * @param graphicsData {Graphics} The graphicsOverlay object containing all the necessary properties
      * @param webGLData {Object}
      */
     PIXI.WebGLGraphics.buildLine = function(graphicsData, webGLData)
@@ -7478,7 +7478,7 @@
      * @static
      * @private
      * @method buildComplexPoly
-     * @param graphicsData {Graphics} The graphics object containing all the necessary properties
+     * @param graphicsData {Graphics} The graphicsOverlay object containing all the necessary properties
      * @param webGLData {Object}
      */
     PIXI.WebGLGraphics.buildComplexPoly = function(graphicsData, webGLData)
@@ -7540,7 +7540,7 @@
      * @static
      * @private
      * @method buildPoly
-     * @param graphicsData {Graphics} The graphics object containing all the necessary properties
+     * @param graphicsData {Graphics} The graphicsOverlay object containing all the necessary properties
      * @param webGLData {Object}
      */
     PIXI.WebGLGraphics.buildPoly = function(graphicsData, webGLData)
@@ -7625,7 +7625,7 @@
     {
         var gl = this.gl;
 
-//    this.lastIndex = graphics.graphicsData.length;
+//    this.lastIndex = graphicsOverlay.graphicsData.length;
         this.glPoints = new PIXI.Float32Array(this.points);
 
         gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer);
@@ -8452,12 +8452,12 @@
      */
     PIXI.WebGLStencilManager.prototype.bindGraphics = function(graphics, webGLData, renderSession)
     {
-        //if(this._currentGraphics === graphics)return;
+        //if(this._currentGraphics === graphicsOverlay)return;
         this._currentGraphics = graphics;
 
         var gl = this.gl;
 
-        // bind the graphics object..
+        // bind the graphicsOverlay object..
         var projection = renderSession.projection,
             offset = renderSession.offset,
             shader;// = renderSession.shaderManager.primitiveShader;
@@ -8787,7 +8787,7 @@
      * Also a thanks to https://github.com/bchevalier for tweaking the tint and alpha so that they now share 4 bytes on the vertex buffer
      *
      * Heavily inspired by LibGDX's WebGLSpriteBatch:
-     * https://github.com/libgdx/libgdx/blob/master/gdx/src/com/badlogic/gdx/graphics/g2d/WebGLSpriteBatch.java
+     * https://github.com/libgdx/libgdx/blob/master/gdx/src/com/badlogic/gdx/graphicsOverlay/g2d/WebGLSpriteBatch.java
      */
 
     /**
@@ -9421,7 +9421,7 @@
      * for creating the original pixi version!
      *
      * Heavily inspired by LibGDX's WebGLSpriteBatch:
-     * https://github.com/libgdx/libgdx/blob/master/gdx/src/com/badlogic/gdx/graphics/g2d/WebGLSpriteBatch.java
+     * https://github.com/libgdx/libgdx/blob/master/gdx/src/com/badlogic/gdx/graphicsOverlay/g2d/WebGLSpriteBatch.java
      */
 
     /**
@@ -11136,7 +11136,7 @@
 
 
     /**
-     * A set of functions used by the canvas renderer to draw the primitive graphics data.
+     * A set of functions used by the canvas renderer to draw the primitive graphicsOverlay data.
      *
      * @class CanvasGraphics
      * @static
@@ -11150,7 +11150,7 @@
      *
      * @method renderGraphics
      * @static
-     * @param graphics {Graphics} the actual graphics object to render
+     * @param graphicsOverlay {Graphics} the actual graphicsOverlay object to render
      * @param context {CanvasRenderingContext2D} the 2d drawing method of the canvas
      */
     PIXI.CanvasGraphics.renderGraphics = function(graphics, context)
@@ -11330,12 +11330,12 @@
     };
 
     /*
-     * Renders a graphics mask
+     * Renders a graphicsOverlay mask
      *
      * @static
      * @private
      * @method renderGraphicsMask
-     * @param graphics {Graphics} the graphics which will be used as a mask
+     * @param graphicsOverlay {Graphics} the graphicsOverlay which will be used as a mask
      * @param context {CanvasRenderingContext2D} the context 2d method of the canvas
      */
     PIXI.CanvasGraphics.renderGraphicsMask = function(graphics, context)
@@ -11347,7 +11347,7 @@
         if(len > 1)
         {
             len = 1;
-            window.console.log('Pixi.js warning: masks in canvas can only mask using the first path in the graphics object');
+            window.console.log('Pixi.js warning: masks in canvas can only mask using the first path in the graphicsOverlay object');
         }
 
         for (var i = 0; i < 1; i++)
@@ -11595,7 +11595,7 @@
         this._localBounds = new PIXI.Rectangle(0,0,1,1);
 
         /**
-         * Used to detect if the graphics object has changed. If this is set to true then the graphics object will be recalculated.
+         * Used to detect if the graphicsOverlay object has changed. If this is set to true then the graphicsOverlay object will be recalculated.
          *
          * @property dirty
          * @type Boolean
@@ -11604,7 +11604,7 @@
         this.dirty = true;
 
         /**
-         * Used to detect if the webgl graphics object has changed. If this is set to true then the graphics object will be recalculated.
+         * Used to detect if the webgl graphicsOverlay object has changed. If this is set to true then the graphicsOverlay object will be recalculated.
          *
          * @property webGLDirty
          * @type Boolean
@@ -11628,10 +11628,10 @@
     PIXI.Graphics.prototype.constructor = PIXI.Graphics;
 
     /**
-     * When cacheAsBitmap is set to true the graphics object will be rendered as if it was a sprite.
-     * This is useful if your graphics element does not change often, as it will speed up the rendering of the object in exchange for taking up texture memory.
-     * It is also useful if you need the graphics object to be anti-aliased, because it will be rendered using canvas.
-     * This is not recommended if you are constantly redrawing the graphics element.
+     * When cacheAsBitmap is set to true the graphicsOverlay object will be rendered as if it was a sprite.
+     * This is useful if your graphicsOverlay element does not change often, as it will speed up the rendering of the object in exchange for taking up texture memory.
+     * It is also useful if you need the graphicsOverlay object to be anti-aliased, because it will be rendered using canvas.
+     * This is not recommended if you are constantly redrawing the graphicsOverlay element.
      *
      * @property cacheAsBitmap
      * @type Boolean
@@ -12106,7 +12106,7 @@
     };
 
     /**
-     * Clears the graphics that were drawn to this Graphics object, and resets fill and line style settings.
+     * Clears the graphicsOverlay that were drawn to this Graphics object, and resets fill and line style settings.
      *
      * @method clear
      * @return {Graphics}
@@ -12124,13 +12124,13 @@
     };
 
     /**
-     * Useful function that returns a texture of the graphics object that can then be used to create sprites
+     * Useful function that returns a texture of the graphicsOverlay object that can then be used to create sprites
      * This can be quite useful if your geometry is complicated and needs to be reused multiple times.
      *
      * @method generateTexture
      * @param resolution {Number} The resolution of the texture being generated
      * @param scaleMode {Number} Should be one of the PIXI.scaleMode consts
-     * @return {Texture} a texture of the graphics object
+     * @return {Texture} a texture of the graphicsOverlay object
      */
     PIXI.Graphics.prototype.generateTexture = function(resolution, scaleMode)
     {
@@ -12511,7 +12511,7 @@
         // this._cachedSprite.buffer.context.save();
         this._cachedSprite.buffer.context.translate(-bounds.x,-bounds.y);
 
-        // make sure we set the alpha of the graphics to 1 for the render.. 
+        // make sure we set the alpha of the graphicsOverlay to 1 for the render..
         this.worldAlpha = 1;
 
         // now render the graphic..

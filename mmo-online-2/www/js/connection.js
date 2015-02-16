@@ -49,7 +49,7 @@ var Connection = function(serverURL, port, client) {
         }
 
         try {
-            this.socket.send(msg);
+            this.socket.send(this.abbreviate(msg));
         } catch (e) {
             this.log('CONNECTION ERROR');
             this.alive = false;
@@ -101,7 +101,7 @@ var Connection = function(serverURL, port, client) {
                 this.syncStep = step;
                 this.syncStepServerTime = serverTime;
                 this.sendPing();
-                this.client.onConnectionReady();
+                this.client.onConnectionReady(msg.id);
                 break;
             default:
                 if (this.ready) {

@@ -32,10 +32,7 @@ var UI = {
     //button events, don't override
     onActionButtonMouseOver: function(b) {
         UI.setCursor('pointer');
-        if (!UI.buttonClicked && UI.buttonSelected == null) {
-            //highlight the button
-            b.setHighlight('white', 0.5);
-        }
+        b.updateStyle(true, false);
     },
     onActionButtonMouseDown: function(b) {
         if (UI.buttonSelected != null) {
@@ -43,35 +40,22 @@ var UI = {
             UI.buttonClicked = false;
             UI.onActionButtonMouseOver(b);
         }
-        b.setBorder('white', 'inset', 2);
+        b.updateStyle(true, true);
         UI.buttonClicked = true;
     },
     onActionButtonMouseOut: function(b) {
         if (UI.buttonClicked) {
             UI.buttonClicked = false;
             UI.setCursor('auto');
-            b.setHighlight('white', 0);
-            b.setBorder('white', 'outset', 2);
         } else {
             if (UI.buttonSelected != null) {
                 //set cursor to action's cursor
                 UI.setCursor(UI.buttonSelected.action.cursor);
-                if (UI.buttonSelected.id == b.id) {
-                    //depress and highlight the button as active
-                    b.setHighlight('green', 0.5);
-                    b.setBorder('white', 'inset', 2);
-                } else {
-                    //set button to normal
-                    b.setHighlight('white', 0);
-                    b.setBorder('white', 'outset', 2);
-                }
             } else {
-                //set button to normal
                 UI.setCursor('auto');
-                b.setHighlight('white', 0);
-                b.setBorder('white', 'outset', 2);
             }
         }
+        b.updateStyle(false, false);
     },
     onActionButtonMouseUp: function(b) {
         if (!UI.buttonClicked) {
@@ -80,9 +64,7 @@ var UI = {
         }
         UI.buttonClicked = false;
         UI.buttonSelected = b;
-        //depress and highlight the button as active
-        b.setHighlight('green', 0.5);
-        b.setBorder('white', 'inset', 2);
+        b.updateStyle(true, false);
         //set cursor to action's cursor
         UI.setCursor(UI.buttonSelected.action.cursor);
     },
@@ -91,9 +73,9 @@ var UI = {
             return;
         }
         UI.setCursor('auto');
-        UI.buttonSelected.setHighlight('white', 0);
-        UI.buttonSelected.setBorder('white', 'outset', 2);
+        var b = UI.buttonSelected;
         UI.buttonSelected = null;
+        b.updateStyle(false, false);
     },
 
 
@@ -248,6 +230,27 @@ UI.ActionButton = function(imgSrc, w, h, action) {
         if (UI.leftMouseDown == null) {
             UI.onActionButtonMouseUp(_this);
             e.preventDefault(); e.defaultPrevented = true; e.stopPropagation(); return false;
+        }
+    };
+
+    this.updateStyle = function(mouseIn, mouseDown) {
+        var active = false;
+        if (UI.buttonSelected != null && UI.buttonSelected.id == this.id) {
+            active = true;
+        }
+
+        if (mouseDown || active) {
+            this.borderDiv.style.borderStyle = 'inset';
+        } else {
+            this.borderDiv.style.borderStyle = 'outset';
+        }
+
+        if (active) {
+            this.setHighlight('green', 0.5);
+        } else if (mouseIn) {
+            this.setHighlight('white', 0.5);
+        } else {
+            this.setHighlight('white', 0);
         }
     };
 

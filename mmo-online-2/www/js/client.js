@@ -41,10 +41,10 @@ var Client = function (serverURL, port, parentElement) {
         this.connection.log('Handshaking...');
     };
 
-    this.onConnectionReady = function () {
+    this.onConnectionReady = function (playerId) {
         //start the game!
         this.connection.log('Connection ready!');
-        this.game = new Game(this.connection, this.stage);
+        this.game = new Game(playerId, this.connection, this.stage);
         this.game.onTick();
     };
 
