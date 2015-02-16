@@ -30,8 +30,8 @@
       <file leaf-file-name="index.html" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/www/index.html">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.40042827" vertical-offset="102" max-vertical-offset="1275">
-              <caret line="28" column="17" selection-start-line="28" selection-start-column="17" selection-end-line="28" selection-end-column="17" />
+            <state vertical-scroll-proportion="0.2537473" vertical-offset="86" max-vertical-offset="1275">
+              <caret line="19" column="86" selection-start-line="19" selection-start-column="86" selection-end-line="19" selection-end-column="86" />
               <folding />
             </state>
           </provider>
@@ -573,7 +573,13 @@
       <option name="project" value="LOCAL" />
       <updated>1424074616968</updated>
     </task>
-    <option name="localTasksCounter" value="10" />
+    <task id="LOCAL-00010" summary="changed body onload to window onload">
+      <created>1424075500117</created>
+      <option name="number" value="00010" />
+      <option name="project" value="LOCAL" />
+      <updated>1424075500117</updated>
+    </task>
+    <option name="localTasksCounter" value="11" />
     <servers />
   </component>
   <component name="ToolWindowManager">
@@ -624,7 +630,8 @@
     <MESSAGE value="textures.js" />
     <MESSAGE value="sick actionbar UI" />
     <MESSAGE value="moved scripts from head to body" />
-    <option name="LAST_COMMIT_MESSAGE" value="moved scripts from head to body" />
+    <MESSAGE value="changed body onload to window onload" />
+    <option name="LAST_COMMIT_MESSAGE" value="changed body onload to window onload" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager />
@@ -984,8 +991,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/www/index.html">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.40042827" vertical-offset="102" max-vertical-offset="1275">
-          <caret line="28" column="17" selection-start-line="28" selection-start-column="17" selection-end-line="28" selection-end-column="17" />
+        <state vertical-scroll-proportion="0.2537473" vertical-offset="86" max-vertical-offset="1275">
+          <caret line="19" column="86" selection-start-line="19" selection-start-column="86" selection-end-line="19" selection-end-column="86" />
           <folding />
         </state>
       </provider>
