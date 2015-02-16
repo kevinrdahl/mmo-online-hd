@@ -16,24 +16,44 @@
         }
     </style>
     <link rel="stylesheet" type="text/css" href="css/ui.css">
+    <script src="https://code.createjs.com/preloadjs-0.6.0.min.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', function(){initGame();}, false);
+        window.onload = function(){preload();};
+
+        function preload () {
+            var numLoaded = 0;
+            var toLoad = [
+                'js/lib/pixi.js',
+                'js/client.js',
+                'js/connection.js',
+                'js/game.js',
+                'js/linalg.js',
+                'js/units.js',
+                'js/textures.js',
+                'js/ui.js',
+                'js/keys.js',
+                'js/hud.js'
+            ];
+
+            var onFileLoaded = function(event) {
+                numLoaded++;
+                if (numLoaded == toLoad.length) {
+                    client = new Client(serverURL, serverPort, clientParent);
+                }
+            };
+
+            var loadQueue = new createjs.LoadQueue();
+            loadQueue.addEventListener("fileload", onFileLoaded);
+            for (var i = 0; i < toLoad.length; i++) {
+                loadQueue.loadFile(toLoad[i]);
+            }
+        }
     </script>
 </head>
 
 <body>
     <div id="gameDiv">
     </div>
-    <script src="js/lib/pixi.js"></script>
-    <script src="js/client.js"></script>
-    <script src="js/connection.js"></script>
-    <script src="js/game.js"></script>
-    <script src="js/linalg.js"></script>
-    <script src="js/units.js"></script>
-    <script src="js/textures.js"></script>
-    <script src="js/ui.js"></script>
-    <script src="js/keys.js"></script>
-    <script src="js/hud.js"></script>
     <script>
         var QueryString = function () {
             var query_string = {};
@@ -60,10 +80,6 @@
         var serverPort = QueryString.port | 8999;
         var clientParent = document.getElementById('gameDiv');
         var client;
-
-        function initGame() {
-            client = new Client(serverURL, serverPort, clientParent);
-        }
     </script>
 </body>
 
