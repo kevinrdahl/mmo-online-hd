@@ -2,10 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="876e2273-8840-4eb4-80e2-91f0a45e6bf0" name="Default" comment="sick actionbar UI">
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/www/img/icon/backstab.png" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/www/favicon.ico" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/www/img/icon/teleport.png" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/node/fileserver.js" afterPath="$PROJECT_DIR$/node/fileserver.js" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/www/index.html" afterPath="$PROJECT_DIR$/www/index.html" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
     </list>
     <ignored path="mmo-online-2.iws" />
@@ -33,8 +30,8 @@
       <file leaf-file-name="index.html" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/www/index.html">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.03640257" vertical-offset="255" max-vertical-offset="1241">
-              <caret line="17" column="61" selection-start-line="17" selection-start-column="61" selection-end-line="17" selection-end-column="61" />
+            <state vertical-scroll-proportion="1.1092077" vertical-offset="52" max-vertical-offset="1241">
+              <caret line="64" column="37" selection-start-line="64" selection-start-column="37" selection-end-line="64" selection-end-column="37" />
               <folding />
             </state>
           </provider>
@@ -192,12 +189,12 @@
         <option value="$PROJECT_DIR$/www/js/ui.js" />
         <option value="$PROJECT_DIR$/www/css/ui.css" />
         <option value="$PROJECT_DIR$/www/js/keys.js" />
-        <option value="$PROJECT_DIR$/www/index.html" />
         <option value="$PROJECT_DIR$/www/js/units.js" />
         <option value="$PROJECT_DIR$/www/js/bars.js" />
         <option value="$PROJECT_DIR$/www/js/game.js" />
         <option value="$PROJECT_DIR$/www/js/hud.js" />
         <option value="$PROJECT_DIR$/node/fileserver.js" />
+        <option value="$PROJECT_DIR$/www/index.html" />
       </list>
     </option>
   </component>
@@ -564,7 +561,13 @@
       <option name="project" value="LOCAL" />
       <updated>1424064350530</updated>
     </task>
-    <option name="localTasksCounter" value="8" />
+    <task id="LOCAL-00008" summary="sick actionbar UI">
+      <created>1424065434502</created>
+      <option name="number" value="00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1424065434502</updated>
+    </task>
+    <option name="localTasksCounter" value="9" />
     <servers />
   </component>
   <component name="ToolWindowManager">
@@ -974,8 +977,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/www/index.html">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.03640257" vertical-offset="255" max-vertical-offset="1241">
-          <caret line="17" column="61" selection-start-line="17" selection-start-column="61" selection-end-line="17" selection-end-column="61" />
+        <state vertical-scroll-proportion="1.1092077" vertical-offset="52" max-vertical-offset="1241">
+          <caret line="64" column="37" selection-start-line="64" selection-start-column="37" selection-end-line="64" selection-end-column="37" />
           <folding />
         </state>
       </provider>
