@@ -8,7 +8,7 @@ var HUD = {
 
 HUD.borderSize = function(w,h) {
     var x = Math.min(w,h);
-    x = Math.ceil(x/4);
+    x = Math.ceil(x/10);
     return x;
 };
 
@@ -49,7 +49,6 @@ HUD.fromRGB = function(rgb) {
 };
 
 HUD.Bar = function(w, h, color, val, maxVal) {
-    console.log(w + ' ' + h);
     this.w = Math.max(w,3);
     this.h = Math.max(h,3);
     this.color = color;
@@ -72,7 +71,7 @@ HUD.Bar = function(w, h, color, val, maxVal) {
         } else {
             return;
         }
-        var b = 2;//HUD.borderSize(this.w, this.h);
+        var b = HUD.borderSize(this.w, this.h);
         var w = this.w-b*2;
         var h = this.h-b*2;
 
@@ -107,6 +106,7 @@ HUD.Bar = function(w, h, color, val, maxVal) {
             this.flashes.push(flash);
         }
         this.val = val;
+        this.redraw = true;
     };
 };
 

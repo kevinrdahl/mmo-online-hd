@@ -85,8 +85,7 @@ var Connection = function(serverURL, port, client) {
                 for (var term in this.abbreviations) {
                     this.expansions[this.abbreviations[term]] = term;
                 }
-                this.socket.send(JSON.stringify({type:'sync'}));
-                this.syncSendTime = new Date().getTime();
+                this.client.onHandShake();
                 break;
             case 'sync':
                 var step = msg.step;
@@ -149,6 +148,11 @@ var Connection = function(serverURL, port, client) {
         this.send(JSON.stringify({type:'ping'}));
         this.pingSendTimes.push(new Date().getTime());
         setTimeout(function() {_this.sendPing();}, this.pingSendInterval);
+    };
+
+    this.sendSync = function() {
+        this.socket.send(JSON.stringify({type:'sync'}));
+        this.syncSendTime = new Date().getTime();
     };
 
     this.reviver = function(key, value) {
