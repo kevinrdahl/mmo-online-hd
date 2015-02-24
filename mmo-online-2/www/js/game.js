@@ -109,10 +109,12 @@ var Game = function (playerId, connection, stage) {
 
         //status
         this.setStatusText({
-            step: this.currentStep,
             avgPing: Math.round(this.connection.meanPing),
             targetDelay: Math.round(this.connection.targetDelay),
-            simSpeed: Math.round(this.tickLen/(this.nextStepTime-this.lastStepTime)*100)
+            'upload': this.connection.formatByteSize(this.connection.bandwidthStats.up.rate) + '/s',
+            'download': this.connection.formatByteSize(this.connection.bandwidthStats.down.rate) + '/s',
+            'total': this.connection.formatByteSize(this.connection.bandwidthStats.up.total) + ' | ' +
+                this.connection.formatByteSize(this.connection.bandwidthStats.down.total)
         });
 
 
@@ -287,7 +289,7 @@ var Game = function (playerId, connection, stage) {
     this.setStatusText = function(o) {
         var s = '';
         for (var prop in o) {
-            s += prop + ': ' + JSON.stringify(o[prop]) + '\n';
+            s += prop + ': ' + o[prop].toString() + '\n';
         }
         this.statusText.setText(s);
     };

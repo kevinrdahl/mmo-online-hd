@@ -26,9 +26,24 @@ var Connection = function(serverURL, port, client) {
     this.aggressiveness = 0.1;
     this.pingSendTimes = [];
     this.pingSendInterval = 500;
+    this.targetDelay = 100;
+
+    this.bandwidthStats = {
+        up:{
+            rate:0,
+            total:0,
+            lengths:[]
+        },
+        down:{
+            rate:0,
+            total:0,
+            lengths:[]
+        }
+    };
+    this.bandwidthSampleTime = 2500;
 
     this.onConnect = function() {
-        this.socket.send(JSON.stringify({type:'dict'}));
+        this.send({type:'dict'});
         this.client.onConnect();
     };
 
@@ -49,7 +64,9 @@ var Connection = function(serverURL, port, client) {
         }
 
         try {
-            this.socket.send(this.abbreviate(msg));
+            var s = this.abbreviate(msg);
+            this.logMsgLength(s.length, 'up');
+            this.socket.send(s);
         } catch (e) {
             this.log('CONNECTION ERROR');
             this.alive = false;
@@ -62,6 +79,8 @@ var Connection = function(serverURL, port, client) {
         var data = message.data;
         var currentTime = new Date().getTime();
         var msg;
+
+        this.logMsgLength(data.length, 'down');
 
         try {
             msg = this.expand(data);
@@ -139,6 +158,47 @@ var Connection = function(serverURL, port, client) {
         }
     };
 
+    //note: if connection is lost this will appear to remain stationary
+    //however, under normal circumstances, pings will keep the numbers moving
+    this.logMsgLength = function(len, dir) {
+        var stats = this.bandwidthStats[dir];
+        var currentTime = new Date().getTime();
+        var recentTotal = 0;
+        
+        stats.total += len;
+
+        stats.lengths.push({time:new Date().getTime(), len:len});
+        for (var i = 0; i < stats.lengths.length; i++) {
+            if (stats.lengths[i].time >= currentTime - this.bandwidthSampleTime) {
+                break;
+            }
+        }
+        stats.lengths.splice(0,i);
+
+        for (var i = 0; i < stats.lengths.length; i++) {
+            recentTotal += stats.lengths[i].len;
+        }
+        stats.rate = Math.round((recentTotal / this.bandwidthSampleTime) * 1000);
+    };
+
+    this.formatByteSize = function(x) {
+        var labels = [
+            'B',
+            'KB',
+            'MB',
+            'GB'
+        ]
+
+        for (var i = 0; i < labels.length-1; i++) {
+            if (x < 512) {
+                break;
+            }
+            x /= 1024;
+        }
+
+        return LinAlg.cutFloat(x, 1) + ' ' + labels[i];
+    };
+
     this.sendPing = function() {
         if (!this.alive) {
             return;
@@ -151,7 +211,7 @@ var Connection = function(serverURL, port, client) {
     };
 
     this.sendSync = function() {
-        this.socket.send(JSON.stringify({type:'sync'}));
+        this.send({type:'sync'});
         this.syncSendTime = new Date().getTime();
     };
 

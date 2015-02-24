@@ -45,7 +45,7 @@ var Game = function(sendMessage) {
         //update units
         if (this.currentStep % 20 == 0) {
             var point = new LinAlg.Vector2(Math.round(Math.random()*700+50), Math.round(Math.random()*500+50));
-            this.units['0'].issueOrder(new Orders.MoveOrder(point, 0, null));
+            this.units['0'].issueOrder(new Orders.MoveOrder(point, 0, null), true);
         }
         for (var unitName in this.units) {
             var unit = this.units[unitName];

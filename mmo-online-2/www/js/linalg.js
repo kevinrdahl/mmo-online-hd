@@ -82,11 +82,31 @@ LinAlg.Vector2 = function(x,y) {
 //returns toString of a number to a certain precision
 LinAlg.cutFloat = function(f, places) {
     places = places|0;
-    f = Math.round(f * Math.pow(10, places)).toString();
+    var s = Math.round(f * Math.pow(10, places)).toString();
     if (places > 0) {
-        f = f.slice(0, f.length-places) + '.' + f.slice(f.length-places, f.length);
+        s = s.slice(0, s.length-places) + '.' + s.slice(s.length-places, s.length);
     }
-    return f;
+
+    //trim trailing zeroes
+    //not the greatest implementation (checks twice per index before the last)
+    var len = s.length;
+    for (var i = s.length-1; i >= 0; i++) {
+        if (s.charAt(i) != '0') {
+            break;
+        }
+        len -= 1
+        if (s.charAt(i-1) == '.') {
+            len -= 1;
+            break;
+        }
+    }
+    s = s.substr(0,len);
+
+    if (f < 1) {
+        return '0' + s;
+    } else {
+        return s;
+    }
 };
 
 LinAlg.toRadians = function(angle) {
