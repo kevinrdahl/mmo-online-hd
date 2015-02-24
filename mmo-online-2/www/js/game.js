@@ -200,6 +200,7 @@ var Game = function (playerId, connection, stage) {
         }
     };
 
+    //TODO: differentiate between selecting own and other units
     this.selectUnit = function(id) {
         this.selected[id] = true;
         this.sprites[id].sprite.tint = 0x66ff66;
@@ -216,6 +217,7 @@ var Game = function (playerId, connection, stage) {
         }
     };
 
+    //TODO: return a list of all that might have been clicked, sorted by z value
     this.getClickedUnit = function(v) {
         for (var uId in this.sprites) {
             if (!(uId in this.state.units)) {
@@ -283,7 +285,24 @@ var Game = function (playerId, connection, stage) {
     };
 
     this.onRightMouseClick = function(v) {
-        console.log('nice right click');
+        var order = {type:'move'};
+        var unit = this.getClickedUnit(v);
+        if (unit == null) {
+            order.point = v;
+        } else {
+            order.unit = unit;
+        }
+
+        for (var selectedUnit in this.selected) {
+            var msg = {
+                type:'order',
+                unit:selectedUnit,
+                order:order
+            };
+            this.connection.send(msg);
+            console.log('send:');
+            console.log(JSON.stringify(msg));
+        }
     };
 
     this.setStatusText = function(o) {

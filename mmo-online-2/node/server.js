@@ -20,6 +20,8 @@ var Server = function(port) {
     });
     this.game.start();
 
+    console.log('Server running on port ' + port);
+
     this.onConnection = function(client) {
         var _this = this;
 

@@ -45,7 +45,7 @@ var Game = function(sendMessage) {
         //update units
         if (this.currentStep % 20 == 0) {
             var point = new LinAlg.Vector2(Math.round(Math.random()*700+50), Math.round(Math.random()*500+50));
-            this.units['0'].issueOrder(new Orders.MoveOrder(point, 0, null), true);
+            this.units['0'].issueOrder(new Orders.MoveOrder({type:'point', point:point}, 0, null), true);
         }
         for (var unitName in this.units) {
             var unit = this.units[unitName];
@@ -119,6 +119,7 @@ var Game = function(sendMessage) {
     };
 
     this.onOrder = function(id, unit, order) {
+        console.log(JSON.stringify(order));
         if (unit == 'global') {
             //global actions (these should be few)
             if (order.type === 'makeunit' && order.point instanceof LinAlg.Vector2) {
@@ -126,14 +127,19 @@ var Game = function(sendMessage) {
             } else if (order.type === 'kill' && order.unit && order.unit in this.units && this.units[order.unit].owner == id) {
                 this.removeUnit(order.unit);
             }
-        } else if (unit in this.units && this.units[unit].owner == id) {
+        } else if (unit in this.units /*&& this.units[unit].owner == id*/) {
             //unit actions
             if (order.type === 'move') {
                 var clear = false;
                 if (order.clear === true) {
                     clear = true;
                 }
-                this.units[unit].issueOrder(new Orders.MoveOrder(order.target, 0, null), clear);
+                var o = Orders.interpret(order, id, this.units);
+                if (o != null) {
+                    this.units[unit].issueOrder(o, true); 
+                }
+            } else {
+                console.log('Weird order from ' + id + ': ' + JSON.stringify(order));
             }
         }
     };
