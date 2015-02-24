@@ -79,7 +79,7 @@ for (var i = 0; i < terms.length; i++) {
 
 
 function reviver(key, value) {
-    if (typeof value === 'object' && 'x' in value && 'y' in value) {
+    if (typeof value === 'object' && value != null && 'x' in value && 'y' in value) {
         return new LinAlg.Vector2(value.x/10, value.y/10);
     } else {
         return value;

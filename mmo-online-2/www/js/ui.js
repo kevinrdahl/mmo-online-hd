@@ -93,17 +93,16 @@ var UI = {
                 return;
             }
             if (e.which == 1) {
-                UI.leftMouseDown = new LinAlg.Vector2(e.x, e.y);
+                UI.leftMouseDown = new LinAlg.Vector2(e.clientX, e.clientY);
                 UI.leftMouseDragging = false;
             } else if (e.which == 3) {
-                UI.rightMouseDown = new LinAlg.Vector2(e.x, e.y);
+                UI.rightMouseDown = new LinAlg.Vector2(e.clientX, e.clientY);
                 UI.rightMouseDragging = false;
             }
             return false;
         };
 
         this.div.onmouseup = function(e) {
-            UI.fixMouseButton(e);
             if (UI.buttonPressed) {
                 UI.buttonPressed = false;
                 return;
@@ -135,8 +134,8 @@ var UI = {
         };
 
         this.div.onmousemove = function(e) {
-            UI.mousePosition.x = e.x;
-            UI.mousePosition.y = e.y;
+            UI.mousePosition.x = e.clientX;
+            UI.mousePosition.y = e.clientY;
             if (UI.leftMouseDown != null) {
                 if (UI.leftMouseDown.distanceTo(UI.mousePosition) >= UI.mouseDragDistance) {
                     UI.leftMouseDragging = true;

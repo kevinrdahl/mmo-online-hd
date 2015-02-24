@@ -273,7 +273,6 @@ var Game = function (playerId, connection, stage) {
                 continue;
             }
             var position = this.sprites[uId].getPosition();
-            console.log(position);
             //if (this.state.units[uId].owner == this.playerId)
             if (rect.contains(position.x, position.y)) {
                 this.selectUnit(uId);

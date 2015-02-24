@@ -58,7 +58,7 @@ var Client = function (serverURL, port, parentElement) {
         //okay, start loading assets
         var _this = this;
         this.loaderText.setText('Loading...');
-        this.loaderBar = new HUD.Bar(400,40,0x999999,0,1);
+        this.loaderBar = new HUD.Bar(400,40,0xffffff,0,1);
         this.loaderBar.sprite.anchor.x = 0.5;
         this.loaderBar.sprite.anchor.y = 0.5;
         this.loaderBar.sprite.position.x = 400;
@@ -71,10 +71,8 @@ var Client = function (serverURL, port, parentElement) {
             _this.numLoaded++;
             _this.loaderBar.changeVal(_this.numLoaded / this.assetURLs.length, true);
             _this.loaderBar.draw(_this.loaderGraphics);
-            console.log('loaded item ' + _this.numLoaded + ' of ' + this.assetURLs.length);
         };
         this.loader.onComplete = function() {
-            console.log('loading complete');
             _this.onLoadComplete();
         };
         this.loader.load();

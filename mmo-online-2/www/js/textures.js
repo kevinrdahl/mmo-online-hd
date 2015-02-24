@@ -3,7 +3,13 @@
  */
 var Textures = {
     texList:[
-        'img/guy.gif'
+        'img/guy.gif',
+        'img/sprite/man/bow.png',
+        'img/sprite/man/hurt.png',
+        'img/sprite/man/slash.png',
+        'img/sprite/man/spell.png',
+        'img/sprite/man/thrust.png',
+        'img/sprite/man/walk.png'
     ]
 };
 
@@ -20,11 +26,7 @@ Textures.TextureManager = function() {
         }
     };
 
-    this.loadTextures = function(onProgress) {
-        var loaded = 0;
-        var loaders = {};
-        for (var i = 0; i < Textures.texList.length; i++) {
-            loaders[Textures.texList[i]] = new PIXI.ImageLoader(Textures.texList[i]);
-        }
+    this.registerTexture = function(name, tex) {
+        this.textures[name] = tex;
     };
 };
