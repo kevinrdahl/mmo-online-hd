@@ -114,7 +114,7 @@ var Game = function (playerId, connection, stage) {
             'upload': this.connection.formatByteSize(this.connection.bandwidthStats.up.rate) + '/s',
             'download': this.connection.formatByteSize(this.connection.bandwidthStats.down.rate) + '/s',
             'total': this.connection.formatByteSize(this.connection.bandwidthStats.up.total) + ' | ' +
-                this.connection.formatByteSize(this.connection.bandwidthStats.down.total)
+                    this.connection.formatByteSize(this.connection.bandwidthStats.down.total)
         });
 
 
@@ -203,12 +203,13 @@ var Game = function (playerId, connection, stage) {
     //TODO: differentiate between selecting own and other units
     this.selectUnit = function(id) {
         this.selected[id] = true;
-        this.sprites[id].sprite.tint = 0x66ff66;
+        this.sprites[id].select();
+        //this.sprites[id].sprite.tint = 0x66ff66;
     };
 
     this.deselectUnit = function(id) {
         delete this.selected[id];
-        this.sprites[id].sprite.tint = 0xffffff;
+        this.sprites[id].deselect();
     };
 
     this.deselectAll = function() {
@@ -232,14 +233,14 @@ var Game = function (playerId, connection, stage) {
     };
 
     this.onAction = function(v, a) {
-        console.log('doing ' + a.name + ' at ' + JSON.stringify(v.scaled(0.1)));
+        var v2 = UI.viewToWorld(v);
         if (a.name == 'makeunit') {
             var msg = {
                 type:'order',
                 unit:'global', //global order
                 order:{
                     type:'makeunit',
-                    point:v
+                    point:v2
                 }
             };
             this.connection.send(msg);
@@ -277,6 +278,7 @@ var Game = function (playerId, connection, stage) {
                 continue;
             }
             var position = this.sprites[uId].getPosition();
+
             //if (this.state.units[uId].owner == this.playerId)
             if (rect.contains(position.x, position.y)) {
                 this.selectUnit(uId);
@@ -285,6 +287,7 @@ var Game = function (playerId, connection, stage) {
     };
 
     this.onRightMouseClick = function(v) {
+        v = UI.viewToWorld(v);
         var order = {type:'move'};
         var unit = this.getClickedUnit(v);
         if (unit == null) {

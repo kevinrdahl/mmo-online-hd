@@ -37,25 +37,44 @@ Units.UnitSprite = function(unit, texManager) {
     this.container = new PIXI.DisplayObjectContainer;
 
     this.sprite = new PIXI.Sprite(texManager.getTexture(unit.sprite));
+    this.sprite.anchor.x = 0.5;
+    this.sprite.anchor.y = 0.8;
 
     this.hpBar = new HUD.Bar(this.sprite.width, Math.round(this.sprite.width/6), 0x00ff00, unit.hp, unit.maxhp);
-    this.hpBar.sprite.position.x = 0;
-    this.hpBar.sprite.position.y = this.sprite.height + 1;
+    this.hpBar.sprite.anchor.x = 0.5;
+    this.hpBar.sprite.position.y = Math.floor(this.sprite.height/4) + 1;
 
+    var maxDimension = Math.max(this.sprite.width, this.sprite.height);
+    this.selectionCircle = new HUD.Circle(maxDimension*1.1, maxDimension*1.1/2, 0x00ff00, 3);
+    this.selectionCircle.sprite.anchor.x = 0.5;
+    this.selectionCircle.sprite.anchor.y = 0.5;
+    this.selectionCircle.setInactive();
+
+    this.container.addChild(this.selectionCircle.sprite);
     this.container.addChild(this.sprite);
     this.container.addChild(this.hpBar.sprite);
 
     this.draw = function(stepProgress, unit, graphics) {
         this.hpBar.draw(graphics);
+        this.selectionCircle.draw(graphics);
         var drawPosition = unit.position.add(unit.nextPosition.sub(unit.position).scaled(stepProgress));
-        this.container.position.x = drawPosition.x - this.sprite.width / 2;
-        this.container.position.y = drawPosition.y - this.sprite.height / 2;
+        drawPosition = UI.worldToView(drawPosition);
+        this.container.position.x = drawPosition.x;
+        this.container.position.y = drawPosition.y;
     };
 
     this.getPosition = function() {
         return new LinAlg.Vector2(
-            this.container.position.x + this.sprite.width/2,
-            this.container.position.y + this.sprite.height/2
+            this.container.position.x,
+            this.container.position.y
         );
+    };
+
+    this.select = function() {
+        this.selectionCircle.setActive();
+    };
+
+    this.deselect = function() {
+        this.selectionCircle.setInactive();
     };
 };

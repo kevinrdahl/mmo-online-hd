@@ -10,6 +10,8 @@ var UI = {
     leftMouseDragging:false,
     rightMouseDragging:false,
     mousePosition: new LinAlg.Vector2(0,0),
+    cameraPosition: new LinAlg.Vector2(0,0),
+    cameraScaleY: 0.5,
     idNum:0,
 
     //defaults, to be overwritten when needed
@@ -82,6 +84,7 @@ var UI = {
     mouseDragDistance:5,
 
     init:function() {
+        var _this = this;
         this.div = document.getElementById('gameDiv');
         this.div.oncontextmenu = function () {return false;};
         this.div.onclick = function(e) {e.preventDefault(); e.defaultPrevented = true; e.stopPropagation(); return false;};
@@ -149,6 +152,10 @@ var UI = {
                 }
             }
             return false;
+        };
+
+        this.div.onmouseout = function(e) {
+            UI.div.onmouseup(e);
         };
     }
 };
@@ -309,4 +316,20 @@ UI.fixMouseButton = function(e) {
         else if (e.button & 4) e.which = 2; // Middle
         else if (e.button & 2) e.which = 3; // Right
     }
+};
+
+UI.viewToWorld = function(v) {
+    var v2 = v.copy();
+    v2.y *= 2;
+    v2.x -= UI.cameraPosition.x;
+    v2.y -= UI.cameraPosition.y;
+    return v2;
+};
+
+UI.worldToView = function(v) {
+    var v2 = v.copy();
+    v2.x += UI.cameraPosition.x;
+    v2.y += UI.cameraPosition.y;
+    v2.y /= 2;
+    return v2;
 };

@@ -3,6 +3,7 @@
  */
 var HUD = {
     flashFadeTime:500,
+    circleHighlightTime:500,
     borderColor:0x000000,
 };
 
@@ -56,10 +57,6 @@ HUD.Bar = function(w, h, color, val, maxVal) {
     this.val = val;
     this.maxVal = maxVal;
 
-    console.log(Number(color).toString(16));
-    console.log(Number(this.flashColor).toString(16));
-
-
     this.tex = new PIXI.RenderTexture(w,h);
     this.sprite = new PIXI.Sprite(this.tex);
     this.flashes = [];
@@ -110,4 +107,53 @@ HUD.Bar = function(w, h, color, val, maxVal) {
     };
 };
 
-//HUD.SelectionCircle = function()
+HUD.Circle = function(w, h, color, borderWidth) {
+    this.w = w*2;
+    this.h = h*2;
+    this.color = color;
+    this.borderWidth = borderWidth*2;
+
+    this.tex = new PIXI.RenderTexture(this.w+this.borderWidth*2,this.h+this.borderWidth*2);
+    this.sprite = new PIXI.Sprite(this.tex);
+    this.sprite.scale.x = 0.5;
+    this.sprite.scale.y = 0.5;
+    this.lastHighlight = new Date().getTime()-HUD.flashFadeTime;
+    this.redraw = true;
+
+    this.draw = function(graphics) {
+        if (this.redraw) {
+            var highlightProgress = new Date().getTime() - this.lastHighlight;
+            highlightProgress = Math.min(highlightProgress/HUD.circleHighlightTime, 1);
+
+            graphics.clear();
+            graphics.lineStyle(this.borderWidth, this.color, 1);
+            graphics.drawEllipse(this.w/2+this.borderWidth, this.h/2+this.borderWidth, this.w/2*highlightProgress, this.h/2*highlightProgress);
+
+            this.tex.render(graphics);
+            console.log(this.tex);
+
+            if (highlightProgress == 1) {
+                this.redraw = false;
+            }
+        }
+    };
+
+    this.highlight = function() {
+        this.lastHighlight = new Date().getTime();
+        this.redraw = true;
+    };
+
+    this.setActive = function() {
+        this.sprite.alpha = 1;
+    };
+
+    this.setInactive = function() {
+        this.sprite.alpha = 0;
+    };
+
+    this.set = function(props) {
+        for (var prop in props) {
+            this[prop] = props[prop];
+        }
+    };
+};
