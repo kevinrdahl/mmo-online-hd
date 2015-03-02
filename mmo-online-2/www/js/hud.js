@@ -5,6 +5,13 @@ var HUD = {
     flashFadeTime:500,
     circleHighlightTime:500,
     borderColor:0x000000,
+
+    colors:{
+        self:0x00ff00,
+        friend:0x0066ff,
+        neutral:0xffff00,
+        enemy:0xff0000
+    }
 };
 
 HUD.borderSize = function(w,h) {
@@ -130,7 +137,6 @@ HUD.Circle = function(w, h, color, borderWidth) {
             graphics.drawEllipse(this.w/2+this.borderWidth, this.h/2+this.borderWidth, this.w/2*highlightProgress, this.h/2*highlightProgress);
 
             this.tex.render(graphics);
-            console.log(this.tex);
 
             if (highlightProgress == 1) {
                 this.redraw = false;

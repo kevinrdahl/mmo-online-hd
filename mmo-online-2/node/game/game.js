@@ -20,7 +20,7 @@ var Game = function(sendMessage) {
     this.currentStep = null;
     this.nextStepTime = null;
     this.lastStepTime = null;
-    this.tickLen = 100;
+    this.tickLen = 50;
 
     this.vision = new Vision.Vision();
     this.players = {};
@@ -42,24 +42,20 @@ var Game = function(sendMessage) {
             }
         }
 
-        //update units
-        if (this.currentStep % 20 == 0) {
-            var point = new LinAlg.Vector2(Math.round(Math.random()*700+50), Math.round(Math.random()*500+50));
-            this.units['0'].issueOrder(new Orders.MoveOrder({type:'point', point:point}, 0, null), true);
-        }
         for (var unitName in this.units) {
             var unit = this.units[unitName];
             unit.position.x = unit.nextPosition.x;
             unit.position.y = unit.nextPosition.y;
-            unit.update();
+            unit.update(this.units);
             var messages = unit.getMessages();
             for (var i = 0; i < messages.length; i++) {
                 var m = messages[i];
                 var s;
                 m.step = this.currentStep;
                 s = Messages.abbreviate(m);
-                for (var pId in this.players) {
-                    this.sendMessage(pId, s);
+                var observers = this.vision.getUnitObservers(unitName);
+                for (var i = 0; i < observers.length; i++) {
+                    this.sendMessage(observers[i], s);
                 }
             }
         }
@@ -84,7 +80,9 @@ var Game = function(sendMessage) {
         this.nextStepTime = this.startTime;
         this.update();
 
-        this.addUnit(new Units.Unit('me', 'default', new LinAlg.Vector2(300,100)));
+        //this.addUnit(new Units.Unit('me', 'default', new LinAlg.Vector2(300,100)));
+        //this.addUnit(new Units.Unit('me', 'default', new LinAlg.Vector2(100,300)));
+        //this.units['1'].issueOrder(Orders.interpret({type:'attack', unit:'0'}, '1', this.units));
     };
 
     this.onConnect = function(id) {
@@ -119,7 +117,7 @@ var Game = function(sendMessage) {
     };
 
     this.onOrder = function(id, unit, order) {
-        console.log(JSON.stringify(order));
+        console.log(id + ': ' + JSON.stringify(order));
         if (unit == 'global') {
             //global actions (these should be few)
             if (order.type === 'makeunit' && order.point instanceof LinAlg.Vector2) {
@@ -129,15 +127,13 @@ var Game = function(sendMessage) {
             }
         } else if (unit in this.units /*&& this.units[unit].owner == id*/) {
             //unit actions
-            if (order.type === 'move') {
-                var clear = false;
-                if (order.clear === true) {
-                    clear = true;
+            var o = Orders.interpret(order, id, this.units);
+            var queue = false;
+            if (o != null) {
+                if (order.queue === true) {
+                    queue = true;
                 }
-                var o = Orders.interpret(order, id, this.units);
-                if (o != null) {
-                    this.units[unit].issueOrder(o, true); 
-                }
+                this.units[unit].issueOrder(o, !queue);
             } else {
                 console.log('Weird order from ' + id + ': ' + JSON.stringify(order));
             }

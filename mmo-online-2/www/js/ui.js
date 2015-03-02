@@ -81,7 +81,7 @@ var UI = {
     },
 
 
-    mouseDragDistance:5,
+    mouseDragDistance:10,
 
     init:function() {
         var _this = this;

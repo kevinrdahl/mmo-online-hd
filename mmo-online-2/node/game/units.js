@@ -19,6 +19,9 @@ Units.Unit = function(owner, type, position) {
     this.orderBroadcast = false;
     this.messages = [];
 
+    this.followThrough = 0;
+    this.attackCoolDown = 0;
+
     var unitTemplate = UnitTypes[type];
     if (typeof unitTemplate === 'undefined') {
         unitTemplate = UnitTypes['default'];
@@ -29,6 +32,13 @@ Units.Unit = function(owner, type, position) {
     this.hp = this.maxhp;
 
     this.update = function(units) {
+        if (this.attackCoolDown > 0) {
+            this.attackCoolDown -= 1;
+        }
+        if (this.followThrough > 0) {
+            this.followThrough -= 1;
+        }
+
         while (true) {
             var order = this.orders[0];
             if (typeof order !== 'undefined') {
@@ -67,7 +77,7 @@ Units.Unit = function(owner, type, position) {
                             type:'order',
                             unit:this.id,
                             position:this.position,
-                            order:order.toObj()
+                            order:order
                         };
                         this.messages.push(o);
 
@@ -90,6 +100,32 @@ Units.Unit = function(owner, type, position) {
                     }
 
                     order.step++;
+                } else if (order instanceof Orders.AttackOrder) {
+                    var range = 100;
+                    var target = units[order.unit];
+
+                    if (typeof target === 'undefined') {
+                        this.discardOrder();
+                        continue;
+                    }
+                    if (this.position.distanceTo(target.position) > range) {
+                        this.moveForOrder(order, {type:'unit', unit:order.unit}, range);
+                        continue;
+                    }
+
+                    if (this.attackCoolDown == 0 && this.followThrough == 0) {
+                        if (order.windUp == -1) {
+                            order.windUp = 5;
+                        } else if (order.windUp > 0) {
+                            order.windUp -= 1;
+                            if (order.windUp == 0) {
+                                order.windUp = -1;
+                                this.attack(target);
+                            }
+                        }
+                    } else {
+                        //do nothing
+                    }
                 }
             } else if (!this.orderBroadcast) {
                 //empty order list, better tell my friends
@@ -118,6 +154,19 @@ Units.Unit = function(owner, type, position) {
         }
     };
 
+    this.attack = function(unit) {
+        this.attackCoolDown = 25;
+        this.followThrough = 10;
+        console.log(this.id + ' attacks ' + unit.id);
+        var o = {
+            type:'order',
+            unit:this.id,
+            position:this.position,
+            order:{type:'attack', unit:'unit.id'}
+        };
+        this.messages.push(o);
+    };
+
     //adds an order to the end of the queue
     this.issueOrder = function(order, clear) {
         if (clear) {
@@ -144,6 +193,11 @@ Units.Unit = function(owner, type, position) {
         return m;
     };
 
+    this.moveForOrder = function(order, target, range) {
+        this.orders.shift();
+        this.interruptOrder(new Orders.MoveOrder(target, range, order));
+    };
+
     this.toJSON = function() {
         var order = this.orders[0];
         if (typeof order === 'undefined') {
@@ -157,7 +211,8 @@ Units.Unit = function(owner, type, position) {
             speed:this.speed,
             maxhp:this.maxhp,
             hp:this.hp,
-            order:order
+            order:order,
+            owner:this.owner
         };
     };
 };

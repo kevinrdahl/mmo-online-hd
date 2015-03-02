@@ -27,6 +27,10 @@ module.exports = Orders;
 
 var LinAlg = require('../../www/js/linalg');
 
+Orders.validUnit = function(o, units) {
+    return ('unit' in o && (typeof o.unit === 'string' || o.unit instanceof String) && o.unit in units);
+};
+
 Orders.interpret = function(o, uId, units) {
     if (!('type' in o))
         return null;
@@ -37,7 +41,7 @@ Orders.interpret = function(o, uId, units) {
         if ('point' in o && o.point instanceof LinAlg.Vector2) {
             target.type = 'point';
             target.point = o.point;
-        } else if ('unit' in o && (typeof o === 'string' || o instanceof String) && o.unit != uId && o.unit in units) {
+        } else if (Orders.validUnit(o, units) && o.unit != uId) {
             target.type = 'unit';
             target.unit = o.unit;
             if ('offset' in o && typeof o.offset === 'number' && o%1 === 0) {
@@ -48,6 +52,9 @@ Orders.interpret = function(o, uId, units) {
         }
 
         var order = new Orders.MoveOrder(target, offset, null);
+        return order;
+    } else if (o.type === 'attack' && Orders.validUnit(o, units) && o.unit != uId) { 
+        var order = new Orders.AttackOrder(o.unit);
         return order;
     } else {
         return null;
@@ -65,10 +72,6 @@ Orders.MoveOrder = function(target, offset, nextOrder) {
         this.target = target.unit;
     }
 
-    this.toObj = function() {
-        return {type:'move', point:this.path[this.path.length-1]};
-    };
-
     this.toJSON = function() {
         if (this.path.length == 0) {
             return null;
@@ -79,4 +82,16 @@ Orders.MoveOrder = function(target, offset, nextOrder) {
             };
         }
     };
+};
+
+Orders.AttackOrder = function(target) {
+    this.unit = target;
+    this.windUp = -1;
+
+    this.toJSON = function() {
+        return {
+            type:'attack',
+            unit:this.target
+        };
+    }
 };

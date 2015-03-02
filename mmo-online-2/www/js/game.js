@@ -5,6 +5,7 @@ var Game = function (playerId, connection, stage) {
     var _this = this;
     var css = 'font-size:200%; font-weight:bold; background:#222; color:#f60';
     console.log('%c MMO Online ', css);
+    console.log('Signed in as player ' + playerId);
 
     this.playerId = playerId;
     this.connection = connection;
@@ -40,8 +41,11 @@ var Game = function (playerId, connection, stage) {
     UI.onLeftMouseDrag = function(v1, v2) {_this.onLeftMouseDrag(v1, v2)};
     UI.onRightMouseClick = function(v) {_this.onRightMouseClick(v)};
 
-    this.currentStep = connection.syncStep;
-    this.tickLen = 100;
+    this.currentStep = connection.syncStep; //always increments by 1
+    this.confirmedStep = connection.syncStep-1; //step before the last in which messages were received
+    this.simStep = connection.syncStep; //the last step that has actually been simulated
+
+    this.tickLen = 50;
     this.lastStepTime = new Date().getTime();
     this.nextStepTime = this.lastStepTime + this.tickLen;
     this.delayAdjustRate = 0.2;
@@ -63,7 +67,10 @@ var Game = function (playerId, connection, stage) {
         var _this = this;
         var currentTime = new Date().getTime();
 
-        this.update();
+        this.currentStep++;
+        while (this.simStep < this.currentStep) {
+            this.update();
+        }
 
         this.lastStepTime = currentTime;
         this.setNextStepTime();
@@ -71,11 +78,11 @@ var Game = function (playerId, connection, stage) {
     };
 
     this.update = function() {
-        this.currentStep++;
+        this.simStep++;
 
         //read messages
-        if (typeof this.messages[this.currentStep] !== 'undefined') {
-            var messages = this.messages[this.currentStep];
+        if (typeof this.messages[this.simStep] !== 'undefined') {
+            var messages = this.messages[this.simStep];
             for (var i = 0; i < messages.length; i++) {
                 var msg = messages[i];
                 var unit;
@@ -118,7 +125,7 @@ var Game = function (playerId, connection, stage) {
         });
 
 
-        this.states[this.currentStep] = JSON.stringify(this.state);
+        this.states[this.simStep] = JSON.stringify(this.state);
     };
 
     this.draw = function() {
@@ -133,9 +140,15 @@ var Game = function (playerId, connection, stage) {
             this.graphicsOverlay.drawRect(v1.x, v1.y, v2.x-v1.x, v2.y-v1.y);
         }
 
-        for (var id in this.state.units) {
+        /*while (this.simStep < this.currentStep) {
+            this.update();
+        }*/
+
+        var state = JSON.parse(this.states[this.currentStep], this.stateJSONReviver);
+
+        for (var id in state.units) {
             if (id in this.sprites) {
-                var unit = this.state.units[id];
+                var unit = state.units[id];
                 var sprite = this.sprites[id];
 
                 sprite.draw(stepProgress, unit, this.texGraphics);
@@ -159,10 +172,7 @@ var Game = function (playerId, connection, stage) {
                 delete this.states[this.lastMessageStep];
             }
 
-            if (msg.step <= this.currentStep && msg.type !== 'step') {
-                //console.log('%c' + this.currentStep + ': ' + msg.step, 'font-weight:bold;');
-                this.rewind(msg.step);
-            }
+            this.controlTime(msg.step, (msg.type !== 'step'));
         }
     };
 
@@ -179,9 +189,28 @@ var Game = function (playerId, connection, stage) {
         }
     };
 
+    this.controlTime = function(msgStep, needSim) {
+        this.confirmedStep = msgStep-1;
+
+        if (msgStep <= this.simStep && needSim) {
+            console.log('%cRewind ' + (this.simStep - this.confirmedStep), 'color:#fff; background:#f06;');
+            this.state = JSON.parse(this.states[this.confirmedStep], this.stateJSONReviver);
+            this.simStep = this.confirmedStep;
+        }
+
+        while (this.simStep < this.confirmedStep) {
+            this.update();
+        }
+    };
+
     //takes the object from a 'see' message
     this.addUnit = function(o) {
         var unit = new Units.Unit(o);
+        if (unit.owner == this.playerId) {
+            unit.control = 'self';
+        } else {
+            unit.control = 'friend';
+        }
         if (!(unit.id in this.sprites)) {
             var sprite = new Units.UnitSprite(unit, this.textureManager);
             this.spriteContainer.addChild(sprite.container);
@@ -204,12 +233,13 @@ var Game = function (playerId, connection, stage) {
     this.selectUnit = function(id) {
         this.selected[id] = true;
         this.sprites[id].select();
-        //this.sprites[id].sprite.tint = 0x66ff66;
     };
 
     this.deselectUnit = function(id) {
         delete this.selected[id];
-        this.sprites[id].deselect();
+        if (id in this.sprites) {
+            this.sprites[id].deselect();
+        }
     };
 
     this.deselectAll = function() {

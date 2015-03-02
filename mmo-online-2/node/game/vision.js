@@ -40,6 +40,28 @@ Vision.Vision = function () {
             delete this.observers[o].seenUnits[id];
         }
     };
+
+    this.getUnitObservers = function(id) {
+        var r = [];
+        var seen;
+        if (id in this.units) {
+            for (var oId in this.observers) {
+                seen = this.unitSeen(id, oId);
+                if (seen) {
+                    r.push(oId);
+                }
+            }
+        }
+        return r;
+    };
+
+    this.unitSeen = function(uId, oId) {
+        if (this.observers[oId].seenUnits[uId]) {
+            return true;
+        } else {
+            return false;
+        }
+    };
 };
 
 Vision.Observer = function(id) {

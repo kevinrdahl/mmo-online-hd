@@ -7,7 +7,9 @@ Units.Unit = function(o) {
     for (var prop in o) {
         this[prop] = o[prop];
     }
-    this.nextPosition = this.position.copy();
+    if (typeof this.nextPosition === 'undefined') {
+        this.nextPosition = this.position.copy();
+    }
     this.class = 'unit';
 
     this.update = function() {
@@ -34,18 +36,19 @@ Units.Unit = function(o) {
 };
 
 Units.UnitSprite = function(unit, texManager) {
+    var color = HUD.colors[unit.control];
     this.container = new PIXI.DisplayObjectContainer;
 
     this.sprite = new PIXI.Sprite(texManager.getTexture(unit.sprite));
     this.sprite.anchor.x = 0.5;
     this.sprite.anchor.y = 0.8;
 
-    this.hpBar = new HUD.Bar(this.sprite.width, Math.round(this.sprite.width/6), 0x00ff00, unit.hp, unit.maxhp);
+    this.hpBar = new HUD.Bar(this.sprite.width, Math.round(this.sprite.width/6), color, unit.hp, unit.maxhp);
     this.hpBar.sprite.anchor.x = 0.5;
     this.hpBar.sprite.position.y = Math.floor(this.sprite.height/4) + 1;
 
     var maxDimension = Math.max(this.sprite.width, this.sprite.height);
-    this.selectionCircle = new HUD.Circle(maxDimension*1.1, maxDimension*1.1/2, 0x00ff00, 3);
+    this.selectionCircle = new HUD.Circle(maxDimension*1.1, maxDimension*1.1/2, color, 3);
     this.selectionCircle.sprite.anchor.x = 0.5;
     this.selectionCircle.sprite.anchor.y = 0.5;
     this.selectionCircle.setInactive();
