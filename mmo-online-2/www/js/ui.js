@@ -11,8 +11,10 @@ var UI = {
     rightMouseDragging:false,
     mousePosition: new LinAlg.Vector2(0,0),
     cameraPosition: new LinAlg.Vector2(0,0),
-    cameraScaleY: 0.5,
+    cameraScaleY: 1/Math.SQRT2,
     idNum:0,
+    mouseDragDistance:15,
+
 
     //defaults, to be overwritten when needed
     onLeftMouseClick: function(v) {
@@ -79,9 +81,6 @@ var UI = {
         UI.buttonSelected = null;
         b.updateStyle(false, false);
     },
-
-
-    mouseDragDistance:10,
 
     init:function() {
         var _this = this;

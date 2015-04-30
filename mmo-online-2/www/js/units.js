@@ -48,7 +48,11 @@ Units.UnitSprite = function(unit, texManager) {
     this.hpBar.sprite.position.y = Math.floor(this.sprite.height/4) + 1;
 
     var maxDimension = Math.max(this.sprite.width, this.sprite.height);
-    this.selectionCircle = new HUD.Circle(maxDimension*1.1, maxDimension*1.1/2, color, 3);
+    this.selectionCircle = new HUD.Circle(
+        Math.round(maxDimension*1.1),
+        Math.round(maxDimension*1.1*UI.cameraScaleY), 
+        color, 
+        3);
     this.selectionCircle.sprite.anchor.x = 0.5;
     this.selectionCircle.sprite.anchor.y = 0.5;
     this.selectionCircle.setInactive();
