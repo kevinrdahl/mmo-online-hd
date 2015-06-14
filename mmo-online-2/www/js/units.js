@@ -24,12 +24,12 @@ Units.Unit = function(o) {
     };
 
     this.stepTowards = function(point) {
-        if (this.position.distanceTo(point) <= this.speed) {
+        if (this.nextPosition.distanceTo(point) <= this.speed) {
             this.nextPosition = point.copy();
             return true;
         } else {
-            var angle = this.position.angleTo(point);
-            this.nextPosition = this.position.offset(angle, this.speed);
+            var angle = this.nextPosition.angleTo(point);
+            this.nextPosition = this.nextPosition.offset(angle, this.speed);
             return false;
         }
     };
@@ -37,7 +37,7 @@ Units.Unit = function(o) {
 
 Units.UnitSprite = function(unit, texManager) {
     var color = HUD.colors[unit.control];
-    this.container = new PIXI.DisplayObjectContainer;
+    this.container = new PIXI.DisplayObjectContainer();
 
     this.sprite = new PIXI.Sprite(texManager.getTexture(unit.sprite));
     this.sprite.anchor.x = 0.5;
@@ -57,9 +57,14 @@ Units.UnitSprite = function(unit, texManager) {
     this.selectionCircle.sprite.anchor.y = 0.5;
     this.selectionCircle.setInactive();
 
+    this.floatingText = [];
+    this.floatingTextContainer = new PIXI.DisplayObjectContainer();
+    this.floatingTextContainer.position.y = this.sprite.height * -0.9;
+
     this.container.addChild(this.selectionCircle.sprite);
     this.container.addChild(this.sprite);
     this.container.addChild(this.hpBar.sprite);
+    this.container.addChild(this.floatingTextContainer);
 
     this.draw = function(stepProgress, unit, graphics) {
         this.hpBar.draw(graphics);
@@ -68,6 +73,14 @@ Units.UnitSprite = function(unit, texManager) {
         drawPosition = UI.worldToView(drawPosition);
         this.container.position.x = drawPosition.x;
         this.container.position.y = drawPosition.y;
+
+        for (var i = 0; i < this.floatingText.length; i++) {
+            var fText = this.floatingText[i];
+            fText.draw();
+            if (fText.remove) {
+                this.floatingTextContainer.removeChild(fText.text);
+            }
+        }
     };
 
     this.getPosition = function() {
@@ -83,5 +96,10 @@ Units.UnitSprite = function(unit, texManager) {
 
     this.deselect = function() {
         this.selectionCircle.setInactive();
+    };
+
+    this.addFloatingText = function(fText) {
+        this.floatingText.push(fText);
+        this.floatingTextContainer.addChild(fText.text);
     };
 };

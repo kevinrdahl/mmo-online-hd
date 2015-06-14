@@ -28,7 +28,8 @@ module.exports = Orders;
 var LinAlg = require('../../www/js/linalg');
 
 Orders.validUnit = function(o, units) {
-    return ('unit' in o && (typeof o.unit === 'string' || o.unit instanceof String) && o.unit in units);
+    var ret = ('unit' in o && o.unit in units);
+    return ret;
 };
 
 Orders.interpret = function(o, uId, units) {
@@ -53,9 +54,11 @@ Orders.interpret = function(o, uId, units) {
 
         var order = new Orders.MoveOrder(target, offset, null);
         return order;
-    } else if (o.type === 'attack' && Orders.validUnit(o, units) && o.unit != uId) { 
-        var order = new Orders.AttackOrder(o.unit);
-        return order;
+    } else if (o.type === 'attack') {
+        if (Orders.validUnit(o, units) && o.unit != uId) {
+            var order = new Orders.AttackOrder(o.unit);
+            return order;
+        }
     } else {
         return null;
     }
@@ -82,6 +85,21 @@ Orders.MoveOrder = function(target, offset, nextOrder) {
             };
         }
     };
+
+    this.toString = function() {
+        var s = 'move to';
+        if (this.path.length == 0) {
+            s += ' nowhere';
+        } else {
+            s += ' [' + this.path[0].x + ',' + this.path[0].y + ']';
+        }
+
+        if (this.nextOrder != null) {
+            s += ' then ' + this.nextOrder.toString();
+        }
+
+        return s;
+    };
 };
 
 Orders.AttackOrder = function(target) {
@@ -91,7 +109,11 @@ Orders.AttackOrder = function(target) {
     this.toJSON = function() {
         return {
             type:'attack',
-            unit:this.target
+            unit:this.unit
         };
     }
+
+    this.toString = function() {
+        return 'attack unit ' + this.unit + ' (windup ' + this.windUp + ')';
+    };
 };

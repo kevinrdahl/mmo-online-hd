@@ -70,11 +70,12 @@ HUD.Bar = function(w, h, color, val, maxVal) {
     this.redraw = true;
 
     this.draw = function(graphics) {
-        if (this.redraw) {
+        if (this.redraw && this.flashes.length == 0) {
             this.redraw = false;
-        } else {
+        } else if (!this.redraw) {
             return;
         }
+        var currentTime = new Date().getTime();
         var b = HUD.borderSize(this.w, this.h);
         var w = this.w-b*2;
         var h = this.h-b*2;
@@ -89,12 +90,30 @@ HUD.Bar = function(w, h, color, val, maxVal) {
         //fill
         var fillW = Math.round((this.val / this.maxVal) * w);
 
-        //flashes
-
-
         graphics.beginFill(this.color);
         graphics.drawRect(b,b,fillW,h);
         graphics.endFill();
+
+        //flashes
+        var numExpiredFlashes = 0;
+        for (var i = 0; i < this.flashes.length; i++) {
+            var flash = this.flashes[i];
+            var progress = (currentTime - flash.time) / HUD.flashFadeTime;
+            var flashX = b + Math.round(flash.newVal / this.maxVal * w);
+            var flashW = Math.round((flash.prevVal - flash.newVal) / this.maxVal * w);
+
+            graphics.beginFill(this.flashColor, Math.max(0, 1-progress));
+            graphics.drawRect(flashX,b,flashW,h);
+            graphics.endFill();
+
+            if (progress >= 1) {
+                numExpiredFlashes += 1;
+            }
+        }
+
+        if (numExpiredFlashes > 0) {
+            this.flashes.splice(0,numExpiredFlashes);
+        }
 
         this.tex.render(graphics);
     };
@@ -111,6 +130,18 @@ HUD.Bar = function(w, h, color, val, maxVal) {
         }
         this.val = val;
         this.redraw = true;
+    };
+
+    this.setActive = function() {
+        this.sprite.alpha = 1;
+    };
+
+    this.setInactive = function() {
+        this.sprite.alpha = 0;
+    };
+
+    this.fadeOut = function(duration) {
+
     };
 };
 
@@ -161,5 +192,36 @@ HUD.Circle = function(w, h, color, borderWidth) {
         for (var prop in props) {
             this[prop] = props[prop];
         }
+    };
+};
+
+HUD.FloatingText = function(text, lifeTime, fadeTime, velocity) {
+    this.text = text;
+    this.birthTime = new Date().getTime();
+    this.lastDrawTime = this.birthTime;
+    this.deathTime = this.birthTime + lifeTime;
+    this.fadeEndTime = this.deathTime + fadeTime;
+    this.velocity = velocity;
+    this.remove = false;
+
+    text.anchor.x = 0.5;
+    text.anchor.y = 0.5;
+
+    this.draw = function() {
+
+        var currentTime = new Date().getTime();
+        var displacementFactor = (currentTime-this.lastDrawTime) / 1000;
+        this.text.position.x += this.velocity.x * displacementFactor;
+        this.text.position.y += this.velocity.y * displacementFactor;
+
+        if (currentTime >= this.deathTime) {
+            var progress = (currentTime-this.deathTime) / (this.fadeEndTime-this.deathTime);
+            this.text.alpha = Math.max(0, 1-progress);
+            if (progress >= 1) {
+                this.remove = true;
+            }
+        }
+
+        this.lastDrawTime = currentTime;
     };
 };

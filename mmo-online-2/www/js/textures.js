@@ -1,4 +1,4 @@
-/**
+/*
  * Created by Kevin on 09/02/2015.
  */
 var Textures = {

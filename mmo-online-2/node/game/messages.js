@@ -35,23 +35,28 @@ Messages.dict = function() {
 };
 
 var terms = [
-    'type',
-    'step',
-    'timeSince',
-    'text',
-    'ping',
-    'sync',
+    'attack',
     'chat',
-    'move',
-    'stop',
-    'position',
-    'point',
-    'see',
-    'unit',
-    'order',
-    'makeunit',
+    'damage',
+    'death',
     'global',
-    'kill'
+    'kill',
+    'killer',
+    'makeunit',
+    'move',
+    'order',
+    'ping',
+    'point',
+    'position',
+    'see',
+    'source',
+    'step',
+    'stop',
+    'sync',
+    'text',
+    'timeSince',
+    'type',
+    'unit'
 ];
 var badAbbrevs = [
     'x',

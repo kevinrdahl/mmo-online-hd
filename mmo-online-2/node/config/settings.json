@@ -1,0 +1,6 @@
+{
+	"tickLen":50,
+	"port":8999,
+
+	"unitDecayTime":10000
+}

@@ -1,0 +1,11 @@
+{
+	"host"     : "mightnot.work",
+    "user"     : "mmoo",
+    "password" : "a series of parallel lines",
+    "database" : "mmoo",
+
+    "dataQueries":{
+    	"mobTypes":"SELECT * FROM d_MobType;",
+    	"graphics":"SELECT * FROM d_Graphic;"
+    }
+}
