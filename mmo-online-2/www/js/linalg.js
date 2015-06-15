@@ -76,7 +76,7 @@ LinAlg.Vector2 = function(x,y) {
             x:Math.round(this.x*10),
             y:Math.round(this.y*10)
         };
-    }
+    };
 };
 
 //returns toString of a number to a certain precision
@@ -115,6 +115,16 @@ LinAlg.toRadians = function(angle) {
 
 LinAlg.toDegrees = function(angle) {
     return (angle*180)/Math.PI;
+};
+
+LinAlg.clamp = function(num, min, max) {
+    if (num > max) {
+        return max;
+    } else if (num < min) {
+        return min;
+    } else {
+        return num;
+    }
 };
 
 //v flipped across the line x=i

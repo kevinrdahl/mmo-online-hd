@@ -15,13 +15,20 @@ var Game = function (playerId, connection, stage) {
     this.spriteContainer = new PIXI.DisplayObjectContainer();
 
     this.HUD = new Interface.HUDLayer();
-    this.HUD.addElement(new Interface.Pane(300, 10, 300, 50));
 
     this.stage.addChild(this.spriteContainer);
     this.stage.addChild(this.graphicsOverlay);
     this.stage.addChild(this.HUD.container);
 
     this.textureManager = new Textures.TextureManager();
+
+
+    var pane = new Interface.Pane(300, 10, 300, 78);
+    this.HUD.addElement('pane', pane);
+    var sprite = new PIXI.Sprite(this.textureManager.getTexture('icon_backstab2'));
+    var button = new Interface.ActionButton(5,5,sprite);
+    button.setHotkey('m1');
+    pane.addElement(button);
 
     var pane = new UI.Pane(300, 100);
     var actionBar = new UI.ActionBar(0,0,1,2);
@@ -57,7 +64,7 @@ var Game = function (playerId, connection, stage) {
     this.messages = {};
     this.lastMessageStep = connection.syncStep;
 
-    this.statusText = new PIXI.Text('', {font:"16px monospace", fill:"white", align:"left"});
+    this.statusText = new PIXI.Text('', {font:"16px Courier", fill:"white", align:"left"});
     this.stage.addChild(this.statusText);
 
     this.state = {
@@ -144,7 +151,7 @@ var Game = function (playerId, connection, stage) {
         var currentTime = new Date().getTime();
         var stepProgress = (currentTime-this.lastStepTime)/this.tickLen;
 
-        this.HUD.draw();
+        this.HUD.draw(this.texGraphics);
 
         this.graphicsOverlay.clear();
         if (UI.mouseAction == null && UI.leftMouseDragging) {
@@ -279,19 +286,19 @@ var Game = function (playerId, connection, stage) {
 
             if (source.owner == this.playerId) {
                 addText = new PIXI.Text(msg.amount, {
-                    font:"18px Arial", 
+                    font:"18px Tahoma", 
                     fill:"white", 
                     align:"center",
                     stroke:"#000000",
-                    strokeThickness:2
+                    strokeThickness:3
                 });
             } else if (unit.owner == this.playerId) {
                 addText = new PIXI.Text(msg.amount, {
-                    font:"18px Arial", 
+                    font:"18px Tahoma", 
                     fill:"red", 
                     align:"center",
                     stroke:"#000000",
-                    strokeThickness:2
+                    strokeThickness:3
                 });
             }
 
@@ -301,7 +308,7 @@ var Game = function (playerId, connection, stage) {
                         addText,
                         0,
                         750,
-                        {x:0, y:-30}
+                        {x:0, y:-20}
                     )
                 );
             }
@@ -356,6 +363,8 @@ var Game = function (playerId, connection, stage) {
         if (unit != null) {
             this.selectUnit(unit);
         }
+
+        this.HUD.children['pane'].children[0].setCooldown(Date.now() + 5000);
     };
 
     this.onLeftMouseDrag = function(v1, v2) {

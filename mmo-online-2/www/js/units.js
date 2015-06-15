@@ -92,6 +92,7 @@ Units.UnitSprite = function(unit, texManager) {
 
     this.select = function() {
         this.selectionCircle.setActive();
+        this.selectionCircle.highlight();
     };
 
     this.deselect = function() {

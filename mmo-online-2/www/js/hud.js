@@ -2,8 +2,9 @@
  * Created by Kevin on 13/02/2015.
  */
 var HUD = {
-    flashFadeTime:500,
-    circleHighlightTime:500,
+    flashFadeTime:3000,
+    circleExpandTime:200,
+    circleHighlightTime:400,
     borderColor:0x000000,
 
     colors:{
@@ -43,6 +44,23 @@ HUD.interpolateColor = function(color1, color2, progress) {
 
     return HUD.fromRGB(c);
 };
+
+HUD.easeOutExpo = function (t, b, c, d) {
+    return c * ( -Math.pow( 2, -10 * t/d ) + 1 ) + b;
+};
+
+HUD.easeInExpo = function (t, b, c, d) {
+    return c * Math.pow( 2, 10 * (t/d - 1) ) + b;
+};
+
+HUD.easeOutSine = function (t, b, c, d) {
+    return c * Math.sin(t/d * (Math.PI/2)) + b;
+};
+
+HUD.easeInSine = function (t, b, c, d) {
+    return -c * Math.cos(t/d * (Math.PI/2)) + c + b;
+};
+
 
 HUD.getRGB = function(color) {
     return [
@@ -102,6 +120,8 @@ HUD.Bar = function(w, h, color, val, maxVal) {
             var flashX = b + Math.round(flash.newVal / this.maxVal * w);
             var flashW = Math.round((flash.prevVal - flash.newVal) / this.maxVal * w);
 
+            progress = HUD.easeOutExpo(progress, 0, 1, 1);
+
             graphics.beginFill(this.flashColor, Math.max(0, 1-progress));
             graphics.drawRect(flashX,b,flashW,h);
             graphics.endFill();
@@ -149,34 +169,45 @@ HUD.Circle = function(w, h, color, borderWidth) {
     this.w = w*2;
     this.h = h*2;
     this.color = color;
+    this.highlightColor = HUD.highlightColor(this.color);
     this.borderWidth = borderWidth*2;
 
     this.tex = new PIXI.RenderTexture(this.w+this.borderWidth*2,this.h+this.borderWidth*2);
     this.sprite = new PIXI.Sprite(this.tex);
     this.sprite.scale.x = 0.5;
     this.sprite.scale.y = 0.5;
-    this.lastHighlight = new Date().getTime()-HUD.flashFadeTime;
+    this.highlightStart = 0;
+    this.highlightEnd = 0;
+    this.expandEnd = 0;
     this.redraw = true;
 
     this.draw = function(graphics) {
         if (this.redraw) {
-            var highlightProgress = new Date().getTime() - this.lastHighlight;
-            highlightProgress = Math.min(highlightProgress/HUD.circleHighlightTime, 1);
+            this.tex.clear();
+            
+            var highlightProgress = Math.min(1, (Date.now()-this.highlightStart) / (this.highlightEnd-this.highlightStart));
+            var expandProgress = Math.min(1, (Date.now()-this.highlightStart) / (this.expandEnd-this.highlightStart));
+            var color = HUD.interpolateColor(this.highlightColor, this.color, highlightProgress);
+            
+            expandProgress = HUD.easeOutExpo(expandProgress, 0, 1, 1);
+
 
             graphics.clear();
-            graphics.lineStyle(this.borderWidth, this.color, 1);
-            graphics.drawEllipse(this.w/2+this.borderWidth, this.h/2+this.borderWidth, this.w/2*highlightProgress, this.h/2*highlightProgress);
+            graphics.lineStyle(this.borderWidth, color, 1);
+            graphics.drawEllipse(this.w/2+this.borderWidth, this.h/2+this.borderWidth, this.w/2*expandProgress, this.h/2*expandProgress);
 
             this.tex.render(graphics);
 
-            if (highlightProgress == 1) {
+            if (highlightProgress == 1 && expandProgress == 1) {
                 this.redraw = false;
             }
         }
     };
 
     this.highlight = function() {
-        this.lastHighlight = new Date().getTime();
+        this.highlightStart = Date.now();
+        this.highlightEnd = this.highlightStart + HUD.circleHighlightTime;
+        this.expandEnd = this.highlightStart + HUD.circleExpandTime;
         this.redraw = true;
     };
 

@@ -11,7 +11,7 @@ var Client = function (serverURL, port, parentElement) {
     //PIXI
     this.stage = new PIXI.Stage(0x333333);
     this.stage.interactive = true;
-    this.renderer = PIXI.autoDetectRenderer(800, 600);
+    this.renderer = PIXI.autoDetectRenderer(800, 600, null, false, true);
     this.renderer.view.setAttribute('z-index','0');
     parentElement.appendChild(this.renderer.view);
 
