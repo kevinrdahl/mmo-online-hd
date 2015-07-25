@@ -1,6 +1,7 @@
 <?php
-	ini_set('display_errors', 'On');
-	error_reporting(E_ALL | E_STRICT);
+	ini_set('display_errors',1);
+	ini_set('display_startup_errors',1);
+	error_reporting(-1);
 
 	function StartOKResponse () {
 		echo("{\"reponseType\":\"OK\", \"response\":");
