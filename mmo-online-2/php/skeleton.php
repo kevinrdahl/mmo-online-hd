@@ -44,14 +44,14 @@
 			if ($resNum > 0) {
 				echo(",");
 			}
-			echo("\"".$row["id"]."\":\"".$row["note"]."\"");
+			echo("\"".$row["skeleton_id"]."\":\"".$row["note"]."\"");
 			$resNum++;
 		}
 
 		echo("}");
 		EndResponse();
 
-		$statement->close();
+		//$statement->close();
 
 	} else if ($action == "getSkeleton") {
 		$statement = $sqlConnection->prepare("SELECT data FROM d_Skeleton WHERE skeleton_id = ?");
