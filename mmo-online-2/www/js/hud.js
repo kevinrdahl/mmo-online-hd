@@ -8,10 +8,10 @@ var HUD = {
     borderColor:0x000000,
 
     colors:{
-        self:0x00ff00,
+        self:0x00cc00,
         friend:0x0066ff,
-        neutral:0xffff00,
-        enemy:0xff0000
+        neutral:0xcccc00,
+        enemy:0xcc0000
     }
 };
 
@@ -22,7 +22,7 @@ HUD.borderSize = function(w,h) {
 };
 
 HUD.highlightColor = function(color) {
-    var x = 0.75;
+    var x = 0.9;
     var c = HUD.getRGB(color);
 
     c[0] += Math.round((255-c[0])*x);

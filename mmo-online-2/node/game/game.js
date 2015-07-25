@@ -146,7 +146,7 @@ var Game = function(sendMessage) {
                 this.removeUnit(order.unit);
             }
 
-            console.log('Player ' + id + ': ' + JSON.stringify(order));
+            //console.log('Player ' + id + ': ' + JSON.stringify(order));
         } else if (unit in this.units /*&& this.units[unit].owner == id*/) {
             //unit actions
             var o = Orders.interpret(order, unit, this.units);

@@ -3,18 +3,20 @@
  */
 var ws = require('ws');
 var fs = require('fs');
+var net = require('net');
 
 var Data = require('./data');
 var game = require('./game/game');
 var Messages = require('./game/messages');
+var TCP = require('./TCP');
 
 
 GLOBAL.settings = JSON.parse(fs.readFileSync('./config/settings.json', 'utf8'));
+var CONN_WS = 0;
+var CONN_TCP = 1;
 
-
-var Server = function(port) {
+var Server = function() {
     var _this = this;
-    this.port = port;
     this.clients = {};
     this.clientNum = 0;
 
@@ -34,15 +36,25 @@ var Server = function(port) {
     this.onDbConnect = function() {
         console.log('Connected!');
         this.getGameData(function() {
-            _this.startWs();
+            _this.startComms();
             _this.startGame();
         });
     };
 
-    this.startWs = function() {
-        this.wsServer = new ws.Server({port:this.port});
-        this.wsServer.on("connection", function(client){_this.onConnection(client);} );
-        console.log('WebSocket server running on port ' + this.port);
+    this.startComms = function() {
+        this.wsServer = new ws.Server({port:GLOBAL.settings.wsPort});
+        this.wsServer.on("connection", function(client){
+            client.clientType = CONN_WS; 
+            _this.onConnection(client);
+        });
+
+        console.log('WebSocket server running on port ' + GLOBAL.settings.wsPort);
+
+        this.tcpServer = net.createServer(function(socket) {
+            var client = new TCP.tcpClient(socket);
+            client.clientType = CONN_TCP;
+            _this.onConnection(client);
+        }).listen(GLOBAL.settings.tcpPort);
     };
 
     this.startGame = function() {
@@ -60,10 +72,19 @@ var Server = function(port) {
         var id = (this.clientNum++).toString();
         this.clients[id] = client;
         client.id = id;
-        client.on('close', function() {_this.onDisconnect(this.id)});
-        client.on('message', function(data) {_this.onMessage(this.id, data)});
 
-        console.log(id + ' CONNECTED');
+        if (client.clientType == CONN_WS) {
+            client.on('close', function() {_this.onDisconnect(this.id)});
+            client.on('message', function(data) {_this.onMessage(this.id, data)});
+            console.log(id + ' CONNECTED (WS)');
+        } else if (client.clientType == CONN_TCP) {
+            client.onMessage = function(data) {_this.onMessage(this.id, data)};
+            client.onDisconnect = function(){_this.onDisconnect(this.id)};
+            console.log(id + ' CONNECTED (TCP)');
+        } else {
+            console.log('PROBLEM!');
+        }
+
     };
 
     this.onDisconnect = function(id) {

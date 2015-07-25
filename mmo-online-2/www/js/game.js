@@ -284,7 +284,7 @@ var Game = function (playerId, connection, stage) {
             var sprite = this.sprites[msg.unit];
             sprite.hpBar.changeVal(unit.hp, false);
 
-            if (source.owner == this.playerId) {
+            if (source.owner == this.playerId || source.control == 'friend') {
                 addText = new PIXI.Text(msg.amount, {
                     font:"18px Tahoma", 
                     fill:"white", 
@@ -292,7 +292,7 @@ var Game = function (playerId, connection, stage) {
                     stroke:"#000000",
                     strokeThickness:3
                 });
-            } else if (unit.owner == this.playerId) {
+            } else if (unit.owner == this.playerId || unit.control == 'friend') {
                 addText = new PIXI.Text(msg.amount, {
                     font:"18px Tahoma", 
                     fill:"red", 
