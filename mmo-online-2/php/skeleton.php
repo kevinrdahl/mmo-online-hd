@@ -58,10 +58,15 @@
 		$statement = $sqlConnection->prepare("SELECT data FROM d_Skeleton WHERE skeleton_id = ?");
 		$statement->bind_param("i", $id);
 		$statement->execute();
-		$statement->bind_result($data);
+		
+		$result = $statement->get_result();
 
 		StartOKResponse();
-		echo($data);
+		
+		while($row = $result->fetch_assoc()) {
+			echo($row["data"]);
+		}
+
 		EndResponse();
 
 	} else {
