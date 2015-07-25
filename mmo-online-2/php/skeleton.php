@@ -60,13 +60,10 @@
 		$statement->execute();
 		
 		$result = $statement->get_result();
+		$row = $result->fetch_assoc();
 
 		StartOKResponse();
-		
-		while($row = $result->fetch_assoc()) {
-			echo($row["data"]);
-		}
-
+		echo($row);
 		EndResponse();
 
 	} else {
