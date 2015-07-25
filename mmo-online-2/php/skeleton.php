@@ -59,12 +59,14 @@
 		$statement->bind_param("i", $id);
 		$statement->execute();
 		
-		$result = $statement->get_result();
-		$row = $result->fetch_assoc();
+		$statement->bind_result($data);
+		$statement->fetch();
 
 		StartOKResponse();
-		echo($row);
+		echo($data);
 		EndResponse();
+
+		$statement->close();
 
 	} else {
 		ErrorResponse("Invalid action.");
