@@ -34,7 +34,7 @@
 
 	if ($action == "getSkeletonList") {
 		$statement = "SELECT skeleton_id, note FROM d_Skeleton;";
-		$result = sqlConnection->query($statement);
+		$result = $sqlConnection->query($statement);
 		$resNum = 0;
 
 		StartOKResponse();
