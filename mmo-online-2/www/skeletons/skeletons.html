@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Skeletons!</title>
+    <link href="jquery-ui/jquery-ui.css" rel="stylesheet">
+    <!--<link rel="icon" type="img/ico" href="favicon.ico">-->
+
+    <style>
+        html, body {
+            padding:0;
+            margin:0;
+            overflow:hidden;
+            font: 80% "Trebuchet MS", sans-serif;
+            height:100%;
+            width:100%;
+        }
+
+        .no-overflow {
+            overflow:hidden;
+        }
+
+        .no-padding {
+            padding:0;
+        }
+
+        #topDiv {
+            position:relative;
+            width:100%;
+            height:32px;
+            background-color:#1c1c1c;
+            color:#bbbbbb;
+            line-height:32px;
+            padding-left:10px;
+        }
+
+        #leftDiv {
+            position:relative;
+            width:300px;
+            height:100%;
+            float:left;
+            background-color: #262626;
+        }
+
+        #viewDiv {
+            position:relative;
+            height:100%;
+            width:calc(100% - 300px);
+            float:left;
+        }
+
+        select {
+            width: 200px;
+        }
+    </style>
+
+    <script src="jquery-2.1.4.min.js"></script>
+    <script src="jquery-ui/jquery-ui.js"></script>
+    <script src="../js/lib/pixi.js"></script>
+    <script src="js/interpolation.js"></script>
+    <script src="js/skeletons.js"></script>
+    <script src="js/vectors.js"></script>
+    <script src="js/editor.js"></script>
+</head>
+
+<body>
+
+<div id="topDiv" class="no-overflow no-padding">
+    <button class="uiButton" id="saveButton">Save</button>
+</div>
+
+<div id="leftDiv" class="no-overflow no-padding">
+    <div id="menuTabs">
+    <ul>
+        <li><a href="#menuTabs-1">Skeleton</a></li>
+        <li><a href="#menuTabs-2">Costume</a></li>
+    </ul>
+    <div id="menuTabs-1">
+        <select id="skeletonSelect">
+            <option selected="selected">None</option>
+        </select>
+        <button class="uiButton" id="newSkeletonButton" style="vertical-align: top">New</button>
+    </div>
+    <div id="menuTabs-2">
+        <select id="costumeSelect">
+            <option selected="selected">None</option>
+        </select>
+        <button class="uiButton" id="newCostumeButton" style="vertical-align: top">New</button>
+    </div>
+</div>
+</div>
+
+<div id="viewDiv" class="no-overflow no-padding"></div>
+
+<script>
+    $( "#menuTabs" ).tabs();
+    $( ".uiButton").button();
+    $( "#skeletonSelect" ).selectmenu();
+    $( "#costumeSelect" ).selectmenu();
+
+    initEditor();
+</script>
+
+</body>
