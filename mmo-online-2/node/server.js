@@ -8,7 +8,7 @@ var net = require('net');
 var Data = require('./data');
 var game = require('./game/game');
 var Messages = require('./game/messages');
-var TCP = require('./TCP');
+var TCP = require('./tcp');
 
 
 GLOBAL.settings = JSON.parse(fs.readFileSync('./config/settings.json', 'utf8'));
