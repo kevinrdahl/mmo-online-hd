@@ -83,6 +83,7 @@ var buffer = new Buffer(4);
 
 var TCPServer = net.createServer(function (c) {
     connection = c;
+    connection.setNoDelay(true);
 
     //connection.setEncoding('utf8');
     connection.on('end', onTCPDisconnect);

@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+    <title>MMO Online HD 2</title>
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            background-color: #000000;
+            height:100%;
+            width:100%;
+            overflow:hidden;
+        }
+
+        #viewDiv {
+            height: 100%;
+            width: 100%;
+            position: relative;
+        }
+    </style>
+
+    <script src="http://code.jquery.com/jquery-2.1.4.min.js"></script>
+    <script src="js/lib/jsface.min.js"></script>
+    <script src="js/lib/rsa.js"></script>
+
+    <script src="../js/lib/pixi.js"></script>
+    <script src="js/util/util.js"></script>
+    <script src="js/util/vectors.js"></script>
+    <script src="js/util/tweens.js"></script>
+    <script src="js/util/texturegen.js"></script>
+    <script src="js/game.js"></script>
+    <script src="js/conn.js"></script>
+    <script src="js/logger.js"></script>
+    <script src="js/messages.js"></script>
+
+    <script src="js/interface/Config.js"></script>
+    <script src="js/interface/InterfaceElement.js"></script>
+    <script src="js/interface/MaskElement.js"></script>
+    <script src="js/interface/InterfaceText.js"></script>
+    <script src="js/interface/ElementList.js"></script>
+    <script src="js/interface/Panel.js"></script>
+    <script src="js/interface/Window.js"></script>
+    <script src="js/interface/Button.js"></script>
+</head>
+
+<body>
+    <div id="viewDiv"></div>
+
+    <script>
+        var QueryString = function () {
+            var query_string = {};
+            var query = window.location.search.substring(1);
+            var vars = query.split("&");
+            for (var i=0;i<vars.length;i++) {
+                var pair = vars[i].split("=");
+                // If first entry with this name
+                if (typeof query_string[pair[0]] === "undefined") {
+                    query_string[pair[0]] = pair[1];
+                    // If second entry with this name
+                } else if (typeof query_string[pair[0]] === "string") {
+                    var arr = [ query_string[pair[0]], pair[1] ];
+                    query_string[pair[0]] = arr;
+                    // If third or later entry with this name
+                } else {
+                    query_string[pair[0]].push(pair[1]);
+                }
+            }
+            return query_string;
+        } ();
+
+        initGame();
+    </script>
+</body>
+
+</html>
