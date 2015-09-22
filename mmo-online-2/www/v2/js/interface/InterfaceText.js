@@ -7,6 +7,7 @@ var InterfaceText = Class(InterfaceElement, {
 
 		this.text = new PIXI.Text(str, this.font);
 		this.displayObject.addChild(this.text);
+		this.onResize();
 	},
 
 	changeFont: function(font) {

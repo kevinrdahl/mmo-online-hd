@@ -1,8 +1,17 @@
 var ElementList = Class(InterfaceElement, {
 	constructor: function(options) {
 		this.padding = UIConfig.elementListPadding;
+		this.resizeFrom = -1;
 
 		ElementList.$super.call(this, options);
+	},
+
+	draw: function() {
+		if (this.resizeFrom != -1) {
+			this.setPositions(this.resizeFrom);
+			this.resizeFrom = -1;
+		}
+		ElementList.$superp.draw.call(this);
 	},
 
 	addChild: function(child) {
@@ -22,8 +31,9 @@ var ElementList = Class(InterfaceElement, {
 	},
 
 	removeChild: function(child) {
+		var index = this.children.indexOf(child);
+		this.setResizeFrom(index);
 		ElementList.$superp.removeChild.call(this, child);
-		this.setPositions();
 	},
 
 	setPositions: function(start) {
@@ -44,10 +54,14 @@ var ElementList = Class(InterfaceElement, {
 
 	onChildResize: function(child) {
 		var index = this.children.indexOf(child);
-		this.setPositions(index);
+		this.setResizeFrom(index);
 	},
 
-
+	setResizeFrom: function(index) {
+		if (this.resizeFrom == -1 || index < this.resizeFrom) {
+			this.resizeFrom = index;
+		}
+	},
 
 	getTotalHeight: function(num) {
 		num = (typeof num !== "undefined") ? num : this.children.length;
