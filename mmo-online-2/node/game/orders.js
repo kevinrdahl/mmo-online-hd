@@ -19,16 +19,6 @@ var Orders = {
 };
 module.exports = Orders;
 
-Orders.TYPES = {
-    STOP:0,
-    MOVE:1,
-    MOVETO:2,
-    ATTACK:3,
-    PATROL:4,
-    SKILL:5,
-    ATTACKMOVE:6
-};
-
 Orders.Order = Class({
     constructor: function(target, type) {
         this.target = target;
@@ -36,39 +26,26 @@ Orders.Order = Class({
     }
 });
 
-Orders.validUnit = function(o, units) {
-    var ret = ('unit' in o && o.unit in units);
-    return ret;
-};
+//returns a valid order to be queued, or null if the message's order is invalid
+//the order might be meaningless but that's handled in Unit code
+Orders.interpret = function(msg, game) {
+    var order = {type:msg.type};
 
-Orders.interpret = function(o, uId, units) {
-    if (!('type' in o))
-        return null;
+    //dun wanna deal with these yet
+    if (msg.type === Messages.TYPES.PATROL)
+        msg.type = Messages.TYPES.MOVE;
 
-    if (o.type === 'move') {
-        var target = {};
-        var offset = 0;
-        if ('point' in o && o.point instanceof LinAlg.Vector2) {
-            target.type = 'point';
-            target.point = o.point;
-        } else if (Orders.validUnit(o, units) && o.unit != uId) {
-            target.type = 'unit';
-            target.unit = o.unit;
-            if ('offset' in o && typeof o.offset === 'number' && o%1 === 0) {
-                offset = o.offset;
-            }
-        } else {
+
+    if (msg.type === Messages.TYPES.MOVE || msg.type === Messages.TYPES.ATTACKMOVE) {
+        if (!LinAlg.propIsVector2(msg, 'point'))
             return null;
-        }
-
-        var order = new Orders.MoveOrder(target, offset, null);
-        return order;
-    } else if (o.type === 'attack') {
-        if (Orders.validUnit(o, units) && o.unit != uId) {
-            var order = new Orders.AttackOrder(o.unit);
-            return order;
-        }
-    } else {
+        order.point = msg.point;
+    } else if (msg.type === Messages.TYPES.ATTACK || msg.type === Messages.TYPES.MOVETO) {
+        if (!(msg.target in game.units))
+            return null;
+    } else if (msg.type !== Messages.TYPES.STOP) {
         return null;
     }
+
+    return order;
 };

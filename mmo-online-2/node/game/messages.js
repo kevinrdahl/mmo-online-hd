@@ -14,8 +14,12 @@ Messages.TYPES = {
     PATROL:4,
     SKILL:5,
     ATTACKMOVE:6,
-    STOP:7
-}
+    STOP:7,
+    SYNC:8,
+    CHAT:9,
+    COMMAND:10,
+    ERROR:11
+};
 
 Messages.ping = function() {
     var msg = {type:'ping'};
@@ -42,6 +46,23 @@ Messages.dict = function() {
         type:'dict',
         dict:this.abbreviations
     });
+};
+
+Messages.write = function(type, params) {
+    var ret = type.toString() + '|';
+
+    if (params != null) {
+        var str = JSON.stringify(params);
+        ret += str.substring(1, str.length-1);
+    }
+
+    return ret;
+};
+
+Messages.writeTyped = function(msg) {
+    var type = msg.type;
+    delete msg.type;
+    return write(type, msg);
 };
 
 var terms = [
@@ -124,6 +145,7 @@ Messages.parse = function(s) {
     //split at the first bar
     var splitIndex = s.indexOf('|');
     if (splitIndex === -1) {
+        //messages with no payload should include the splitter anyway
         return null;
     }
 
@@ -132,17 +154,14 @@ Messages.parse = function(s) {
         return null;
     }
 
-    var msgParams;
+    var msg;
     try {
-        msgParams = JSON.parse(s.substring(splitIndex+1));
+        msg = JSON.parse('{' + s.substring(splitIndex+1) + '}');
     } catch (e) {
         return null;
     }
 
-    var msg = {
-        type:msgType,
-        params:msgParams
-    };
+    msg.type = msgType;
 
     return msg;
 };

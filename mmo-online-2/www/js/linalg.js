@@ -33,6 +33,10 @@ LinAlg.Vector2 = function(x,y) {
         return LinAlg.toDegrees(Math.atan2(v.y - this.y, v.x - this.x));
     };
 
+    this.equals = function(v) {
+        return (this.x == v.x && this.y == v.y);
+    };
+
     this.midpointTo = function(v) {
         return new LinAlg.Vector2(this.x+(v.x-this.x)/2, this.y+(v.y-this.y)/2);
     };
@@ -60,6 +64,10 @@ LinAlg.Vector2 = function(x,y) {
         return new LinAlg.Vector2(this.x, this.y);
     };
 
+    this.rounded = function() {
+        return new LinAlg.Vector2(Math.round(this.x), Math.round(this.y));
+    };
+
     //don't want to send huge useless floats to clients
     /*this.toJSON = function(places) {
         var x = LinAlg.cutFloat(this.x, places);
@@ -73,8 +81,8 @@ LinAlg.Vector2 = function(x,y) {
 
     this.toJSON = function() {
         return {
-            x:Math.round(this.x*10),
-            y:Math.round(this.y*10)
+            x:this.x,
+            y:this.y
         };
     };
 };
@@ -125,6 +133,19 @@ LinAlg.clamp = function(num, min, max) {
     } else {
         return num;
     }
+};
+
+//checks if a property is vector2, converting if possible
+LinAlg.propIsVector2 = function(obj, prop) {
+    var val = obj[prop];
+    if (val instanceof LinAlg.Vector2) {
+        return true;
+    } else if (Array.isArray(val) && val.length == 2 && typeof val[0] === 'number' && typeof val[1] === 'number') {
+        obj[prop] = new LinAlg.Vector2(val[0], val[1]);
+        return true;
+    }
+    obj[prop] = null;
+    return false;
 };
 
 //v flipped across the line x=i

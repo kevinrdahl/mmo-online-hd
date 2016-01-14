@@ -11,10 +11,13 @@ var Units = {
 module.exports = Units;
 
 Units.Unit = function(properties) {
-    this.id = (Units.unitNum++).toString();
+    this.id = Units.unitNum++;
     this.orders = [];
     this.orderBroadcast = false;
     this.messages = [];
+
+    this.movement = 0; //0 stopped, then the 8 directions starting from UP
+    this.lastMovement = 0;
 
     this.followThrough = 0;
     this.attackCoolDown = 0;
@@ -22,28 +25,81 @@ Units.Unit = function(properties) {
     for (var prop in properties) {
         this[prop] = properties[prop];
     }
-    this.nextPosition = this.position.copy();
     this.dead = false;
+    this.diagonalSpeed = this.speed / Math.SQRT2;
 
-    this.update = function(game) {
-        if (this.attackCoolDown > 0) {
-            this.attackCoolDown -= 1;
+    //figure out what to do!
+    this.think = function(game) {
+        //TODO: if attack moving, check for nearby enemies
+        //similar for patrol, but return to point
+
+        //check that targets are valid
+        while (this.orders.length > 0) {
+            var order = this.orders[0];
+            if (typeof order.target !== 'undefined' && !(order.target in game.units))
+                this.orders.shift();
+            else
+                break;
         }
-        if (this.followThrough > 0) {
-            this.followThrough -= 1;
-        }
-
-        var units = game.units;
-        var order = this.orders[0];
-
-
     };
 
     this.move = function(game) {
-        var order = this.orders[0];
+        this.lastMovement = this.movement;
 
-        if (typeof order === 'undefined') {
-            //fugg
+        if (this.orders.length == 0) {
+            this.movement = 0;
+        } else {
+            var order = this.orders[0];
+            var dest = null;
+
+            if (order.type === Messages.TYPES.MOVE || order.type === Messages.TYPES.ATTACKMOVE) {
+                dest = order.point;
+            } else if (order.type === Messages.TYPES.MOVETO || order.type === Messages.TYPES.ATTACK) {
+                //TODO: include targeted abilities
+                var target = game.units[order.target];
+                var angle = target.position.angleTo(this.position);
+                dest = target.position.offset(angle, this.attackRange);
+            }
+
+            if (dest != null) {
+                if (this.position.distanceTo(dest) <= this.speed) {
+                    this.position = dest.copy();
+                    this.movement = -1;
+
+                    if (order.type === Messages.TYPES.MOVE || order.type === Messages.TYPES.ATTACKMOVE)
+                        this.orders.shift();
+                } else {
+                    //there's surely a more elegant way, but this works
+                    if (this.position.x < dest.x) {
+                        if (this.position.y < dest.y)
+                            this.movement = 2; //UP-RIGHT
+                        else if (this.position.y > dest.y)
+                            this.movement = 4; //DOWN-RIGHT
+                        else
+                            this.movement = 3; //RIGHT
+                    
+                    } else if (this.position.x > dest.x) {
+                        if (this.position.y < dest.y)
+                            this.movement = 8; //UP-LEFT
+                        else if (this.position.y > dest.y)
+                            this.movement = 6; //DOWN-LEFT
+                        else
+                            this.movement = 7; //LEFT
+                    
+                    } else {
+                        if (this.position.y < dest.y)
+                            this.movement = 5; //DOWN
+                        else
+                            this.movement = 1; //UP
+                    }
+                }
+            }
+        }
+
+        if (this.movement !== this.lastMovement) {
+            if (this.movement === -1)
+                this.movement = 0;
+            this.messages.push({type:Messages.TYPES.MOVE, direction:this.movement, position:this.position.rounded()});
         }
     };
 

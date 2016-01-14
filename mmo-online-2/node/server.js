@@ -4,6 +4,9 @@
 var ws = require('ws');
 var fs = require('fs');
 var net = require('net');
+var jsface = require("jsface"),
+    Class  = jsface.Class,
+    extend = jsface.extend;
 
 var Data = require('./data');
 var game = require('./game/game');
@@ -11,16 +14,20 @@ var Messages = require('./game/messages');
 var TCP = require('./tcp');
 
 
+
 GLOBAL.settings = JSON.parse(fs.readFileSync('./config/settings.json', 'utf8'));
 var CONN_WS = 0;
 var CONN_TCP = 1;
 
-var Server = function() {
-    var _this = this;
-    this.clients = {};
-    this.clientNum = 0;
+var Server = Class({
+    constructor: function() {
+        this.clients = {};
+        this.clientNum = 0;
+    },
 
-    this.start = function() {
+    start: function() {
+        var _this = this;
+
         console.log('Reading config files...');
         this.dbConfig = JSON.parse(fs.readFileSync('./config/db.json', 'utf8'));
         this.bannerText = fs.readFileSync('./config/banner.txt', 'utf8');
@@ -31,17 +38,21 @@ var Server = function() {
         this.dao.connect(function() {
             _this.onDbConnect();
         });
-    };
+    },
 
-    this.onDbConnect = function() {
+    tonDbConnect: function() {
+        var _this = this;
+
         console.log('Connected!');
         this.getGameData(function() {
             _this.startComms();
             _this.startGame();
         });
-    };
+    },
 
-    this.startComms = function() {
+    startComms: function() {
+        var _this = this;
+
         this.wsServer = new ws.Server({port:GLOBAL.settings.wsPort});
         this.wsServer.on("connection", function(client){
             client.clientType = CONN_WS; 
@@ -55,18 +66,16 @@ var Server = function() {
             client.clientType = CONN_TCP;
             _this.onConnection(client);
         }).listen(GLOBAL.settings.tcpPort);
-    };
+    },
 
-    this.startGame = function() {
-        this.game = new game.Game(function(id, message){
-            _this.sendMessage(id, message);
-        });
+    startGame: function() {
+        this.game = new game.Game(this);
         this.game.start();
 
         console.log('\n' + this.bannerText + '\n');
-    };
+    },
 
-    this.onConnection = function(client) {
+    onConnection: function(client) {
         var _this = this;
 
         var id = (this.clientNum++).toString();
@@ -85,21 +94,22 @@ var Server = function() {
             console.log('PROBLEM!');
         }
 
-    };
+    },
 
-    this.onDisconnect = function(id) {
+    onDisconnect: function(id) {
         delete this.clients[id];
         this.game.onDisconnect(id);
         console.log(id + ' DISCONNECTED');
-    };
+    },
 
-    this.onMessage = function(id, data) {
+    onMessage: function(id, data) {
         if (data === 'DEFS') {
             //send a big message with all basic communication info
             this.sendMessage(id, Messages.dict());
         } else {
             var msg = Messages.parse(data);
             if (msg == null) {
+                console.log('ERROR parsing message "' + s + '" from client ' + id);
                 return;
             }
 
@@ -114,9 +124,9 @@ var Server = function() {
                 this.game.onMessage(id, msg);
             }
         }
-    };
+    },
 
-    this.sendMessage = function(id, message) {
+    sendMessage: function(id, message) {
         //console.log('to ' + id + ': ' + message);
         if (typeof this.clients[id] !== 'undefined') {
             try {
@@ -126,17 +136,17 @@ var Server = function() {
                 //nop
             }
         }
-    };
+    },
 
-    this.getGameData = function(callback) {
+    getGameData: function(callback) {
         console.log('Retrieving game data...')
         var c = callback;
         this.dao.getGameData(function(data) {
             GLOBAL.gameData = data;
             c();
         });
-    };
-};
+    }
+});
 
 var server = new Server(GLOBAL.settings.port);
 server.start();
