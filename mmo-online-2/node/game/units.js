@@ -25,7 +25,7 @@ Units.Unit = function(properties) {
     this.nextPosition = this.position.copy();
     this.dead = false;
 
-    this.update = function(units) {
+    this.update = function(game) {
         if (this.attackCoolDown > 0) {
             this.attackCoolDown -= 1;
         }
@@ -33,129 +33,22 @@ Units.Unit = function(properties) {
             this.followThrough -= 1;
         }
 
-        while (true) {
-            var order = this.orders[0];
-            if (typeof order !== 'undefined') {
-                if (order instanceof Orders.MoveOrder) {
-                    var needPath = false;
-                    if (order.step == 0 || order.path.length == 0) {
-                        needPath = true;
-                    } else if (!(order.target instanceof LinAlg.Vector2)) {
-                        if (!(order.target in units)) {
-                            this.discardOrder();
-                            continue;
-                        }
-                        if (order.step > Orders.moveToUnitRefresh) {
-                            var dest = order.path[order.path.length-1];
-                            var unit = units[order.target];
-                            if (dest.x != unit.position.x || dest.y != unit.position.y) {
-                                needPath = true;
-                            }
-                        }
-                    }
+        var units = game.units;
+        var order = this.orders[0];
 
-                    if (needPath) {
-                        var targetPoint = (order.target instanceof LinAlg.Vector2) ? order.target : units[order.target].position;
-                        //find a path!
-                        order.path = [];
-                        order.path.push(targetPoint.copy());
-                        this.orderBroadcast = false;
-                    }
 
-                    //announce and carry out the order
-                    if (!this.orderBroadcast) {
-                        //console.log(this.name + ' ' + this.id + ': ' + order.toString());
+    };
 
-                        var o = {
-                            type:'order',
-                            unit:this.id,
-                            position:this.position,
-                            order:JSON.parse(JSON.stringify(order)) //otherwise the path points can be consumed before this is stringified
-                                                                    //TODO: find a better way
-                        };
-                        this.messages.push(o);
+    this.move = function(game) {
+        var order = this.orders[0];
 
-                        this.orderBroadcast = true;
-                    }
-
-                    var done = this.stepTowards(order.path[0]);
-                    if (order.nextOrder != null) {
-                        if (this.nextPosition.distanceTo(order.path[order.path.length-1]) <= order.offset) {
-                            done = true;
-                        }
-                    }
-
-                    if (done) {
-                        this.orderBroadcast = false;
-                        order.path.shift();
-                        if (order.path.length == 0) {
-                            if (order.nextOrder == null) {
-                                this.discardOrder();
-                            } else {
-                                //remove this move order and place the next thing in front
-                                this.orders.shift();
-                                this.interruptOrder(order.nextOrder);
-                            }
-                        }
-                    } else {
-                        order.step++;
-                    }
-                } else if (order instanceof Orders.AttackOrder) {
-                    var target = units[order.unit];
-
-                    if (typeof target === 'undefined' || target.dead) {
-                        this.discardOrder();
-                        continue;
-                    }
-                    //use nextposition here as we might be coming from a moveto
-                    if (order.windUp == -1 && this.nextPosition.distanceTo(target.position) > this.attackRange + this.radius + target.radius) {
-                        this.moveForOrder(order, {type:'unit', unit:order.unit}, this.attackRange + this.radius + target.radius - 5);
-                        continue;
-                    }
-
-                    if (this.attackCoolDown == 0 && this.followThrough == 0) {
-                        if (order.windUp == -1) {
-                            order.windUp = 5;
-                            this.orderBroadcast = false;
-                        } else if (order.windUp > 0) {
-                            order.windUp -= 1;
-                            if (order.windUp == 0) {
-                                order.windUp = -1;
-                                this.attack(target);
-                            }
-                        }
-                    } else {
-                        //do nothing
-                    }
-
-                    if (!this.orderBroadcast) {
-                        //console.log(this.name + ' ' + this.id + ': ' + order.toString());
-                        var o = {
-                            type:'order',
-                            unit:this.id,
-                            position:this.nextPosition,
-                            order:{type:'attack', unit:'unit.id'}
-                        };
-                        this.messages.push(o);
-                        this.orderBroadcast = true;
-                    }
-                } else {
-                    console.log('unit ' + this.id + ': ' + JSON.stringify(order) + '???');
-                }
-            } else if (!this.orderBroadcast) {
-                //empty order list, better tell my friends
-                this.messages.push({
-                    type:'order',
-                    position:this.position,
-                    unit:this.id,
-                    order:{
-                        type:'stop'
-                    }
-                });
-                this.orderBroadcast = true;
-            }
-            break;
+        if (typeof order === 'undefined') {
+            //fugg
         }
+    };
+
+    this.act = function(game) {
+
     };
 
     this.stepTowards = function(point) {

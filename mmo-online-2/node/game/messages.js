@@ -6,6 +6,16 @@ var LinAlg = require('../../www/js/linalg');
 var Messages = {};
 module.exports = Messages;
 
+Messages.TYPES = {
+    PING:0,
+    MOVE:1,
+    MOVETO:2,
+    ATTACK:3,
+    PATROL:4,
+    SKILL:5,
+    ATTACKMOVE:6,
+    STOP:7
+}
 
 Messages.ping = function() {
     var msg = {type:'ping'};
@@ -104,4 +114,35 @@ Messages.expand = function(s) {
         s = s.split('"'+prop+'"').join('"'+this.expansions[prop]+'"');
     }
     return JSON.parse(s, reviver);
+};
+
+/*
+    MESSAGE FORMAT:
+    3|"param":"string", "param2":num
+ */
+Messages.parse = function(s) {
+    //split at the first bar
+    var splitIndex = s.indexOf('|');
+    if (splitIndex === -1) {
+        return null;
+    }
+
+    var msgType = parseInt(s.substring(0, splitIndex), 10);
+    if (isNaN(msgType) || !(msgType in Messages.TYPES)) {
+        return null;
+    }
+
+    var msgParams;
+    try {
+        msgParams = JSON.parse(s.substring(splitIndex+1));
+    } catch (e) {
+        return null;
+    }
+
+    var msg = {
+        type:msgType,
+        params:msgParams
+    };
+
+    return msg;
 };

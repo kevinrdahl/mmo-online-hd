@@ -73,23 +73,25 @@ var Server = function(port) {
     };
 
     this.onMessage = function(id, data) {
-
-        var msg = Messages.expand(data);
-        /*try {
-            msg = Messages.expand(data);
-        } catch (e) {
-            console.log('ERROR: malformed message from ' + id + ', "' + data + '"');
-            return;
-        }*/
-
-        if (msg.type === 'dict') {
+        if (data === 'DEFS') {
+            //send a big message with all basic communication info
             this.sendMessage(id, Messages.dict());
-        } else if (msg.type === 'sync') {
-            this.game.onConnect(id);
-        } else if (msg.type === 'ping') {
-            this.sendMessage(id, Messages.ping());
         } else {
-            this.game.onMessage(id, msg);
+            var msg = Messages.parse(data);
+            if (msg == null) {
+                return;
+            }
+
+            if (msg.type === Messages.TYPES.PING) {
+                //just reply, server doesn't care about timing
+                this.sendMessage(id, Messages.ping());
+            } else if (msg.type === Messages.TYPES.SYNC) {
+                //client is ready to connect to the game
+                //pass it along
+                this.game.onConnect(id);
+            } else {
+                this.game.onMessage(id, msg);
+            }
         }
     };
 

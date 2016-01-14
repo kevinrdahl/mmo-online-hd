@@ -1,0 +1,30 @@
+THOUGHTS
+
+Change client message syntax to reduce size:
+	Rather than {"type":"order", "order":{whatever}}
+	Just [Orders.TYPES.MOVE, {params}]
+
+	Every order obviously has a type
+		saves |"t":| (4 chars)
+	These can be easily enumerated on both client and server
+		saves a couple of quotes (2 chars)
+
+	Shave the array syntax off entirely
+		saves |[,]| (3 chars)
+	Further, remove the curlies around the object 
+		saves 2 chars, just 1 if using a new delimiter after the number
+
+	NEW NEW SYNTAX:
+		3|"param":"string", "param2":num
+
+	TOTAL SAVINGS:
+		About 10 chars per message.
+		Yay!
+
+	NOTE: will need to tweak the message compressor
+	OTHER NOTE: expect that most messages from client are orders, so the order types can just be among the message types.
+
+	~~For now just leave this shit uncompressed.~~
+
+
+Organize this god damn client holy shit.
