@@ -1,6 +1,7 @@
 {
 	"tickLen":50,
-	"port":8999,
+	"wsPort":8999,
+	"tcpPort":9001,
 
 	"unitDecayTime":10000
 }

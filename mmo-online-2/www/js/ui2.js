@@ -1,6 +1,18 @@
 /**
  * Created by Kevin on 10/02/2015.
  */
+var UI = function(div) {
+    this.div = div || window.document;
+    this.init();
+}
+
+UI.prototype.noop = function(){};
+
+UI.prototype.init = function() {
+    var _this = this;
+    this.div.addEventListener('mousedown', function(e){_this.onMouseDown(e);});
+}
+
 var UI = {
     div: null,
     buttonSelected:null,

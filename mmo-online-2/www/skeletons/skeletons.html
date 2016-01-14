@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Skeletons!</title>
+    <link href="jquery-ui/jquery-ui.css" rel="stylesheet">
+    <!--<link rel="icon" type="img/ico" href="favicon.ico">-->
+
+    <style>
+        html, body {
+            padding:0;
+            margin:0;
+            overflow:hidden;
+            font: 80% "Arial", sans-serif;
+            height:100%;
+            width:100%;
+            background-color: white;
+        }
+
+        .no-overflow {
+            overflow:hidden;
+        }
+
+        .no-padding {
+            padding:0;
+        }
+
+        #topDiv {
+            position:relative;
+            width:100%;
+            height:32px;
+            color:#ffffff;
+            line-height:32px;
+            padding-left:10px;
+        }
+
+        #leftDiv {
+            position:relative;
+            width:300px;
+            height:100%;
+            float:left;
+        }
+
+        #viewDiv {
+            position:relative;
+            height:100%;
+            width:calc(100% - 300px);
+            float:left;
+        }
+
+        #timeDiv {
+            padding-left:10px;
+            width:380px;
+        }
+
+        .positionable {
+            position: absolute;
+            display: block;
+            right: 0;
+            bottom: 0;
+        }
+
+        select {
+            width: 200px;
+        }
+    </style>
+
+    <script src="jquery-2.1.4.min.js"></script>
+    <script src="jquery-ui/jquery-ui.js"></script>
+    <script src="../js/lib/pixi.js"></script>
+    <script src="js/interpolation.js"></script>
+    <script src="js/skeletons.js"></script>
+    <script src="js/vectors.js"></script>
+    <script src="js/editor.js"></script>
+</head>
+
+<body>
+
+<div id="topDiv" class="no-overflow no-padding">
+    <button class="uiButton" id="saveButton">Save</button>
+    <div id="timeDiv" class="no-overflow no-padding">
+        <button id="timeButtonFirst">First</button>
+        <button id="timeButtonPrevious">Previous</button>
+        <button id="timeButtonPausePlay">Pause/Play</button>
+        <button id="timeButtonStop">Stop</button>
+        <button id="timeButtonNext">Next</button>
+        <button id="timeButtonLast">Last</button>
+        &nbsp;
+        <input id="timeSpinner"></input>
+    </div>
+</div>
+
+<div id="leftDiv" class="no-overflow no-padding">
+    <div id="menuTabs">
+    <ul>
+        <li><a href="#menuTabs-1">Skeleton</a></li>
+        <li><a href="#menuTabs-2">Costume</a></li>
+    </ul>
+    <div id="menuTabs-1">
+        <select id="skeletonSelect">
+            <option selected="selected">Unnamed Skeleton</option>
+        </select>
+        <button class="uiButton" id="newSkeletonButton" style="vertical-align: top">New</button>
+        <h3>Bone</h3>
+        <div id="boneTools">
+            <input type="radio" id="boneMove" name="radio" checked="checked"><label for="boneMove">Move</label>
+            <input type="radio" id="boneStretch" name="radio"><label for="boneStretch">Stretch</label>
+            <input type="radio" id="boneAdd" name="radio"><label for="boneAdd">Add</label>
+            <input type="radio" id="boneRemove" name="radio"><label for="boneRemove">Remove</label>
+        </div>
+    </div>
+    <div id="menuTabs-2">
+        <select id="costumeSelect">
+            <option selected="selected">Unnamed Costume</option>
+        </select>
+        <button class="uiButton" id="newCostumeButton" style="vertical-align: top">New</button>
+    </div>
+</div>
+</div>
+
+<div id="viewDiv" class="no-overflow no-padding"></div>
+
+<script>
+    $( "#menuTabs" ).tabs({
+        activate:function(event,ui){
+            console.log(ui.newTab.index());
+        } 
+    });
+    $( ".uiButton").button();
+    $( "#skeletonSelect" ).selectmenu();
+    $( "#costumeSelect" ).selectmenu();
+
+    $( "#boneTools" ).buttonset();
+
+    $("#timeButtonFirst").button({icons:{primary:"ui-icon-seek-first"}, text:false});
+    $("#timeButtonPrevious").button({icons:{primary:"ui-icon-seek-prev"}, text:false});
+    $("#timeButtonPausePlay").button({icons:{primary:"ui-icon-play"}, text:false});
+    $("#timeButtonStop").button({icons:{primary:"ui-icon-stop"}, text:false});
+    $("#timeButtonNext").button({icons:{primary:"ui-icon-seek-next"}, text:false});
+    $("#timeButtonLast").button({icons:{primary:"ui-icon-seek-end"}, text:false});
+    $("#timeSpinner").spinner({min:0, value:0});
+
+    function positionTimeDiv() {
+        $( "#timeDiv" ).position({
+            my: "right bottom",
+            at: "right top",
+            of: $( "#viewDiv" )
+        });
+    }
+    positionTimeDiv();
+
+
+    initEditor();
+</script>
+
+</body>
