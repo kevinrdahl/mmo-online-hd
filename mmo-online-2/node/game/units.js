@@ -101,10 +101,43 @@ Units.Unit = function(properties) {
                 this.movement = 0;
             this.messages.push({type:Messages.TYPES.MOVE, direction:this.movement, position:this.position.rounded()});
         }
+
+        //TODO: make nice when not tired
+        if (this.movement != 0) {
+            switch(this.movement) {
+                case 1: 
+                    this.position.y += this.speed;
+                    break;
+                case 2: 
+                    this.position.x += this.diagonalSpeed; 
+                    this.position.y += this.diagonalSpeed;
+                    break;
+                case 3: 
+                    this.position.x += this.speed;
+                    break;
+                case 4: 
+                    this.position.x += this.diagonalSpeed; 
+                    this.position.y -= this.diagonalSpeed;
+                    break;
+                case 5: 
+                    this.position.y -= this.speed;
+                    break;
+                case 6: 
+                    this.position.x -= this.diagonalSpeed; 
+                    this.position.y -= this.diagonalSpeed;
+                    break;
+                case 7: 
+                    this.position.x -= this.speed;
+                    break;
+                case 8: 
+                    this.position.x -= this.diagonalSpeed; 
+                    this.position.y += this.diagonalSpeed;
+                    break;
+        }
     };
 
     this.act = function(game) {
-
+        //fugg
     };
 
     this.stepTowards = function(point) {
