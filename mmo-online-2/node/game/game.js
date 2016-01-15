@@ -1,58 +1,54 @@
 /**
  * Created by Kevin on 31/01/2015.
  */
+var Game = {};
+module.exports = Game;
+
 var UnitTypes = require('./unit-types');
 var Messages = require('./messages');
 var Orders = require('./orders');
 var Units = require('./units');
 var LinAlg = require('../../www/js/linalg');
 var Vision = require('./vision');
+var jsface = require("jsface"),
+    Class  = jsface.Class,
+    extend = jsface.extend;
 
-var Game = function(server) {
-    this.server = server;
-    this.startTime = null;
-    this.currentStep = null;
-    this.nextStepTime = null;
-    this.lastStepTime = null;
-    this.tickLen = GLOBAL.settings.tickLen;
+Game.Game = Class({
+    constructor: function(server, name) {
+        this.server = server;
+        this.name = name;
+        this.startTime = null;
+        this.currentStep = null;
+        this.nextStepTime = null;
+        this.lastStepTime = null;
+        this.tickLen = GLOBAL.settings.tickLen;
 
-    this.vision = new Vision.Vision();
-    this.players = {};
-    this.units = {};
+        this.vision = null;
+        this.players = {};
+        this.units = {};
+    },
 
-    this.update = function() {
+    start: function() {
+        this.vision = new Vision.Vision();
+        this.startTime = new Date().getTime();
+        this.lastStepTime = this.startTime - this.tickLen;
+        this.nextStepTime = this.startTime;
+
+        this.update();
+    },
+
+    update: function() {
         var _this = this;
         this.currentStep += 1;
 
-        //update vision
-        var visionChanges = this.vision.getChanges();
-        for (var pId in visionChanges) {
-            for (var uId in visionChanges[pId]) {
-                if (visionChanges[pId][uId] == false) {
-                    this.sendMessage(pId, JSON.stringify({step:this.currentStep, type:'unsee', unit:uId}));
-                } else {
-                    this.sendMessage(pId, JSON.stringify({step:this.currentStep, type:'see', unit:this.units[uId]}));
-                }
-            }
-        }
-
-        //unit thinking
-        for (var unitId in this.units) {
-            var unit = this.units[unitId];
-            unit.think(this);
-        }
-
-        //unit movement
-        for (var unitId in this.units) {
-            var unit = this.units[unitId];
-            unit.move(this);
-        }
-
-        //unit actions
-        for (var unitId in this.units) {
-            var unit = this.units[unitId];
-            unit.act(this);
-        }
+        this.updateVision();
+        this.unitAI();
+        this.unitMovement();
+        this.updateUnitPostions();
+        this.unitActions();
+        this.checkUnitStatus();
+        this.sendStep();
 
         //check unit status
         for (var unitId in this.units) {
@@ -69,7 +65,7 @@ var Game = function(server) {
                 s = Messages.writeTyped(m);
 
                 for (var j = 0; j < observers.length; j++) {
-                    this.sendMessage(observers[j], s);
+                    this.sendString(observers[j], s);
                 }
             }
 
@@ -84,7 +80,7 @@ var Game = function(server) {
         //send out step messages to players who haven't received anything in a while
         for (var pId in this.players) {
             if (this.players[pId].lastMessageStep < this.currentStep - 5) {
-                this.sendMessage(pId, Messages.step(this.currentStep));
+                this.sendString(pId, Messages.step(this.currentStep));
             }
         }
 
@@ -93,64 +89,83 @@ var Game = function(server) {
         this.nextStepTime += this.tickLen;
 
         setTimeout(function(){_this.update();}, this.nextStepTime - currentTime);
-    };
+    },
 
-    this.start = function() {
-        this.initGameData();
+    updateVision: function() {
+        var visionChanges = this.vision.getChanges();
+        for (var pId in visionChanges) {
+            for (var uId in visionChanges[pId]) {
+                if (visionChanges[pId][uId] == false) {
+                    //this.sendString(pId, JSON.stringify({step:this.currentStep, type:'unsee', unit:uId}));
+                } else {
+                    //this.sendString(pId, JSON.stringify({step:this.currentStep, type:'see', unit:this.units[uId]}));
+                }
+            }
+        }
+    },
 
-        this.startTime = new Date().getTime();
-        this.lastStepTime = this.startTime - this.tickLen;
-        this.nextStepTime = this.startTime;
-        this.update();
+    unitAI: function() {
+        var unit
+        for (var unitId in this.units) {
+            this.units[unitId].think(this);
+        }
+    },
 
-        //this.addUnit(new Units.Unit('me', 'default', new LinAlg.Vector2(300,100)));
-        //this.addUnit(new Units.Unit('me', 'default', new LinAlg.Vector2(100,300)));
-        //this.units['1'].issueOrder(Orders.interpret({type:'attack', unit:'0'}, '1', this.units));
-    };
+    unitMovement: function() {
+        var unit
+        for (var unitId in this.units) {
+            this.units[unitId].move(this);
+        }
+    },
 
-    this.initGameData = function() {
-        //do stuff with the game data!
-    };
+    updateUnitPostions: function() {
 
-    this.onConnect = function(id) {
-        if (id in this.players) {
+    },
+
+    unitActions: function() {
+        var unit
+        for (var unitId in this.units) {
+            this.units[unitId].act(this);
+        }
+    },
+
+    onConnect: function(clientId) {
+        if (clientId in this.players) {
             return;
         }
 
-        this.players[id] = new Player(id);
+        this.players[clientId] = new Player(clientId);
         var currentTime = new Date().getTime();
-        this.sendMessage(id, Messages.sync(id, this.currentStep, currentTime - this.lastStepTime));
-        this.vision.addObserver(id);
-    };
+        //this.sendString(clientId, Messages.sync(clientId, this.currentStep, currentTime - this.lastStepTime));
+        this.vision.addObserver(clientId);
+    },
 
-    this.onDisconnect = function(id) {
-        if (id in this.players) {
-            delete this.players[id];
+    onDisconnect: function(clientId) {
+        if (clientId in this.players) {
+            delete this.players[clientId];
         }
-        this.vision.removeObserver(id);
-    };
+        this.vision.removeObserver(clientId);
+    },
 
-    this.onMessage = function(id, msg) {
-        if (msg.type === Messages.TYPES.PING) {
-            server.sendMessage(id, Messages.write(Messages.TYPES.PING, null));
-        } else if (msg.type === Messages.TYPES.CHAT) {
-            var s = Messages.chat(id, msg.text);
-            this.broadcast(s);
+    onMessage: function(clientId, msg) {
+        if (msg.type === Messages.TYPES.CHAT) {
+            //var s = Messages.chat(clientId, msg.text);
+            //this.broadcast(s);
             //TODO: channels and PM
         } else if (msg.type in Messages.TYPES) {
-            this.onOrder(id, msg);
+            this.onOrder(clientId, msg);
         } else {
-            console.log('Unknown message type ' + msg.type + ' from player ' + id);
+            console.log('Unknown message type ' + msg.type + ' from player ' + clientId);
         }
-    };
+    },
 
-    this.broadcast = function(s) {
+    broadcast: function(s) {
         for (var playerId in this.players) {
-            server.sendMessage(playerId, s);
+            server.sendString(playerId, s);
         }
-    };
+    },
 
-    this.onOrder = function(playerId, msg) {
+    onOrder: function(playerId, msg) {
         if (typeof msg.type === Messages.TYPES.COMMAND) {
             if (msg.command === 'makeUnit') {
                 if (!LinAlg.propIsVector2(msg, 'point'))
@@ -177,20 +192,22 @@ var Game = function(server) {
                 console.log('Weird order from ' + playerId + ': ' + JSON.stringify(order));
             }
         }
-    };
+    },
 
-    this.addUnit = function(unit) {
+    addUnit: function(unit) {
         this.units[unit.id] = unit;
         this.vision.addUnit(unit.id);
-    };
+    },
 
-    this.removeUnit = function(id) {
-        this.vision.removeUnit(id);
-        delete this.units[id];
-    };
-}; module.exports.Game = Game;
+    removeUnit: function(unitId) {
+        this.vision.removeUnit(unitId);
+        delete this.units[unitId];
+    }
+});
 
-var Player = function(id) {
-    this.id = id;
-    this.lastMessageStep = 0;
-};
+var Player = Class({
+    constructor: function(id) {
+        this.id = id;
+        this.lastMessageStep = 0;
+    }
+});

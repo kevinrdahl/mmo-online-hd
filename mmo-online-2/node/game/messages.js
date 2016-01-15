@@ -1,10 +1,14 @@
 /**
  * Created by Kevin on 01/02/2015.
  */
-var LinAlg = require('../../www/js/linalg');
-
 var Messages = {};
 module.exports = Messages;
+
+var jsface = require("jsface"),
+    Class  = jsface.Class,
+    extend = jsface.extend,
+    LinAlg = require('../../www/js/linalg'),
+    MMOOUtil = require('./mmoo-util');
 
 Messages.TYPES = {
     PING:0,
@@ -15,131 +19,152 @@ Messages.TYPES = {
     SKILL:5,
     ATTACKMOVE:6,
     STOP:7,
-    SYNC:8,
+    JOIN:8,
     CHAT:9,
     COMMAND:10,
-    ERROR:11
+    ERROR:11,
+    LOGIN:12,
+    HANDSHAKE:13,
+    GAMES:14
 };
 
-Messages.ping = function() {
-    var msg = {type:'ping'};
-    return this.abbreviate(msg);
-};
+Messages.expansions = {};
+Messages.abbreviations = {};
 
-Messages.step = function(step) {
-    var msg = {type:'step', step:step};
-    return this.abbreviate(msg);
-};
+//create abbreviations
+//NOTE: To distinguish them from properties which are simply very short, they all begin with a '?'
+(function() {
+    //terms that should be shortened in communication
+    var terms = [
+        'name',
+        'password',
+        'success',
+        'name'
+    ];
 
-Messages.sync = function(id, step, timeSince) {
-    var msg = {id:id, type:'sync', step:step, timeSince:timeSince};
-    return this.abbreviate(msg);
-};
+    var pool = new MMOOUtil.IdPool();
+    var term, abbreviation;
 
-Messages.chat = function(id, text) {
-    var msg = {type:'chat', id:id, text:text};
-    return this.abbreviate(msg);
-};
-
-Messages.dict = function() {
-    return JSON.stringify({
-        type:'dict',
-        dict:this.abbreviations
-    });
-};
-
-Messages.write = function(type, params) {
-    var ret = type.toString() + '|';
-
-    if (params != null) {
-        var str = JSON.stringify(params);
-        ret += str.substring(1, str.length-1);
+    for (var i = 0; i < terms.length; i++) {
+        term = terms[i];
+        abbreviation = '?' + pool.get();
+        Messages.abbreviations[term] = abbreviation;
+        Messages.expansions[abbreviation] = term;
     }
+})();
 
-    return ret;
-};
+//never changes, why rewrite it?
+Messages.PING = Messages.TYPES.PING.toString() + '|';
 
-Messages.writeTyped = function(msg) {
-    var type = msg.type;
-    delete msg.type;
-    return write(type, msg);
-};
+/***********
+ * CLASSES *
+ ***********/
+Messages.Message = Class({
+    constructor: function(type, params) {
+        this.type = type;
+        this.params = params;
+    },
 
-var terms = [
-    'attack',
-    'chat',
-    'damage',
-    'death',
-    'global',
-    'kill',
-    'killer',
-    'makeunit',
-    'move',
-    'order',
-    'ping',
-    'point',
-    'position',
-    'see',
-    'source',
-    'step',
-    'stop',
-    'sync',
-    'text',
-    'timeSince',
-    'type',
-    'unit'
-];
-var badAbbrevs = [
-    'x',
-    'y'
-];
-Messages.abbreviations = {}; //long to short
-Messages.expansions = {};    //short to long
-
-for (var i = 0; i < terms.length; i++) {
-    var abbrev = terms[i][0];
-    if (badAbbrevs.indexOf(abbrev) != -1) {
-        abbrev = 'p';
+    serialize: function() {
+        return this.type.toString() + '|' + Messages.abbreviate(this.params);
     }
-    if (abbrev in Messages.expansions) {
-        for (var j = 0; ; j++) {
-            if (!(abbrev+j in Messages.expansions)) {
-                abbrev = abbrev+j;
-                break;
-            }
+});
+
+//NOTE: unique in that it doesn't serialize to standard message format, since the client wouldn't know how to read it
+Messages.Handshake = Class(Messages.Message, {
+    constructor: function() {},
+
+    serialize: function() {
+        return JSON.stringify({
+            types: Messages.TYPES,
+            abbreviations: Messages.abbreviations,
+            expansions: Messages.expansions
+        });
+    }
+})
+
+Messages.LogInResponse = Class(Messages.Message, {
+    constructor: function(success) {
+        Messages.Handshake.$super.call(this, Messages.TYPES.HANDSHAKE, {
+            success: success
+        });
+    }
+});
+
+Messages.GameList = Class(Messages.Message, {
+    constructor: function(games) {
+        var descriptions = [];
+        for (var i = 0; i < games.length; i++) {
+            descriptions.push({
+                name: games[i].name,
+                players: Object.keys(games[i].players).length
+            });
         }
+        Messages.Handshake.$super.call(this, Messages.TYPES.HANDSHAKE, {
+            games: descriptions
+        });
     }
-    Messages.abbreviations[terms[i]] = abbrev;
-    Messages.expansions[abbrev] = terms[i];
-}
+});
 
 
-function reviver(key, value) {
-    if (typeof value === 'object' && value != null && 'x' in value && 'y' in value) {
-        return new LinAlg.Vector2(value.x/10, value.y/10);
-    } else {
-        return value;
-    }
-}
 
-Messages.abbreviate = function(o) {
-    var s = JSON.stringify(o);
-    for (var prop in this.abbreviations) {
-        s = s.split('"'+prop+'"').join('"'+this.abbreviations[prop]+'"');
+/*************
+ * FUNCTIONS *
+ *************/
+//stringifies the object, without curlies, and abbreviating its keys (not those of any values)
+//will need a rehaul if deeper abbreviation is required
+Messages.abbreviate = function(obj) {
+    var clone = {};
+    var keys = Object.keys(obj);
+    var key;
+    var s;
+    
+    for (var i = 0; i < keys.length; i++) {
+        key = keys[i];
+        clone[Messages.getAbbreviation(key)] = obj[key];
     }
-    return s;
+
+    s = JSON.stringify(clone);
+    return s.substring(1, s.length-1);
 };
 
+Messages.getAbbreviation = function(term) {
+    if (term.length < 3)
+        return term;
+    var abbreviation = Messages.abbreviations[term];
+    if (typeof abbreviation === 'undefined')
+        return term;
+    return abbreviation;
+};
+
+//returns a param list from the portion of the message following '|'
 Messages.expand = function(s) {
-    for (var prop in this.expansions) {
-        s = s.split('"'+prop+'"').join('"'+this.expansions[prop]+'"');
+    var obj = JSON.parse('{' + s + '}');
+    var keys = Object.keys(obj);
+    var key, fullKey;
+
+    for (var i = 0; i < keys.length; i++) {
+        key = keys[i];
+        fullKey = Messages.getExpansion(key);
+        obj[fullKey] = obj[key];
+        delete obj[key];
     }
-    return JSON.parse(s, reviver);
+
+    return obj;
+};
+
+Messages.getExpansion = function(term) {
+    if (term.length == 1)
+        return term;
+    var expansion = Messages.expansions[term];
+    if (typeof expansion === 'undefined')
+        return term;
+    return expansion;
 };
 
 /*
-    MESSAGE FORMAT:
-    3|"param":"string", "param2":num
+ * MESSAGE FORMAT:
+ * type|"param":"string", "param2":num
  */
 Messages.parse = function(s) {
     //split at the first bar
@@ -150,18 +175,16 @@ Messages.parse = function(s) {
     }
 
     var msgType = parseInt(s.substring(0, splitIndex), 10);
-    if (isNaN(msgType) || !(msgType in Messages.TYPES)) {
+    if (isNaN(msgType)) {
         return null;
     }
 
-    var msg;
+    var params;
     try {
-        msg = JSON.parse('{' + s.substring(splitIndex+1) + '}');
+        params = Messages.expand(s.substring(splitIndex+1));
     } catch (e) {
         return null;
     }
 
-    msg.type = msgType;
-
-    return msg;
+    return new Messages.Message(msgType, params);
 };

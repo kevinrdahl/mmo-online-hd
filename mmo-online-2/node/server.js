@@ -40,7 +40,7 @@ var Server = Class({
         });
     },
 
-    tonDbConnect: function() {
+    onDbConnect: function() {
         var _this = this;
 
         console.log('Connected!');
@@ -69,7 +69,7 @@ var Server = Class({
     },
 
     startGame: function() {
-        this.game = new game.Game(this);
+        this.game = new game.Game(this, "Game 1");
         this.game.start();
 
         console.log('\n' + this.bannerText + '\n');
@@ -91,9 +91,11 @@ var Server = Class({
             client.onDisconnect = function(){_this.onDisconnect(this.id)};
             console.log(id + ' CONNECTED (TCP)');
         } else {
-            console.log('PROBLEM!');
+            console.log('CONNECTION PROBLEM!');
         }
 
+        //send handshake
+        this.sendString(id, new Messages.Handshake().serialize());
     },
 
     onDisconnect: function(id) {
@@ -102,38 +104,35 @@ var Server = Class({
         console.log(id + ' DISCONNECTED');
     },
 
-    onMessage: function(id, data) {
-        if (data === 'DEFS') {
-            //send a big message with all basic communication info
-            this.sendMessage(id, Messages.dict());
-        } else {
-            var msg = Messages.parse(data);
-            if (msg == null) {
-                console.log('ERROR parsing message "' + s + '" from client ' + id);
-                return;
-            }
+    onMessage: function(clientId, data) {
+        var msg = Messages.parse(data);
+        if (msg == null) {
+            console.log('ERROR parsing message "' + data + '" from client ' + clientId);
+            return;
+        }
 
-            if (msg.type === Messages.TYPES.PING) {
-                //just reply, server doesn't care about timing
-                this.sendMessage(id, Messages.ping());
-            } else if (msg.type === Messages.TYPES.SYNC) {
-                //client is ready to connect to the game
-                //pass it along
-                this.game.onConnect(id);
-            } else {
-                this.game.onMessage(id, msg);
-            }
+        if (msg.type === Messages.TYPES.PING) {
+            //just reply, server doesn't care about timing
+            this.sendString(clientId, Messages.PING);
+        } else if (msg.type == Messages.TYPES.GAMES) {
+            //return a list of active games/worlds
+            this.sendString(clientId, new Messages.GameList([this.game]).serialize());
+        } else if (msg.type === Messages.TYPES.JOIN) {
+            //client is ready to connect to a game
+            //TODO: check whether that game exists (for now there's only 1 game)
+            this.game.onConnect(clientId);
+        } else {
+            this.game.onMessage(clientId, msg);
         }
     },
 
-    sendMessage: function(id, message) {
-        //console.log('to ' + id + ': ' + message);
+    sendString: function(id, s) {
+        //console.log('to ' + id + ': ' + s);
         if (typeof this.clients[id] !== 'undefined') {
             try {
-                this.clients[id].send(message);
+                this.clients[id].send(s);
             } catch (e) {
                 console.log(e);
-                //nop
             }
         }
     },
