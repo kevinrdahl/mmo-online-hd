@@ -23,6 +23,22 @@ Orders.Order = Class({
     constructor: function(target, type) {
         this.target = target;
         this.type = type;
+    },
+
+    isMove: function() {
+        return (
+            this.type === Messages.TYPES.MOVE 
+            || this.type === Messages.TYPES.ATTACKMOVE
+            || this.type === Messages.TYPES.PATROL
+        );
+    },
+
+    isUnitTargeted: function() {
+        return {
+            this.type === Messages.TYPES.ATTACK
+            || this.type === Messages.TYPES.MOVETO
+            || this.type === Messages.TYPES.SKILL
+        };
     }
 });
 

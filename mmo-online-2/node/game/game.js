@@ -212,7 +212,11 @@ Game.Game = Class({
 
     spawnProjectile: function(originId, targetId) {
         //TODO
-    }
+    },
+
+    unitExists: function(unitId) {
+        return (typeof this.units[unitId] !== 'undefined');
+    };
 });
 
 var Player = Class({

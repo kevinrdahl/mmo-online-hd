@@ -33,6 +33,10 @@ LinAlg.Vector2 = function(x,y) {
         return LinAlg.toDegrees(Math.atan2(v.y - this.y, v.x - this.x));
     };
 
+    this.offsetTo = function(v, dist) {
+        return this.offset(this.angleTo(v), dist);
+    };
+
     this.equals = function(v) {
         return (this.x == v.x && this.y == v.y);
     };
@@ -80,10 +84,7 @@ LinAlg.Vector2 = function(x,y) {
     };*/
 
     this.toJSON = function() {
-        return {
-            x:this.x,
-            y:this.y
-        };
+        return [this.x, this.y];
     };
 };
 

@@ -4,6 +4,7 @@
 var LinAlg = require('../../www/js/linalg');
 var Orders = require('./orders');
 var UnitTypes = require('./unit-types');
+var Messages = require('./messages');
 var jsface = require("jsface"),
     Class  = jsface.Class,
     extend = jsface.extend,
@@ -26,7 +27,7 @@ Units.Unit = Class({
 
             return Math.floor(angle / (360.0/Units.Unit.NUM_DIRECTIONS));
         }
-    }
+    }, 
     constructor: function(unitType, id, owner, position) {
         this.unitType = unitType;
         this.id = id;
@@ -69,13 +70,54 @@ Units.Unit = Class({
         //If attack moving, insert attack order on nearby enemy.
         //Similar for patrol
         //Actual AI might go in in the future
+
+        //discard orders which can't be fulfilled
+        var order;
+        while (this.orders.length > 0) {
+            order = this.orders[0];
+            if (order.isUnitTargeted) {
+                if (!game.unitExists(order.params.target) 
+                    || (order.type === Messages.TYPES.ATTACK && !game.units[order.params.target].alive)) {
+
+                    order.shift();
+                    continue;
+                }
+            }
+
+            break;
+        }
     },
 
     move: function(game) {
         //If current order is move/attack-move, do it
         //Or if current order is something else and out of range, move closer
+        this.lastDirection = this.direction;
+        this.direction = -1;
 
-        this.lastMovement = this.movement;
+        if (this.orders.length > 0) {
+            var order = this.orders[0];
+            var dest = null;
+
+            if order.isMove() {
+                dest = order.params.point;
+            } else if (order.type === Messages.TYPES.ATTACK) {
+                var target = game.units[order.params.target];
+                var range = this.distanceToAttack(target);
+                if (this.position.distanceTo(target.position) >= range) {
+                    dest = target.position.offsetTo(this.position, range);
+                }
+            }
+
+            if (dest != null) {
+                this.direction = Units.Unit.getDirection(this.position.angleTo(dest));
+                var movement = Units.Unit.DIRECTION_VECTORS[this.direction].scaled(this.moveSpeed);
+                this.nextPosition = this.position.add(movement);
+            }
+        }
+
+        if (this.direction !== this.lastDirection) {
+            this.messages.push(new Messages.UnitMove(game.currentStep, this.id, this.direction, this.position));
+        }
     },
 
     updatePosition: function() {
@@ -84,8 +126,15 @@ Units.Unit = Class({
 
     act: function(game) {
         //If order is an action and unit is able, DO IT
-    },
+        //for now, this is just attacking
 
+        if (this.orders.length > 0) {
+            var order = this.orders[0];
+            if (order.type === Messages.TYPES.ATTACK && this.inAttackRange()) {
+                this.attack(game, game.units[order.params.target]);
+            }
+        }
+    },
 
     attack: function(game, unit) {
         //attackSpeed is number of attacks per second
@@ -123,7 +172,7 @@ Units.Unit = Class({
 
         this.stop();
 
-        this.messages.push({new Messages.UnitDeath(this.id)});
+        this.messages.push(new Messages.UnitDeath(this.id));
         this.dead = true;
     },
 
@@ -155,6 +204,14 @@ Units.Unit = Class({
         return m;
     },
 
+    distanceToAttack: function(target) {
+        return this.radius + target.radius + this.attackRange;
+    },
+
+    inAttackRange: function(target) {
+        return (this.position.distanceTo(target.position) <= this.distanceToAttack(target));
+    },
+
     toJSON: function() {
         var props = {
             id: this.id,
@@ -178,7 +235,7 @@ Units.Unit = Class({
 
 //create directions and vectors
 (function() {
-    var angleDelta = 360.0 / Unit.Unit.NUM_DIRECTIONS;
+    var angleDelta = 360.0 / Units.Unit.NUM_DIRECTIONS;
     var angle = 0;
 
     for (var i = 0; i < Units.Unit.NUM_DIRECTIONS; i++) {

@@ -46,6 +46,7 @@ Messages.abbreviations = {};
         'source',
         'position',
         'point',
+        'position',
         'moveSpeed',
         'attackDamage',
         'attackRange',
@@ -123,11 +124,12 @@ Messages.GameList = Class(Messages.Message, {
 });
 
 Messages.UnitMove = Class(Messages.Message, {
-    constructor: function(step, unitId, direction) {
+    constructor: function(step, unitId, direction, position) {
         Messages.UnitMove.$super.call(this, Messages.TYPES.MOVE, {
             step: step,
             unit: unitId,
-            direction: direction
+            direction: direction,
+            position: position
         });
     }
 });
