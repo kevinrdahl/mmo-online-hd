@@ -25,7 +25,9 @@ Messages.TYPES = {
     ERROR:11,
     LOGIN:12,
     HANDSHAKE:13,
-    GAMES:14
+    GAMES:14,
+    HEALTH:15,
+    DEATH:16
 };
 
 Messages.expansions = {};
@@ -36,9 +38,23 @@ Messages.abbreviations = {};
 (function() {
     //terms that should be shortened in communication
     var terms = [
+        'step',
+        'unit',
+        'direction',
+        'target',
+        'amount',
+        'source',
+        'position',
+        'point',
+        'moveSpeed',
+        'attackDamage',
+        'attackRange',
+        'attackSpeed',
+        'radius',
         'name',
         'password',
         'success',
+        'alive',
         'name'
     ];
 
@@ -85,7 +101,7 @@ Messages.Handshake = Class(Messages.Message, {
 
 Messages.LogInResponse = Class(Messages.Message, {
     constructor: function(success) {
-        Messages.Handshake.$super.call(this, Messages.TYPES.HANDSHAKE, {
+        Messages.LogInResponse.$super.call(this, Messages.TYPES.LOGIN, {
             success: success
         });
     }
@@ -100,13 +116,50 @@ Messages.GameList = Class(Messages.Message, {
                 players: Object.keys(games[i].players).length
             });
         }
-        Messages.Handshake.$super.call(this, Messages.TYPES.HANDSHAKE, {
+        Messages.GameList.$super.call(this, Messages.TYPES.GAMES, {
             games: descriptions
         });
     }
 });
 
+Messages.UnitMove = Class(Messages.Message, {
+    constructor: function(step, unitId, direction) {
+        Messages.UnitMove.$super.call(this, Messages.TYPES.MOVE, {
+            step: step,
+            unit: unitId,
+            direction: direction
+        });
+    }
+});
 
+Messages.UnitAttack = Class(Messages.Message, {
+    constructor: function(step, unitId, targetId) {
+        Messages.UnitAttack.$super.call(this, Messages.TYPES.MOVE, {
+            step: step,
+            unit: unitId,
+            target: targetId
+        });
+    }
+});
+
+Messages.UnitHealth = Class(Messages.Message, {
+    constructor: function(unitId, sourceId, amount) {
+        Messages.UnitHealth.$super.call(this, Messages.TYPES.HEALTH, {
+            step: step,
+            unit: unitId,
+            source: sourceId,
+            amount: amount
+        });
+    }
+});
+
+Messages.UnitDeath = Class(Messages.Message, {
+    constructor: function(unitId) {
+        Messages.UnitDeath.$super.call(this, Messages.TYPES.DEATH, {
+            unit: unitId
+        });
+    }
+});
 
 /*************
  * FUNCTIONS *

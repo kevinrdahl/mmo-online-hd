@@ -47,35 +47,8 @@ Game.Game = Class({
         this.unitMovement();
         this.updateUnitPostions();
         this.unitActions();
-        this.checkUnitStatus();
+        this.sendUnitMessages();
         this.sendStep();
-
-        //check unit status
-        for (var unitId in this.units) {
-            var unit = this.units[unitId];
-            var messages = unit.getMessages();
-            var observers = this.vision.getUnitObservers(unitId);
-
-            for (var i = 0; i < messages.length; i++) {
-                var m = messages[i];
-                var s;
-
-                m.step = this.currentStep;
-                m.unit = unitId;
-                s = Messages.writeTyped(m);
-
-                for (var j = 0; j < observers.length; j++) {
-                    this.sendString(observers[j], s);
-                }
-            }
-
-            if (unit.dead) {
-                unit.decayTime -= 1;
-                if (unit.decayTime <= 0) {
-                    this.removeUnit(unitId);
-                }
-            }
-        }
 
         //send out step messages to players who haven't received anything in a while
         for (var pId in this.players) {
@@ -126,6 +99,39 @@ Game.Game = Class({
         var unit
         for (var unitId in this.units) {
             this.units[unitId].act(this);
+        }
+    },
+
+    sendUnitMessages: function() {
+        var unit, 
+            messages, 
+            observers,
+            m,
+            s;
+
+        for (var unitId in this.units) {
+            unit = this.units[unitId];
+            messages = unit.getMessages();
+            observers = this.vision.getUnitObservers(unitId);
+
+            for (var i = 0; i < messages.length; i++) {
+                m = messages[i];
+
+                m.params.step = this.currentStep;
+                m.params.unit = unitId;
+                s = Messages.writeTyped(m);
+
+                for (var j = 0; j < observers.length; j++) {
+                    this.sendString(observers[j], s);
+                }
+            }
+
+            if (unit.dead) {
+                unit.decayTime -= 1;
+                if (unit.decayTime <= 0) {
+                    this.removeUnit(unitId);
+                }
+            }
         }
     },
 
@@ -202,6 +208,10 @@ Game.Game = Class({
     removeUnit: function(unitId) {
         this.vision.removeUnit(unitId);
         delete this.units[unitId];
+    },
+
+    spawnProjectile: function(originId, targetId) {
+        //TODO
     }
 });
 

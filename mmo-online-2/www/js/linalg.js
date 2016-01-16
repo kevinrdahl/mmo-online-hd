@@ -140,7 +140,7 @@ LinAlg.propIsVector2 = function(obj, prop) {
     var val = obj[prop];
     if (val instanceof LinAlg.Vector2) {
         return true;
-    } else if (Array.isArray(val) && val.length == 2 && typeof val[0] === 'number' && typeof val[1] === 'number') {
+    } else if (Array.isArray(val) && val.length === 2 && typeof val[0] === 'number' && typeof val[1] === 'number') {
         obj[prop] = new LinAlg.Vector2(val[0], val[1]);
         return true;
     }

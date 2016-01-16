@@ -4,166 +4,131 @@
 var LinAlg = require('../../www/js/linalg');
 var Orders = require('./orders');
 var UnitTypes = require('./unit-types');
+var jsface = require("jsface"),
+    Class  = jsface.Class,
+    extend = jsface.extend,
+    MMOOUtil = require('./mmoo-util');
 
-var Units = {
-    unitNum:0
-};
+var Units = {};
 module.exports = Units;
 
-Units.Unit = function(properties) {
-    this.id = Units.unitNum++;
-    this.orders = [];
-    this.orderBroadcast = false;
-    this.messages = [];
+Units.Unit = Class({
+    $static: {
+        idPool: new MMOOUtil.IdPool(),
+        NUM_DIRECTIONS: 16,
+        DIRECTIONS: [],
+        DIRECTION_VECTORS: [],
 
-    this.movement = 0; //0 stopped, then the 8 directions starting from UP
-    this.lastMovement = 0;
+        getDirection: function(angle) {
+            angle = angle % 360;
+            if (angle < 0)
+                angle += 360;
 
-    this.followThrough = 0;
-    this.attackCoolDown = 0;
-
-    for (var prop in properties) {
-        this[prop] = properties[prop];
+            return Math.floor(angle / (360.0/Units.Unit.NUM_DIRECTIONS));
+        }
     }
-    this.dead = false;
-    this.diagonalSpeed = this.speed / Math.SQRT2;
+    constructor: function(unitType, id, owner, position) {
+        this.unitType = unitType;
+        this.id = id;
+        this.owner = owner;
+        this.game = game;
 
-    //figure out what to do!
-    this.think = function(game) {
-        //TODO: if attack moving, check for nearby enemies
-        //similar for patrol, but return to point
+        this.position = position;
+        this.nextPosition = position.copy();
+        this.direction = -1;
+        this.lastDirection = -1;
 
-        //check that targets are valid
-        while (this.orders.length > 0) {
-            var order = this.orders[0];
-            if (typeof order.target !== 'undefined' && !(order.target in game.units))
-                this.orders.shift();
-            else
-                break;
-        }
-    };
+        this.cooldowns = {attack:0};
+        this.followThrough = 0;
 
-    this.move = function(game) {
+        this.orders = [];
+        this.messages = [];
+
+        this.moveSpeed = 2000;
+        this.radius = 250;
+        this.graphic = null;
+        this.projectileGraphic = null;
+        this.projectileSpeed = -1;
+
+        this.alive = true;
+
+        //STATS
+        this.hp = 100;
+        this.hpMax = 100;
+        this.mp = 100;
+        this.mpMax = 100;
+        this.attackDamage = 20;
+        this.attackSpeed = 1;
+        this.attackRange = 150;
+        this.level = 1;
+        this.xp = 0;
+        this.xpNeeded = 100;
+    },
+
+    think: function(game) {
+        //If attack moving, insert attack order on nearby enemy.
+        //Similar for patrol
+        //Actual AI might go in in the future
+    },
+
+    move: function(game) {
+        //If current order is move/attack-move, do it
+        //Or if current order is something else and out of range, move closer
+
         this.lastMovement = this.movement;
+    },
 
-        if (this.orders.length == 0) {
-            this.movement = 0;
-        } else {
-            var order = this.orders[0];
-            var dest = null;
+    updatePosition: function() {
+        this.position = this.nextPosition;
+    },
 
-            if (order.type === Messages.TYPES.MOVE || order.type === Messages.TYPES.ATTACKMOVE) {
-                dest = order.point;
-            } else if (order.type === Messages.TYPES.MOVETO || order.type === Messages.TYPES.ATTACK) {
-                //TODO: include targeted abilities
-                var target = game.units[order.target];
-                var angle = target.position.angleTo(this.position);
-                dest = target.position.offset(angle, this.attackRange);
-            }
+    act: function(game) {
+        //If order is an action and unit is able, DO IT
+    },
 
-            if (dest != null) {
-                if (this.position.distanceTo(dest) <= this.speed) {
-                    this.position = dest.copy();
-                    this.movement = -1;
 
-                    if (order.type === Messages.TYPES.MOVE || order.type === Messages.TYPES.ATTACKMOVE)
-                        this.orders.shift();
-                } else {
-                    //there's surely a more elegant way, but this works
-                    if (this.position.x < dest.x) {
-                        if (this.position.y < dest.y)
-                            this.movement = 2; //UP-RIGHT
-                        else if (this.position.y > dest.y)
-                            this.movement = 4; //DOWN-RIGHT
-                        else
-                            this.movement = 3; //RIGHT
-                    
-                    } else if (this.position.x > dest.x) {
-                        if (this.position.y < dest.y)
-                            this.movement = 8; //UP-LEFT
-                        else if (this.position.y > dest.y)
-                            this.movement = 6; //DOWN-LEFT
-                        else
-                            this.movement = 7; //LEFT
-                    
-                    } else {
-                        if (this.position.y < dest.y)
-                            this.movement = 5; //DOWN
-                        else
-                            this.movement = 1; //UP
-                    }
-                }
-            }
-        }
+    attack: function(game, unit) {
+        //attackSpeed is number of attacks per second
+        this.cooldowns.attack = Math.round((1000.0/GLOBAL.settings.tickLen) / this.attackSpeed);
 
-        if (this.movement !== this.lastMovement) {
-            if (this.movement === -1)
-                this.movement = 0;
-            this.messages.push({type:Messages.TYPES.MOVE, direction:this.movement, position:this.position.rounded()});
-        }
-    };
+        //just let followthrough be half the attack cooldown
+        this.followThrough = Math.round(this.cooldowns.attack/2.0);
 
-    this.act = function(game) {
-
-    };
-
-    this.stepTowards = function(point) {
-        if (this.position.distanceTo(point) <= this.speed) {
-            this.nextPosition = point.copy();
-            return true;
-        } else {
-            var angle = this.position.angleTo(point);
-            this.nextPosition = this.position.offset(angle, this.speed);
-            return false;
-        }
-    };
-
-    this.attack = function(unit) {
-        this.attackCoolDown = (1000/GLOBAL.settings.tickLen) / this.attackSpeed; //attackSpeed is number of attacks per second
-        this.followThrough = 10;
+        this.messages.push(new Messages.UnitAttack(game.currentStep, this.id, unit.id));
  
-        //announce a hit
-        //TODO: unless it's a projectile then announce a projectile appearing
-        unit.takeDamage(this.id, this.attackDamage, 'poo');
-    };
+        if (this.projectileSpeed > 0) {
+            //spawn projectile
+            game.spawnProjectile(this, unit);
+        } else {
+            unit.takeDamage(this, this.attackDamage, 'physical');
+        }
+    },
 
-    this.takeDamage = function(source, amount, type) {
-        console.log(this.id + ' takes ' + amount + ' ' + type + ' damage from ' + source + '.');
+    takeDamage: function(source, amount, type) {
+        console.log(this.id + ' takes ' + amount + ' ' + type + ' damage from ' + source.id + '.');
         var alive = (this.hp > 0);
 
         this.hp -= amount;
-        this.messages.push({
-            type:'damage',
-            unit:this.id,
-            source:source,
-            amount:amount,
-            damageType:type
-        });
+        this.messages.push(new Messages.UnitHealth(this.id, source.id, -amount));
 
         if (alive && this.hp <= 0) {
-           this.die();
+           this.die(source);
         }
-    };
+    },
 
-    this.die = function(killer) {
+    die: function(killer) {
         console.log(this.id + ' dies.');
         this.killer = killer;
         this.decayTime = Math.ceil(GLOBAL.settings.unitDecayTime / GLOBAL.settings.tickLen);
 
         this.stop();
 
-        this.messages.push({
-            type:'death',
-            unit:this.id,
-            killer:killer,
-            position:this.nextPosition
-        });
-
+        this.messages.push({new Messages.UnitDeath(this.id)});
         this.dead = true;
-    };
+    },
 
     //adds an order to the end of the queue
-    this.issueOrder = function(order, clear) {
+    issueOrder: function(order, clear) {
         if (this.dead) {
             return;
         }
@@ -172,72 +137,59 @@ Units.Unit = function(properties) {
         }
         this.orders.push(order);
         this.orderBroadcast = false;
-    };
+    },
 
     //places an order at the front of the queue
-    this.interruptOrder = function(order) {
+    interruptOrder: function(order) {
         this.orders.unshift(order);
-        this.orderBroadcast = false;
-    };
+    },
 
-    this.discardOrder = function() {
-        this.orders.shift();
-        this.orderBroadcast = false;
-    };
-
-    this.stop = function() {
+    stop: function() {
+        this.direction = -1;
         this.orders.splice(0,this.orders.length);
-        this.messages.push({
-            type:'order',
-            position:this.nextPosition,
-            unit:this.id,
-            order:{
-                type:'stop'
-            }
-        });
-    };
+    },
 
-    this.getMessages = function() {
+    getMessages: function () {
         var m = this.messages;
         this.messages = [];
         return m;
-    };
+    },
 
-    this.moveForOrder = function(order, target, range) {
-        this.orders.shift();
-        this.interruptOrder(new Orders.MoveOrder(target, range, order));
-    };
-
-    this.toJSON = function() {
-        var order = this.orders[0];
-        if (typeof order === 'undefined') {
-            order = null;
-        }
-
+    toJSON: function() {
         var props = {
-            id:this.id,
-            name:this.name,
-            level:this.level,
-            position:this.position,
-            sprite:this.sprite,
-            speed:this.speed,
-            maxhp:this.maxhp,
-            hp:this.hp,
-            hpRegen:this.hpRegen,
-            order:order,
-            owner:this.owner,
-            graphic:this.graphic
+            id: this.id,
+            name: this.name,
+            owner: this.owner,
+            graphic: this.graphic,
+            radius: this.radius,
+            position: this.position,
+            direction: this.direction,
+            moveSpeed: this.moveSpeed,
+            hp: this.hp,
+            hpMax: this.hpMax,
+            alive: this.alive,
+            attackDamage: this.attackDamage,
+            attackRange: this.attackRange,
+            attackSpeed: this.attackSpeed
         };
-
-        if (this.dead) {
-            props.dead = true;
-        }
-
         return props;
-    };
-};
+    }
+});
 
+//create directions and vectors
+(function() {
+    var angleDelta = 360.0 / Unit.Unit.NUM_DIRECTIONS;
+    var angle = 0;
 
+    for (var i = 0; i < Units.Unit.NUM_DIRECTIONS; i++) {
+        Units.Unit.DIRECTIONS.push(angle);
+        Units.Unit.DIRECTION_VECTORS.push(new LinAlg.Vector2(0.0, 0.0).offset(angle, 1.0));
+
+        angle += angleDelta;
+    }
+})();
+
+//dunno how this is used anymore, it's ugly wah
 Units.createMobProps = function(mobType, level, owner, position) {
     var props = {};
 
