@@ -27,6 +27,7 @@ Game.Game = Class({
         this.vision = null;
         this.players = {};
         this.units = {};
+        this.projectiles = [];
     },
 
     start: function() {
@@ -210,8 +211,9 @@ Game.Game = Class({
         delete this.units[unitId];
     },
 
-    spawnProjectile: function(originId, targetId) {
-        //TODO
+    spawnProjectile: function(origin, target) {
+        var p = new Projectile(origin, target);
+        this.projectiles.push(p);
     },
 
     unitExists: function(unitId) {
