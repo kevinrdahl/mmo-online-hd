@@ -5,6 +5,9 @@ var LinAlg = require('../../www/js/linalg');
 var Orders = require('./orders');
 var UnitTypes = require('./unit-types');
 var Messages = require('./messages');
+var Projectiles = require('./projectiles'),
+    Projectile = Projectiles.Projectile;
+
 var jsface = require("jsface"),
     Class  = jsface.Class,
     extend = jsface.extend,
@@ -34,7 +37,7 @@ Units.Unit = Class({
         this.owner = owner;
         this.game = game;
 
-        this.position = position;
+        this.position = position.copy();
         this.nextPosition = position.copy();
         this.direction = -1;
         this.lastDirection = -1;
@@ -104,24 +107,25 @@ Units.Unit = Class({
                 var target = game.units[order.params.target];
                 var range = this.distanceToAttack(target);
                 if (this.position.distanceTo(target.position) >= range) {
-                    dest = target.position.offsetTo(this.position, range);
+                    dest = target.position.copy();
+                    dest.offsetTo(this.position, range);
                 }
             }
 
             if (dest != null) {
                 this.direction = Units.Unit.getDirection(this.position.angleTo(dest));
                 var movement = Units.Unit.DIRECTION_VECTORS[this.direction].scaled(this.moveSpeed);
-                this.nextPosition = this.position.add(movement);
+                this.nextPosition.add(movement);
             }
         }
 
         if (this.direction !== this.lastDirection) {
-            this.messages.push(new Messages.UnitMove(game.currentStep, this.id, this.direction, this.position));
+            this.messages.push(new Messages.UnitMove(game.currentStep, this.id, this.direction, this.position.copy()));
         }
     },
 
     updatePosition: function() {
-        this.position = this.nextPosition;
+        this.position.set(this.nextPosition);
     },
 
     act: function(game) {
@@ -147,7 +151,12 @@ Units.Unit = Class({
  
         if (this.projectileSpeed > 0) {
             //spawn projectile
-            game.spawnProjectile(this, unit);
+            game.spawnProjectile(new Projectile(
+                this.position.copy(), 
+                unit.position.copy(), 
+                this.projectileSpeed, 
+                this.projectileGraphic
+            ));
         } else {
             unit.takeDamage(this, this.attackDamage, 'physical');
         }
@@ -219,7 +228,7 @@ Units.Unit = Class({
             owner: this.owner,
             graphic: this.graphic,
             radius: this.radius,
-            position: this.position,
+            position: this.position.copy(),
             direction: this.direction,
             moveSpeed: this.moveSpeed,
             hp: this.hp,
@@ -237,10 +246,12 @@ Units.Unit = Class({
 (function() {
     var angleDelta = 360.0 / Units.Unit.NUM_DIRECTIONS;
     var angle = 0;
+    var v;
 
     for (var i = 0; i < Units.Unit.NUM_DIRECTIONS; i++) {
+        v = new LinAlg.Vector2(0.0, 0.0).offset(angle, 1.0);
         Units.Unit.DIRECTIONS.push(angle);
-        Units.Unit.DIRECTION_VECTORS.push(new LinAlg.Vector2(0.0, 0.0).offset(angle, 1.0));
+        Units.Unit.DIRECTION_VECTORS.push(v);
 
         angle += angleDelta;
     }

@@ -7,9 +7,15 @@ module.exports = Game;
 var UnitTypes = require('./unit-types');
 var Messages = require('./messages');
 var Orders = require('./orders');
-var Units = require('./units');
+var Units = require('./units'),
+    Unit = Units.Unit;
+var Players = require('/players'),
+    Player = Players.Player;
+var Projectiles = require('/projectiles'),
+    Projectile = Projectiles.Projectile;
 var LinAlg = require('../../www/js/linalg');
 var Vision = require('./vision');
+
 var jsface = require("jsface"),
     Class  = jsface.Class,
     extend = jsface.extend;
@@ -211,19 +217,11 @@ Game.Game = Class({
         delete this.units[unitId];
     },
 
-    spawnProjectile: function(origin, target) {
-        var p = new Projectile(origin, target);
+    spawnProjectile: function(projectile) {
         this.projectiles.push(p);
     },
 
     unitExists: function(unitId) {
         return (typeof this.units[unitId] !== 'undefined');
     };
-});
-
-var Player = Class({
-    constructor: function(id) {
-        this.id = id;
-        this.lastMessageStep = 0;
-    }
 });

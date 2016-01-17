@@ -21,24 +21,24 @@ LinAlg.Vector2 = function(x,y) {
         return Math.sqrt(Math.pow(this.x - v.x, 2) + Math.pow(this.y - v.y, 2));
     };
 
-    this.offset = function (angle, dist) {
-        var v = new LinAlg.Vector2(this.x, this.y);
-        angle = LinAlg.toRadians(angle);
-        v.x += dist * Math.cos(angle);
-        v.y += dist * Math.sin(angle);
-        return v;
-    };
-
     this.angleTo = function (v) {
         return LinAlg.toDegrees(Math.atan2(v.y - this.y, v.x - this.x));
     };
 
-    this.offsetTo = function(v, dist) {
-        return this.offset(this.angleTo(v), dist);
-    };
-
     this.equals = function(v) {
         return (this.x == v.x && this.y == v.y);
+    };
+
+    this.offset = function (angle, dist) {
+        angle = LinAlg.toRadians(angle);
+        this.x += dist * Math.cos(angle);
+        this.y += dist * Math.sin(angle);
+        return this;
+    };
+
+    this.offsetTo = function(v, dist) {
+        this.offset(this.angleTo(v), dist);
+        return this;
     };
 
     this.midpointTo = function(v) {
@@ -46,30 +46,46 @@ LinAlg.Vector2 = function(x,y) {
     };
 
     this.add = function(v) {
-        return new LinAlg.Vector2(this.x + v.x, this.y + v.y);
+        this.x += v.x;
+        this.y += v.y;
+        return this;
     };
 
     this.sub = function(v) {
-        return new LinAlg.Vector2(this.x - v.x, this.y - v.y);
+        this.x -= v.x;
+        this.y -= v.y;
+        return this;
     };
 
-    this.scaled = function(s) {
-        return new LinAlg.Vector2(this.x * s, this.y * s);
+    this.set = function(v) {
+        this.x = v.x;
+        this.y = v.y;
+        return this;
     };
 
-    this.normalized = function() {
+    this.scale = function(s) {
+        this.x *= s;
+        this.y *= s;
+        return this;
+    };
+
+    this.normalize = function() {
         if (this.x == 0 && this.y == 0) {
-            return new LinAlg.Vector2(1,1);
+            this.x = 1;
+            this.y = 0;
         }
-        return this.scaled(1/this.getLength());
+        this.scale(1/this.getLength());
+        return this;
     };
 
     this.copy = function () {
         return new LinAlg.Vector2(this.x, this.y);
     };
 
-    this.rounded = function() {
-        return new LinAlg.Vector2(Math.round(this.x), Math.round(this.y));
+    this.round = function() {
+        this.x = Math.round(this.x);
+        this.y = Math.round(this.y);
+        return this;
     };
 
     //don't want to send huge useless floats to clients

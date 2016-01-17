@@ -7,8 +7,8 @@ module.exports = Projectiles;
 
 Projectiles.Projectile = Class({
 	constructor: function(position, destination, speed, graphic) {
-		this.position = position.copy();
-		this.destination = destination.copy();
+		this.position = position;
+		this.destination = destination;
 		this.speed = speed;
 		this.graphic = graphic;
 		
@@ -17,10 +17,10 @@ Projectiles.Projectile = Class({
 
 	update: function() {
 		if (this.position.distanceTo(this.destination) <= this.speed) {
-			this.position = this.destination;
+			this.position.set(this.destination);
 			this.hit = true;
 		} else {
-			this.position = this.position.offsetTo(this.destination, this.speed);
+			this.position.offsetTo(this.destination, this.speed);
 		}
 	}
 });
