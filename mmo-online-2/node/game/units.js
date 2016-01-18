@@ -55,6 +55,7 @@ Units.Unit = Class({
         this.projectileSpeed = -1;
 
         this.alive = true;
+        this.exists = false;
 
         //STATS
         this.hp = 100;
@@ -69,7 +70,8 @@ Units.Unit = Class({
         this.xpNeeded = 100;
     },
 
-    think: function(game) {
+    //Prior to moving or acting, check to make sure the current order is valid.
+    checkOrders: function(game) {
         //If attack moving, insert attack order on nearby enemy.
         //Similar for patrol
         //Actual AI might go in in the future
@@ -78,13 +80,19 @@ Units.Unit = Class({
         var order;
         while (this.orders.length > 0) {
             order = this.orders[0];
-            if (order.isUnitTargeted) {
-                if (!game.unitExists(order.params.target) 
-                    || (order.type === Messages.TYPES.ATTACK && !game.units[order.params.target].alive)) {
+            if (order instanceof Orders.UnitOrder) {
+                //give the order its unit reference
+                if (order.unit === null)
+                    order.unit = game.getUnit(order.unitId);
 
+                if (order.unit === null 
+                    || !order.unit.exists
+                    || (order.type === Messages.TYPES.ATTACK && !order.unit.alive)) {
                     this.orders.shift();
                     continue;
                 }
+            } else if (order.type === Messages.TYPES.STOP) {
+                this.stop();
             }
 
             break;
@@ -98,13 +106,15 @@ Units.Unit = Class({
         this.direction = -1;
 
         if (this.orders.length > 0) {
+            this.checkOrders(game);
+
             var order = this.orders[0];
             var dest = null;
 
-            if order.isMove() {
-                dest = order.params.point;
+            if (order.isMove()) {
+                dest = order.point;
             } else if (order.type === Messages.TYPES.ATTACK) {
-                var target = game.units[order.params.target];
+                var target = order.unit;
                 var range = this.distanceToAttack(target);
                 if (this.position.distanceTo(target.position) >= range) {
                     dest = target.position.copy();
@@ -112,15 +122,20 @@ Units.Unit = Class({
                 }
             }
 
-            if (dest != null) {
-                this.direction = Units.Unit.getDirection(this.position.angleTo(dest));
-                var movement = Units.Unit.DIRECTION_VECTORS[this.direction].scaled(this.moveSpeed);
-                this.nextPosition.add(movement);
+            if (dest !== null) {
+                if (this.position.distanceTo(dest) <= this.moveSpeed) {
+                    this.nextPosition = dest;
+                    this.discardCurrentOrder();
+                } else {
+                    this.direction = Units.Unit.getDirection(this.position.angleTo(dest));
+                    var movement = Units.Unit.DIRECTION_VECTORS[this.direction].copy().scale(this.moveSpeed);
+                    this.nextPosition.add(movement);
+                }
             }
         }
 
         if (this.direction !== this.lastDirection) {
-            this.messages.push(new Messages.UnitMove(game.currentStep, this.id, this.direction, this.position.copy()));
+            this.messages.push(new Messages.UnitMove(game.currentStep, this.id, this.direction, this.nextPosition.copy()));
         }
     },
 
@@ -133,9 +148,13 @@ Units.Unit = Class({
         //for now, this is just attacking
 
         if (this.orders.length > 0) {
+            this.checkOrders(game);
+
             var order = this.orders[0];
-            if (order.type === Messages.TYPES.ATTACK && this.inAttackRange()) {
-                this.attack(game, game.units[order.params.target]);
+            if (order instanceof Orders.UnitOrder) {
+                if (order.type === Messages.TYPES.ATTACK && this.inAttackRange(order.unit)) {
+                    this.attack(game, order.unit);
+                }
             }
         }
     },
@@ -196,6 +215,10 @@ Units.Unit = Class({
         }
         this.orders.push(order);
         this.orderBroadcast = false;
+    },
+
+    discardCurrentOrder: function() {
+        this.orders.shift();
     },
 
     //places an order at the front of the queue

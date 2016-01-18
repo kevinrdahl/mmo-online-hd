@@ -19,17 +19,19 @@ Messages.TYPES = {
     SKILL:5,
     ATTACKMOVE:6,
     STOP:7,
-    JOIN:8,
+    HEALTH:8,
     CHAT:9,
     COMMAND:10,
     ERROR:11,
     LOGIN:12,
     HANDSHAKE:13,
     GAMES:14,
-    HEALTH:15,
+    JOIN:15,
     DEATH:16,
-    PATROL:17
+    PATROL:17,
+    STEP:18
 };
+Messages.NUM_TYPES = Object.keys(Messages.TYPES).length;
 
 Messages.expansions = {};
 Messages.abbreviations = {};
@@ -48,6 +50,7 @@ Messages.abbreviations = {};
         'position',
         'point',
         'destination',
+        'queue',
         'moveSpeed',
         'attackDamage',
         'attackRange',
@@ -85,6 +88,14 @@ Messages.Message = Class({
 
     serialize: function() {
         return this.type.toString() + '|' + Messages.abbreviate(this.params);
+    },
+
+    hasStep: function() {
+        return (this.type === Messages.TYPES.MOVE
+            || this.type === Messages.TYPES.ATTACK
+            || this.type === Messages.TYPES.PROJECTILE
+            || this.type === Messages.TYPES.STEP
+        );
     }
 });
 
@@ -164,20 +175,28 @@ Messages.UnitDeath = Class(Messages.Message, {
     }
 });
 
-//TODO
 Messages.Projectile = Class(Messages.Message, {
-    constructor: function(step, projectile) {
+    constructor: function(step, position, target, speed, graphic) {
         Messages.Projectile.$super.call(this, Messages.TYPES.PROJECTILE, {
-            unit: unitId
+            step: step,
+            position: position,
+            target: target,
+            speed: speed,
+            graphic: graphic
         });
+    }
+});
+
+Messages.Step = Class(Messages.Message, {
+    constructor: function(step) {
+        Messages.Step.$super.call(this, Messages.TYPES.STEP, {step: step});
     }
 });
 
 /*************
  * FUNCTIONS *
  *************/
-//stringifies the object, without curlies, and abbreviating its keys (not those of any values)
-//will need a rehaul if deeper abbreviation is required
+//abbreviates keys
 Messages.abbreviateRecursive = function(obj) {
     var clone = {};
     var keys = Object.keys(obj);
@@ -187,7 +206,11 @@ Messages.abbreviateRecursive = function(obj) {
     for (var i = 0; i < keys.length; i++) {
         key = keys[i];
         val = obj[key];
-        if (val !== null && typeof val === 'object' && !Array.isArray(val)) {
+
+        //PERFORMANCE HIT PROBABLY TOO BIG
+        if (val instanceof LinAlg.Vector2) {
+            //val = [val.x, val.y];
+        } else if (typeof val === 'object' && val !== null && !Array.isArray(val)) {
             val = Messages.abbreviateRecursive(val);
         }
         clone[Messages.getAbbreviation(key)] = val;
@@ -210,7 +233,7 @@ Messages.getAbbreviation = function(term) {
     return abbreviation;
 };
 
-//expands param names
+//expands param names (and now vectors)
 Messages.expand = function(obj) {
     var keys = Object.keys(obj);
     var key, val, fullKey;
@@ -218,22 +241,25 @@ Messages.expand = function(obj) {
     for (var i = 0; i < keys.length; i++) {
         key = keys[i];
         val = obj[key];
+        fullKey = Messages.getExpansion(key);
 
         if (val !== null && typeof val === 'object' && !Array.isArray(val)) {
             Messages.expand(val);
+        } else if (Array.isArray(val) 
+            && val.length === 2
+            && typeof val[0] === 'number' && typeof val[1] === 'number') {
+            val = new LinAlg.Vector2(val.x, val.y);
         }
 
-        fullKey = Messages.getExpansion(key);
-
         if (key !== fullKey) {
-            obj[fullKey] = obj[key];
+            obj[fullKey] = val;
             delete obj[key];    
         }
     }
 };
 
 Messages.getExpansion = function(term) {
-    if (term.length == 1)
+    if (term.length === 1)
         return term;
     var expansion = Messages.expansions[term];
     if (typeof expansion === 'undefined')
@@ -261,10 +287,10 @@ Messages.parse = function(s) {
     var params;
     try {
         params = JSON.parse('{' + s.substring(splitIndex+1) + '}');
-        Messages.expand(params);
     } catch (e) {
         return null;
     }
+    Messages.expand(params);
 
     return new Messages.Message(msgType, params);
 };

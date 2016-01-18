@@ -9,9 +9,9 @@ var Messages = require('./messages');
 var Orders = require('./orders');
 var Units = require('./units'),
     Unit = Units.Unit;
-var Players = require('/players'),
+var Players = require('./players'),
     Player = Players.Player;
-var Projectiles = require('/projectiles'),
+var Projectiles = require('./projectiles'),
     Projectile = Projectiles.Projectile;
 var LinAlg = require('../../www/js/linalg');
 var Vision = require('./vision');
@@ -50,9 +50,7 @@ Game.Game = Class({
         this.currentStep += 1;
 
         this.updateVision();
-        this.unitAI();
         this.unitMovement();
-        this.updateUnitPostions();
         this.unitActions();
         this.updateProjectiles();
         this.sendUnitMessages();
@@ -85,28 +83,24 @@ Game.Game = Class({
         }
     },
 
-    unitAI: function() {
-        var unit
-        for (var unitId in this.units) {
-            this.units[unitId].think(this);
-        }
-    },
-
     unitMovement: function() {
-        var unit
-        for (var unitId in this.units) {
-            this.units[unitId].move(this);
+        var keys = Object.keys(this.units);
+        var unit;
+
+        for (var i = 0; i < keys.length; i++) {
+            this.units[keys[i]].move(this);
         }
-    },
 
-    updateUnitPostions: function() {
-
+        for (var i = 0; i < keys.length; i++) {
+            unit = this.units[keys[i]];
+            unit.updatePosition();
+        }
     },
 
     unitActions: function() {
-        var unit
-        for (var unitId in this.units) {
-            this.units[unitId].act(this);
+        var keys = Object.keys(this.units);
+        for (var i = 0; i < keys.length; i++) {
+            this.units[keys[i]].act(this);
         }
     },
 
@@ -126,7 +120,8 @@ Game.Game = Class({
             messages, 
             observers,
             m,
-            s;
+            s,
+            hasStep;
 
         for (var unitId in this.units) {
             unit = this.units[unitId];
@@ -135,13 +130,16 @@ Game.Game = Class({
 
             for (var i = 0; i < messages.length; i++) {
                 m = messages[i];
+                s = m.serialize();
 
-                m.params.step = this.currentStep;
-                m.params.unit = unitId;
-                s = Messages.writeTyped(m);
+                hasStep = false;
+                if (m.hasStep())
+                    hasStep = true;
 
                 for (var j = 0; j < observers.length; j++) {
                     this.sendString(observers[j], s);
+                    if (hasStep)
+                        observers[j].lastMessageStep = this.currentStep;
                 }
             }
 
@@ -150,6 +148,19 @@ Game.Game = Class({
                 if (unit.decayTime <= 0) {
                     this.removeUnit(unitId);
                 }
+            }
+        }
+    },
+
+    sendStep: function() {
+        var keys = Object.keys(this.players);
+        var player;
+        var msgString = new Messages.Step(this.currentStep).serialize();
+        for (var i = 0; i < keys.length; i++) {
+            player = this.players[keys[i]];
+            if (this.currentStep - player.lastMessageStep >= Player.STEP_UPDATE_INTERVAL) {
+                this.sendString(player.id, msgString);
+                player.lastMessageStep = this.currentStep;
             }
         }
     },
@@ -177,7 +188,7 @@ Game.Game = Class({
             //var s = Messages.chat(clientId, msg.text);
             //this.broadcast(s);
             //TODO: channels and PM
-        } else if (msg.type in Messages.TYPES) {
+        } else if (0 <= msg.type && msg.type < Messages.NUM_TYPES) {
             this.onOrder(clientId, msg);
         } else {
             console.log('Unknown message type ' + msg.type + ' from player ' + clientId);
@@ -191,30 +202,34 @@ Game.Game = Class({
     },
 
     onOrder: function(playerId, msg) {
-        if (typeof msg.type === Messages.TYPES.COMMAND) {
-            if (msg.command === 'makeUnit') {
-                if (!LinAlg.propIsVector2(msg, 'point'))
+        if (msg.type === Messages.TYPES.COMMAND) {
+            if (msg.params.command === 'makeUnit') {
+                if (!(msg.params.point instanceof LinAlg.Vector2))
                     return;
-                var props = Units.createMobProps(GLOBAL.gameData.mobTypes[0], 1, id, order.point);
+                var props = Units.createMobProps(GLOBAL.gameData.mobTypes[0], 1, id, order.params.point);
                 var unit = new Units.Unit(props);
                 this.addUnit(unit);
                 console.log('Unit ' + unit.id + ' spawned by player ' + playerId);
             } else if (msg.command === 'removeUnit') {
-                if (msg.target in this.units) {
-                    this.removeUnit(msg.target);
-                    console.log('Unit ' + msg.target + ' removed by player ' + playerId);
+                var target = this.getUnit(msg.params.target);
+                if (target !== null) {
+                    this.removeUnit(target);
+                    console.log('Unit ' + target.id + ' removed by player ' + playerId);
                 }
             }
-        } else if (msg.unit in this.units && this.units[unit].owner === playerId) {
-            var queue = false;
-            if (msg.shift)
-                queue = true;
+        } else if (typeof msg.params.unit === 'string') {
+            var unit = this.getUnit(msg.params.unit);
+            if (unit !== null && unit.owner === playerId) {
+                var queue = false;
+                if (msg.params.queue)
+                    queue = true;
 
-            var order = Orders.interpret(msg, this);
-            if (order != null) {
-                this.units[msg.unit].issueOrder(order, !queue);
-            } else {
-                console.log('Weird order from ' + playerId + ': ' + JSON.stringify(order));
+                var order = Orders.interpret(msg, this);
+                if (order !== null) {
+                    this.units[msg.unit].issueOrder(order, !queue);
+                } else {
+                    console.log('Weird order from ' + playerId + ': ' + JSON.stringify(order));
+                }
             }
         }
     },
@@ -222,18 +237,36 @@ Game.Game = Class({
     addUnit: function(unit) {
         this.units[unit.id] = unit;
         this.vision.addUnit(unit.id);
+        unit.exists = true;
     },
 
-    removeUnit: function(unitId) {
-        this.vision.removeUnit(unitId);
-        delete this.units[unitId];
+    removeUnit: function(unit) {
+        this.vision.removeUnit(unit.id);
+        delete this.units[unit.id];
+        unit.exists = false;
+    },
+
+    getUnit: function(unitId) {
+        var unit = this.units[unitId];
+        if (typeof unit === 'undefined')
+            return null;
+        else
+            return unit;
     },
 
     spawnProjectile: function(projectile) {
         this.projectiles.push(p);
+        //tell everyone! this needs to not be everyone
+        this.broadcast(new Messages.Projectile(
+            this.currentStep,
+            projectile.position,
+            projectile.target,
+            projectile.speed,
+            projectile.graphic
+        ).serialize());
     },
 
     unitExists: function(unitId) {
         return (typeof this.units[unitId] !== 'undefined');
-    };
+    }
 });

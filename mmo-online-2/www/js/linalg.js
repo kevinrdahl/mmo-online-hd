@@ -88,17 +88,6 @@ LinAlg.Vector2 = function(x,y) {
         return this;
     };
 
-    //don't want to send huge useless floats to clients
-    /*this.toJSON = function(places) {
-        var x = LinAlg.cutFloat(this.x, places);
-        var y = LinAlg.cutFloat(this.y, places);
-        var json = '{"x":'+ x + ',"y":' + y + '}';
-        console.log('JSON: ' + json);
-        console.log(x);
-        console.log(y);
-        return json;
-    };*/
-
     this.toJSON = function() {
         return [this.x, this.y];
     };

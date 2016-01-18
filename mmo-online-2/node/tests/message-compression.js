@@ -1,4 +1,5 @@
 var Messages = require('../game/messages');
+var LinAlg = require('../../www/js/linalg')
 var lzString = require("lz-string");
 
 /*var handshake = new Messages.Handshake();
@@ -46,6 +47,43 @@ function test(obj) {
 	showSize(compressed, 'lz-string');
 }
 
+function perfTest(msg) {
+	writeLine();
+	writePrettyJSON(msg);
+
+	var count = 10000;
+	var plain = msg.serialize();
+	var o;
+
+	console.log('Stringify and parse message %d times.', count);
+	var startTime = Date.now();
+	for (var i = 0; i < count; i++) {
+		s = JSON.stringify(msg);
+		o = JSON.parse(s);
+	}
+	var endTime = Date.now();
+	console.log('%d ms, %d chars each', endTime - startTime, s.length);
+
+	console.log('\nSerialize and parse message %d times.', count);
+	startTime = Date.now();
+	
+	for (var i = 0; i < count; i++) {
+		s = msg.serialize();
+		o = Messages.parse(s);
+	}
+	endTime = Date.now();
+	console.log('%d ms, %d chars each', endTime - startTime, s.length);
+
+	console.log('\nCompress and read serialized message %d times.', count);
+	startTime = Date.now();
+	for (var i = 0; i < count; i++) {
+		s = lzString.compressToUTF16(plain);
+		s2 = lzString.decompressFromUTF16(s);
+	}
+	endTime = Date.now();
+	console.log('%d ms, %d chars each', endTime - startTime, s.length);
+}
+
 /*test({
 	unit:{
 		position:[100,100],
@@ -57,42 +95,16 @@ function test(obj) {
 
 //running for a week
 //absurd number of units
-var msg = new Messages.UnitMove(12096000, 'abc', 4, [1000000, 500000]);
+var msg1 = new Messages.UnitMove(12096000, 'abc', 4, new LinAlg.Vector2(1000000, 500000));
+var msg2 = new Messages.UnitMove(12096000, 'abc', 4, [1000000, 500000]);
 //var msg = new Messages.UnitAttack(12096000, 'abc', 'abcd');
 
-test(msg);
+test(msg1);
+//test(msg2);
 
 console.log();
 writeLine();
-console.log('PERFORMANCE')
-writeLine();
-var count = 10000;
-var plain = msg.serialize();
-var o;
+console.log('PERFORMANCE');
 
-console.log('Stringify and parse message %d times.', count);
-var startTime = Date.now();
-for (var i = 0; i < count; i++) {
-	s = JSON.stringify(msg);
-	o = JSON.parse(s);
-}
-var endTime = Date.now();
-console.log('%d ms, %d chars each', endTime - startTime, s.length);
-
-console.log('\nSerialize and parse message %d times.', count);
-startTime = Date.now();
-for (var i = 0; i < count; i++) {
-	s = msg.serialize();
-	o = Messages.parse(s);
-}
-endTime = Date.now();
-console.log('%d ms, %d chars each', endTime - startTime, s.length);
-
-console.log('\nCompress and read serialized message %d times.', count);
-startTime = Date.now();
-for (var i = 0; i < count; i++) {
-	s = lzString.compressToUTF16(plain);
-	s2 = lzString.decompressFromUTF16(s);
-}
-endTime = Date.now();
-console.log('%d ms, %d chars each', endTime - startTime, s.length);
+perfTest(msg1);
+//perfTest(msg2);

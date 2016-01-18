@@ -20,9 +20,27 @@ var Orders = {
 module.exports = Orders;
 
 Orders.Order = Class({
-    constructor: function(target, type) {
-        this.target = target;
+    constructor: function(type) {
         this.type = type;
+    },
+
+    isMove: function() {
+        return false;
+    }
+});
+
+Orders.UnitOrder = Class(Orders.Order, {
+    constructor: function(type, unitId) {
+        Orders.UnitOrder.$super.call(this, type);
+        this.unitId = targetId;
+        this.unit = null;
+    }
+});
+
+Orders.PointOrder = Class(Orders.Order, {
+    constructor: function(type, point) {
+        Orders.PointOrder.$super.call(this, type);
+        this.point = point;
     },
 
     isMove: function() {
@@ -31,21 +49,13 @@ Orders.Order = Class({
             || this.type === Messages.TYPES.ATTACKMOVE
             || this.type === Messages.TYPES.PATROL
         );
-    },
-
-    isUnitTargeted: function() {
-        return {
-            this.type === Messages.TYPES.ATTACK
-            || this.type === Messages.TYPES.MOVETO
-            || this.type === Messages.TYPES.SKILL
-        };
     }
 });
 
 //returns a valid order to be queued, or null if the message's order is invalid
 //the order might be meaningless but that's handled in Unit code
 Orders.interpret = function(msg, game) {
-    var order = {type:msg.type};
+    var order;
 
     //dun wanna deal with these yet
     if (msg.type === Messages.TYPES.PATROL)
@@ -53,14 +63,17 @@ Orders.interpret = function(msg, game) {
 
 
     if (msg.type === Messages.TYPES.MOVE || msg.type === Messages.TYPES.ATTACKMOVE) {
-        if (!LinAlg.propIsVector2(msg, 'point'))
+        if (!(msg.params.point instanceof LinAlg.Vector2))
             return null;
-        order.point = msg.point;
+        order = new Orders.PointOrder(msg.type, msg.params.point);
     } else if (msg.type === Messages.TYPES.ATTACK || msg.type === Messages.TYPES.MOVETO) {
-        if (!(msg.target in game.units))
+        if (game.getUnit(msg.params.target) === null)
             return null;
+        order = new Orders.UnitOrder(msg.type, msg.params.target);
     } else if (msg.type !== Messages.TYPES.STOP) {
         return null;
+    } else {
+        order = new Orders.Order(Messages.TYPES.STOP);
     }
 
     return order;
