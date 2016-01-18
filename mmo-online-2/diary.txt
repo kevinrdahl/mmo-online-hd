@@ -49,11 +49,13 @@ Fancy text:
 [X] Get rid of uses of the propIsVector2 function, since parse creates them now.
 
 
-[ ] Projectiles.
+[ ] Projectiles
 
-	Would be dead simple if they were only for attacking. Also hard to account for skills cause they don't exist yet, and there are loads of ways they could be added.
+	There are two types of projectiles, point target and unit target.
 
-	For now, just get them fully working for attacks. The messaging component probably won't change, no matter what is done to projectiles on the server.
+	A projectile hitting should trigger an event, given to the projectile at creation. 
+		For an attack, this might be called an AttackHitEvent. 
+		When skills are implemented, it could be a SkillHitEvent, with some param pointing to the skill.
 
 	Accuracy isn't nearly as important as with unit positions, so just announce a projectile when it's created, and anyone who wasn't there can suck it. This means someone too far away who walks into view range before the projectile hits won't see it. This is minor unless the projectile's speed is super slow.
 
@@ -82,11 +84,20 @@ Fancy text:
 	Looking it up many times every frame is a huge waste of cycles. Just give units an "exists" property, which is set to false when removing them from the world. Then, things can store pointers to the unit and check that value. 
 
 	To avoid keeping units in memory too long due to references, objects (mainly orders) should keep their unit ref null until it's actually needed. In the case of orders, when they're the front of the queue.
+
+	Tackled the big culprits.
 	
 
 [ ] Skills
 
 	distant future
+
+
+[ ] Events
+	
+	Without some kind of event system, adding anything is going to become a clusterfuck.
+
+	To start, make an Event class with a bunch of derivatives, like with Messages. Except these are for server use only.
 
 
 [ ] Organize this god damn client holy shit.
