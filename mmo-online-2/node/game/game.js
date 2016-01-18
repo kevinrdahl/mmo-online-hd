@@ -54,6 +54,7 @@ Game.Game = Class({
         this.unitMovement();
         this.updateUnitPostions();
         this.unitActions();
+        this.updateProjectiles();
         this.sendUnitMessages();
         this.sendStep();
 
@@ -106,6 +107,17 @@ Game.Game = Class({
         var unit
         for (var unitId in this.units) {
             this.units[unitId].act(this);
+        }
+    },
+
+    updateProjectiles: function() {
+        var p;
+        for (var i = 0; i < this.projectiles.length; i++) {
+            p = this.projectiles[i];
+            p.update();
+            if (p.hit) {
+                //dunno yet
+            }
         }
     },
 

@@ -15,7 +15,7 @@ Messages.TYPES = {
     MOVE:1,
     MOVETO:2,
     ATTACK:3,
-    PATROL:4,
+    PROJECTILE:4,
     SKILL:5,
     ATTACKMOVE:6,
     STOP:7,
@@ -27,7 +27,8 @@ Messages.TYPES = {
     HANDSHAKE:13,
     GAMES:14,
     HEALTH:15,
-    DEATH:16
+    DEATH:16,
+    PATROL:17
 };
 
 Messages.expansions = {};
@@ -46,7 +47,7 @@ Messages.abbreviations = {};
         'source',
         'position',
         'point',
-        'position',
+        'destination',
         'moveSpeed',
         'attackDamage',
         'attackRange',
@@ -163,23 +164,40 @@ Messages.UnitDeath = Class(Messages.Message, {
     }
 });
 
+//TODO
+Messages.Projectile = Class(Messages.Message, {
+    constructor: function(step, projectile) {
+        Messages.Projectile.$super.call(this, Messages.TYPES.PROJECTILE, {
+            unit: unitId
+        });
+    }
+});
+
 /*************
  * FUNCTIONS *
  *************/
 //stringifies the object, without curlies, and abbreviating its keys (not those of any values)
 //will need a rehaul if deeper abbreviation is required
-Messages.abbreviate = function(obj) {
+Messages.abbreviateRecursive = function(obj) {
     var clone = {};
     var keys = Object.keys(obj);
-    var key;
+    var key, val;
     var s;
     
     for (var i = 0; i < keys.length; i++) {
         key = keys[i];
-        clone[Messages.getAbbreviation(key)] = obj[key];
+        val = obj[key];
+        if (val !== null && typeof val === 'object' && !Array.isArray(val)) {
+            val = Messages.abbreviateRecursive(val);
+        }
+        clone[Messages.getAbbreviation(key)] = val;
     }
 
-    s = JSON.stringify(clone);
+    return clone
+};
+
+Messages.abbreviate = function(obj) {
+    var s = JSON.stringify(Messages.abbreviateRecursive(obj));
     return s.substring(1, s.length-1);
 };
 
@@ -192,20 +210,26 @@ Messages.getAbbreviation = function(term) {
     return abbreviation;
 };
 
-//returns a param list from the portion of the message following '|'
-Messages.expand = function(s) {
-    var obj = JSON.parse('{' + s + '}');
+//expands param names
+Messages.expand = function(obj) {
     var keys = Object.keys(obj);
-    var key, fullKey;
+    var key, val, fullKey;
 
     for (var i = 0; i < keys.length; i++) {
         key = keys[i];
-        fullKey = Messages.getExpansion(key);
-        obj[fullKey] = obj[key];
-        delete obj[key];
-    }
+        val = obj[key];
 
-    return obj;
+        if (val !== null && typeof val === 'object' && !Array.isArray(val)) {
+            Messages.expand(val);
+        }
+
+        fullKey = Messages.getExpansion(key);
+
+        if (key !== fullKey) {
+            obj[fullKey] = obj[key];
+            delete obj[key];    
+        }
+    }
 };
 
 Messages.getExpansion = function(term) {
@@ -236,7 +260,8 @@ Messages.parse = function(s) {
 
     var params;
     try {
-        params = Messages.expand(s.substring(splitIndex+1));
+        params = JSON.parse('{' + s.substring(splitIndex+1) + '}');
+        Messages.expand(params);
     } catch (e) {
         return null;
     }

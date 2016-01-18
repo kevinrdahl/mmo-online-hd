@@ -2,11 +2,18 @@ var jsface = require("jsface"),
     Class  = jsface.Class,
     extend = jsface.extend;
 
+var MMOOUtil = require('./mmoo-util');
+
 var Projectiles = {};
 module.exports = Projectiles;
 
 Projectiles.Projectile = Class({
-	constructor: function(position, destination, speed, graphic) {
+	$static: {
+        idPool: new MMOOUtil.IdPool()
+    },
+
+	constructor: function(id, position, destination, speed, graphic) {
+		this.id = id;
 		this.position = position;
 		this.destination = destination;
 		this.speed = speed;
@@ -21,6 +28,16 @@ Projectiles.Projectile = Class({
 			this.hit = true;
 		} else {
 			this.position.offsetTo(this.destination, this.speed);
+		}
+	},
+
+	toJSON: function() {
+		return {
+			id: this.id,
+			position: this.position,
+			destination: this.destination,
+			speed: this.speed,
+			graphic: this.graphic
 		}
 	}
 });

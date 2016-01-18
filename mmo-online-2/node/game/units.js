@@ -82,7 +82,7 @@ Units.Unit = Class({
                 if (!game.unitExists(order.params.target) 
                     || (order.type === Messages.TYPES.ATTACK && !game.units[order.params.target].alive)) {
 
-                    order.shift();
+                    this.orders.shift();
                     continue;
                 }
             }
@@ -152,6 +152,7 @@ Units.Unit = Class({
         if (this.projectileSpeed > 0) {
             //spawn projectile
             game.spawnProjectile(new Projectile(
+                Projectile.idPool.get(),
                 this.position.copy(), 
                 unit.position.copy(), 
                 this.projectileSpeed, 
@@ -228,7 +229,7 @@ Units.Unit = Class({
             owner: this.owner,
             graphic: this.graphic,
             radius: this.radius,
-            position: this.position.copy(),
+            position: this.position,
             direction: this.direction,
             moveSpeed: this.moveSpeed,
             hp: this.hp,
