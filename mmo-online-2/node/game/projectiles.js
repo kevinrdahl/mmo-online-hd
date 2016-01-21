@@ -2,6 +2,7 @@ var jsface = require("jsface"),
     Class  = jsface.Class,
     extend = jsface.extend;
 
+var LinAlg = require('../../www/js/linalg');
 var MMOOUtil = require('./mmoo-util');
 
 var Projectiles = {};
@@ -12,8 +13,7 @@ Projectiles.Projectile = Class({
         idPool: new MMOOUtil.IdPool()
     },
 
-	constructor: function(id, position, speed, graphic) {
-		this.id = id;
+	constructor: function(position, speed, graphic) {
 		this.position = position;
 		this.speed = speed;
 		this.graphic = graphic;
@@ -28,29 +28,19 @@ Projectiles.Projectile = Class({
 	},
 
 	stepTo: function(destination) {
-		if (this.position.distanceTo(this.destination) <= this.speed) {
-			this.position.set(this.destination);
+		if (this.position.withinDistance(destination, this.speed)) {
+			this.position.set(destination);
 			this.hit = true;
 		} else {
-			this.position.offsetTo(this.destination, this.speed);
-		}
-	},
-
-	toJSON: function() {
-		return {
-			id: this.id,
-			position: this.position,
-			destination: this.destination,
-			speed: this.speed,
-			graphic: this.graphic
+			this.position.offsetTo(destination, this.speed);
 		}
 	}
 });
 
 Projectiles.TargetProjectile = Class(Projectiles.Projectile, {
-	constructor: function(id, position, speed, graphic, target) {
+	constructor: function(position, speed, graphic, target) {
 		this.target = target;
-		Projectiles.TargetProjectile.$super.call(this, id, position, speed, graphic);
+		Projectiles.TargetProjectile.$super.call(this, position, speed, graphic);
 	},
 
 	update: function() {
@@ -62,10 +52,24 @@ Projectiles.TargetProjectile = Class(Projectiles.Projectile, {
 	}
 });
 
+Projectiles.AttackProjectile = Class(Projectiles.TargetProjectile, {
+	constructor: function(target, source) {
+		Projectiles.AttackProjectile.$super.call(
+			this, 
+			source.position.copy(), 
+			source.projectileSpeed,
+			source.projecileGraphic,
+			target
+		);
+
+		this.damage = source.attackDamage;
+	}
+});
+
 Projectiles.PointProjectile = Class(Projectiles.Projectile, {
-	constructor: function(id, position, speed, graphic, point) {
+	constructor: function(position, speed, graphic, point) {
 		this.point = point;
-		Projectiles.PointProjectile.$super.call(this, id, position, speed, graphic);
+		Projectiles.PointProjectile.$super.call(this, position, speed, graphic);
 	},
 
 	update: function() {

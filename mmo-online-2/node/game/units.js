@@ -5,8 +5,7 @@ var LinAlg = require('../../www/js/linalg');
 var Orders = require('./orders');
 var UnitTypes = require('./unit-types');
 var Messages = require('./messages');
-var Projectiles = require('./projectiles'),
-    Projectile = Projectiles.Projectile;
+var Projectiles = require('./projectiles');
 
 var jsface = require("jsface"),
     Class  = jsface.Class,
@@ -31,24 +30,25 @@ Units.Unit = Class({
             return Math.floor(angle / (360.0/Units.Unit.NUM_DIRECTIONS));
         }
     }, 
-    constructor: function(unitType, id, owner, position) {
+    constructor: function(unitType, owner, position) {
         this.unitType = unitType;
-        this.id = id;
+        this.id = Units.Unit.idPool.get();
         this.owner = owner;
-        this.game = game;
 
         this.position = position.copy();
         this.nextPosition = position.copy();
-        this.direction = -1;
-        this.lastDirection = -1;
+        this.direction = -2;
+        this.lastDirection = -2;
 
         this.cooldowns = {attack:0};
         this.followThrough = 0;
+        this.windUp = 0;
 
         this.orders = [];
         this.messages = [];
 
         this.moveSpeed = 2000;
+        this.movePerTick = 0;
         this.radius = 250;
         this.graphic = null;
         this.projectileGraphic = null;
@@ -57,17 +57,39 @@ Units.Unit = Class({
         this.alive = true;
         this.exists = false;
 
-        //STATS
         this.hp = 100;
         this.hpMax = 100;
         this.mp = 100;
         this.mpMax = 100;
         this.attackDamage = 20;
+
         this.attackSpeed = 1;
+        this.attackCooldownFrames = 0;
+        this.attackWindUp = 0.25;
+        this.attackWindUpFrames = 0;
+        this.attackFollowThrough = 0.5;
+        this.attackFollowThroughFrames = 0
         this.attackRange = 150;
         this.level = 1;
+
         this.xp = 0;
         this.xpNeeded = 100;
+
+        this.updateDerivedStats();
+    },
+
+    updateTimers: function() {
+        var cooldown;
+        for (var name in this.cooldowns) {
+            cooldown = this.cooldowns[name]-1;
+            if (cooldown >= 0)
+                this.cooldowns[name] = cooldown;
+        }
+
+        if (this.followThrough > -1)
+            this.followThrough -= 1;
+        if (this.windUp > -1)
+            this.windUp -= 1;
     },
 
     //Prior to moving or acting, check to make sure the current order is valid.
@@ -88,7 +110,7 @@ Units.Unit = Class({
                 if (order.unit === null 
                     || !order.unit.exists
                     || (order.type === Messages.TYPES.ATTACK && !order.unit.alive)) {
-                    this.orders.shift();
+                    this.discardCurrentOrder();
                     continue;
                 }
             } else if (order.type === Messages.TYPES.STOP) {
@@ -105,9 +127,9 @@ Units.Unit = Class({
         this.lastDirection = this.direction;
         this.direction = -1;
 
-        if (this.orders.length > 0) {
-            this.checkOrders(game);
+        this.checkOrders(game);
 
+        if (this.orders.length > 0 && this.followThrough <= 0) {
             var order = this.orders[0];
             var dest = null;
 
@@ -123,12 +145,14 @@ Units.Unit = Class({
             }
 
             if (dest !== null) {
-                if (this.position.distanceTo(dest) <= this.moveSpeed) {
+                if (this.position.distanceTo(dest) <= this.movePerTick) {
                     this.nextPosition = dest;
-                    this.discardCurrentOrder();
+
+                    if (order.type === Messages.TYPES.MOVE)
+                        this.discardCurrentOrder();
                 } else {
                     this.direction = Units.Unit.getDirection(this.position.angleTo(dest));
-                    var movement = Units.Unit.DIRECTION_VECTORS[this.direction].copy().scale(this.moveSpeed);
+                    var movement = Units.Unit.DIRECTION_VECTORS[this.direction].copy().scale(this.movePerTick);
                     this.nextPosition.add(movement);
                 }
             }
@@ -146,44 +170,45 @@ Units.Unit = Class({
     act: function(game) {
         //If order is an action and unit is able, DO IT
         //for now, this is just attacking
+        this.checkOrders(game);
 
-        if (this.orders.length > 0) {
-            this.checkOrders(game);
-
+        if (this.orders.length > 0 && this.followThrough <= 0) {
             var order = this.orders[0];
             if (order instanceof Orders.UnitOrder) {
-                if (order.type === Messages.TYPES.ATTACK && this.inAttackRange(order.unit)) {
-                    this.attack(game, order.unit);
+                if (order.type === Messages.TYPES.ATTACK) {
+                    //try to attack
+                    if (this.inAttackRange(order.unit) && this.cooldowns.attack <= 0) {
+                        //if not winding up, do so
+                        if (this.windUp <= -1) {
+                            this.windUp = this.attackWindUpFrames;
+                        }
+
+                        //if just completed windUp (or there was none), attack!
+                        if (this.windUp === 0) {
+                            this.attack(game, order.unit);
+                        }
+                    }
                 }
             }
         }
     },
 
     attack: function(game, unit) {
-        //attackSpeed is number of attacks per second
-        this.cooldowns.attack = Math.round((1000.0/GLOBAL.settings.tickLen) / this.attackSpeed);
-
-        //just let followthrough be half the attack cooldown
-        this.followThrough = Math.round(this.cooldowns.attack/2.0);
+        this.followThrough = this.attackFollowThroughFrames;
+        this.cooldowns.attack = this.attackCooldownFrames;
 
         this.messages.push(new Messages.UnitAttack(game.currentStep, this.id, unit.id));
  
         if (this.projectileSpeed > 0) {
             //spawn projectile
-            game.spawnProjectile(new Projectile(
-                Projectile.idPool.get(),
-                this.position.copy(), 
-                unit.position.copy(), 
-                this.projectileSpeed, 
-                this.projectileGraphic
-            ));
+            game.spawnProjectile(new Projectiles.AttackProjectile(unit,this));
         } else {
             unit.takeDamage(this, this.attackDamage, 'physical');
         }
     },
 
     takeDamage: function(source, amount, type) {
-        console.log(this.id + ' takes ' + amount + ' ' + type + ' damage from ' + source.id + '.');
+        //console.log(this.id + ' takes ' + amount + ' ' + type + ' damage from ' + source.id + '.');
         var alive = (this.hp > 0);
 
         this.hp -= amount;
@@ -195,14 +220,14 @@ Units.Unit = Class({
     },
 
     die: function(killer) {
-        console.log(this.id + ' dies.');
+        console.log('Unit ' + this.id + ' dies.');
         this.killer = killer;
-        this.decayTime = Math.ceil(GLOBAL.settings.unitDecayTime / GLOBAL.settings.tickLen);
+        this.decayTime = MMOOUtil.secondsToFrames(GLOBAL.settings.unitDecayTime);
 
         this.stop();
 
-        this.messages.push(new Messages.UnitDeath(this.id));
-        this.dead = true;
+        this.messages.push(new Messages.UnitDeath(this.id, killer.id));
+        this.alive = false;
     },
 
     //adds an order to the end of the queue
@@ -219,6 +244,7 @@ Units.Unit = Class({
 
     discardCurrentOrder: function() {
         this.orders.shift();
+        this.windUp = -1;
     },
 
     //places an order at the front of the queue
@@ -228,6 +254,7 @@ Units.Unit = Class({
 
     stop: function() {
         this.direction = -1;
+        this.windUp = -1;
         this.orders.splice(0,this.orders.length);
     },
 
@@ -235,6 +262,16 @@ Units.Unit = Class({
         var m = this.messages;
         this.messages = [];
         return m;
+    },
+
+    updateDerivedStats: function() {
+        var tickLen = GLOBAL.settings.tickLen;
+        var attackFrames = MMOOUtil.secondsToFrames(this.attackSpeed);
+
+        this.movePerTick                = MMOOUtil.rateToDelta(this.moveSpeed);
+        this.attackWindUpFrames         = Math.round(this.attackWindUp * attackFrames);
+        this.attackFollowThroughFrames  = Math.round(this.attackFollowThrough * attackFrames);
+        this.attackCooldownFrames       = attackFrames - this.attackWindUpFrames;
     },
 
     distanceToAttack: function(target) {

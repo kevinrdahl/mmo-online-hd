@@ -13,13 +13,13 @@ var game = require('./game/game');
 var Messages = require('./game/messages');
 var TCP = require('./tcp');
 
+var Servers = {};
+module.exports = Servers;
 
-
-GLOBAL.settings = JSON.parse(fs.readFileSync('./config/settings.json', 'utf8'));
 var CONN_WS = 0;
 var CONN_TCP = 1;
 
-var Server = Class({
+Servers.Server = Class({
     constructor: function() {
         this.clients = {};
         this.clientNum = 0;
@@ -33,21 +33,22 @@ var Server = Class({
         this.bannerText = fs.readFileSync('./config/banner.txt', 'utf8');
         console.log('Done!');
 
-        console.log('Connecting to database...');
+        /*console.log('Connecting to database...');
         this.dao = new Data.DAO(this.dbConfig);
         this.dao.connect(function() {
             _this.onDbConnect();
-        });
+        });*/
+        this.onDbConnect();
     },
 
     onDbConnect: function() {
         var _this = this;
 
         console.log('Connected!');
-        this.getGameData(function() {
+        //this.getGameData(function() {
             _this.startComms();
             _this.startGame();
-        });
+        //});
     },
 
     startComms: function() {
@@ -69,10 +70,9 @@ var Server = Class({
     },
 
     startGame: function() {
+        console.log('\n' + this.bannerText + '\n');
         this.game = new game.Game(this, "Game 1");
         this.game.start();
-
-        console.log('\n' + this.bannerText + '\n');
     },
 
     onConnection: function(client) {
@@ -147,5 +147,3 @@ var Server = Class({
     }
 });
 
-var server = new Server(GLOBAL.settings.port);
-server.start();

@@ -18,7 +18,15 @@ LinAlg.Vector2 = function(x,y) {
     };
 
     this.distanceTo = function (v) {
-        return Math.sqrt(Math.pow(this.x - v.x, 2) + Math.pow(this.y - v.y, 2));
+        return Math.sqrt(this.squaredDistanceTo(v));
+    };
+
+    this.squaredDistanceTo = function(v) {
+        return Math.pow(this.x - v.x, 2) + Math.pow(this.y - v.y, 2);
+    };
+
+    this.withinDistance = function(v, dist) {
+        return this.squaredDistanceTo(v) <= dist*dist;
     };
 
     this.angleTo = function (v) {

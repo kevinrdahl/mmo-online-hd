@@ -13,6 +13,7 @@ var jsface = require("jsface"),
     extend = jsface.extend;
 
 var LinAlg = require('../../www/js/linalg');
+var Messages = require('./messages');
 
 var Orders = {
     moveToUnitRefresh:10
@@ -32,7 +33,7 @@ Orders.Order = Class({
 Orders.UnitOrder = Class(Orders.Order, {
     constructor: function(type, unitId) {
         Orders.UnitOrder.$super.call(this, type);
-        this.unitId = targetId;
+        this.unitId = unitId;
         this.unit = null;
     }
 });

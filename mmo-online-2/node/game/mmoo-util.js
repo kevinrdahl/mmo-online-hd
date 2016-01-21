@@ -59,3 +59,16 @@ MMOOUtil.IdPool = Class({
 		}
 	}
 });
+
+
+/*
+ * Wherever possible, things are stored as rates, eg attacks/second.
+ * This returns the appropriate tick delta, based on sim frequency.
+ */
+MMOOUtil.rateToDelta = function(rate) {
+	return rate * (GLOBAL.settings.tickLen / 1000.0);
+};
+
+MMOOUtil.secondsToFrames = function(secs) {
+	return Math.round(secs * (1000.0 / GLOBAL.settings.tickLen));
+};

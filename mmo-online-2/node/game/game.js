@@ -15,6 +15,7 @@ var Projectiles = require('./projectiles'),
     Projectile = Projectiles.Projectile;
 var LinAlg = require('../../www/js/linalg');
 var Vision = require('./vision');
+var GameLogic = require('./game-logic');
 
 var jsface = require("jsface"),
     Class  = jsface.Class,
@@ -42,6 +43,9 @@ Game.Game = Class({
         this.lastStepTime = this.startTime - this.tickLen;
         this.nextStepTime = this.startTime;
 
+        GameLogic.setup(this);
+        console.log('The game begins.\n\n');
+
         this.update();
     },
 
@@ -62,6 +66,8 @@ Game.Game = Class({
                 this.sendString(pId, Messages.step(this.currentStep));
             }
         }
+
+        GameLogic.update(this);
 
         var currentTime = new Date().getTime();
         this.lastStepTime = currentTime;
@@ -88,7 +94,9 @@ Game.Game = Class({
         var unit;
 
         for (var i = 0; i < keys.length; i++) {
-            this.units[keys[i]].move(this);
+            unit = this.units[keys[i]];
+            unit.updateTimers();
+            unit.move(this);
         }
 
         for (var i = 0; i < keys.length; i++) {
@@ -131,6 +139,9 @@ Game.Game = Class({
             for (var i = 0; i < messages.length; i++) {
                 m = messages[i];
                 s = m.serialize();
+
+                console.log('Unit %s: %s', unit.id, m.debugString());
+                //console.log('         "' + s + '"');
 
                 hasStep = false;
                 if (m.hasStep())
@@ -255,6 +266,7 @@ Game.Game = Class({
     },
 
     spawnProjectile: function(projectile) {
+        console.log("new projectile " + JSON.stringify(projectile));
         this.projectiles.push(p);
         //tell everyone! this needs to not be everyone
         this.broadcast(new Messages.Projectile(

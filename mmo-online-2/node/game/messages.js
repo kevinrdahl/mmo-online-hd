@@ -8,7 +8,8 @@ var jsface = require("jsface"),
     Class  = jsface.Class,
     extend = jsface.extend,
     LinAlg = require('../../www/js/linalg'),
-    MMOOUtil = require('./mmoo-util');
+    MMOOUtil = require('./mmoo-util'),
+    Units = require('./units');
 
 Messages.TYPES = {
     PING:0,
@@ -31,6 +32,14 @@ Messages.TYPES = {
     PATROL:17,
     STEP:18
 };
+Messages.TYPE_NAMES = [];
+(function() {
+    for (var name in Messages.TYPES) {
+        Messages.TYPE_NAMES[Messages.TYPES[name]] = name;
+    }
+})();
+
+
 Messages.NUM_TYPES = Object.keys(Messages.TYPES).length;
 
 Messages.expansions = {};
@@ -51,6 +60,7 @@ Messages.abbreviations = {};
         'point',
         'destination',
         'queue',
+        'killer',
         'moveSpeed',
         'attackDamage',
         'attackRange',
@@ -96,6 +106,10 @@ Messages.Message = Class({
             || this.type === Messages.TYPES.PROJECTILE
             || this.type === Messages.TYPES.STEP
         );
+    },
+
+    debugString: function() {
+        return Messages.TYPE_NAMES[this.type] + ' (' + this.type + ') ' + JSON.stringify(this.params);
     }
 });
 
@@ -141,14 +155,20 @@ Messages.UnitMove = Class(Messages.Message, {
             step: step,
             unit: unitId,
             direction: direction,
-            position: position
+            position: position.copy().round()
         });
+    },
+
+    debugString: function() {
+        if (this.params.direction === -1)
+            return 'STOP';
+        return Messages.UnitMove.$superp.debugString.call(this);
     }
 });
 
 Messages.UnitAttack = Class(Messages.Message, {
     constructor: function(step, unitId, targetId) {
-        Messages.UnitAttack.$super.call(this, Messages.TYPES.MOVE, {
+        Messages.UnitAttack.$super.call(this, Messages.TYPES.ATTACK, {
             step: step,
             unit: unitId,
             target: targetId
@@ -159,7 +179,6 @@ Messages.UnitAttack = Class(Messages.Message, {
 Messages.UnitHealth = Class(Messages.Message, {
     constructor: function(unitId, sourceId, amount) {
         Messages.UnitHealth.$super.call(this, Messages.TYPES.HEALTH, {
-            step: step,
             unit: unitId,
             source: sourceId,
             amount: amount
@@ -168,9 +187,10 @@ Messages.UnitHealth = Class(Messages.Message, {
 });
 
 Messages.UnitDeath = Class(Messages.Message, {
-    constructor: function(unitId) {
+    constructor: function(unitId, killerId) {
         Messages.UnitDeath.$super.call(this, Messages.TYPES.DEATH, {
-            unit: unitId
+            unit: unitId,
+            killer: killerId
         });
     }
 });
