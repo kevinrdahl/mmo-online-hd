@@ -11,6 +11,7 @@ var jsface = require("jsface"),
 var Data = require('./data');
 var game = require('./game/game');
 var Messages = require('./game/messages');
+var MMOOUtil = require('./game/mmoo-util');
 var TCP = require('./tcp');
 
 var Servers = {};
@@ -33,39 +34,39 @@ Servers.Server = Class({
         this.bannerText = fs.readFileSync('./config/banner.txt', 'utf8');
         console.log('Done!');
 
-        /*console.log('Connecting to database...');
+        console.log('Connecting to database...');
         this.dao = new Data.DAO(this.dbConfig);
         this.dao.connect(function() {
             _this.onDbConnect();
-        });*/
-        this.onDbConnect();
+        });
     },
 
     onDbConnect: function() {
         var _this = this;
 
-        console.log('Connected!');
-        //this.getGameData(function() {
+        console.log('Connected to database!');
+
+        this.getGameData(function() {
             _this.startComms();
             _this.startGame();
-        //});
+        });
     },
 
     startComms: function() {
         var _this = this;
 
         this.wsServer = new ws.Server({port:GLOBAL.settings.wsPort});
-        this.wsServer.on("connection", function(client){
-            client.clientType = CONN_WS; 
-            _this.onConnection(client);
+        this.wsServer.on("connection", function(connection){
+            client.connectionType = CONN_WS; 
+            _this.onConnection(connection);
         });
 
         console.log('WebSocket server running on port ' + GLOBAL.settings.wsPort);
 
         this.tcpServer = net.createServer(function(socket) {
-            var client = new TCP.tcpClient(socket);
-            client.clientType = CONN_TCP;
-            _this.onConnection(client);
+            var connection = new TCP.tcpClient(socket);
+            connection.connectionType = CONN_TCP;
+            _this.onConnection(connection);
         }).listen(GLOBAL.settings.tcpPort);
     },
 
@@ -75,65 +76,118 @@ Servers.Server = Class({
         this.game.start();
     },
 
-    onConnection: function(client) {
+    onConnection: function(connection) {
         var _this = this;
 
-        var id = (this.clientNum++).toString();
-        this.clients[id] = client;
-        client.id = id;
+        var client = new Servers.Client(connection);
+        this.clients[client.id] = client;
 
-        if (client.clientType == CONN_WS) {
-            client.on('close', function() {_this.onDisconnect(this.id)});
-            client.on('message', function(data) {_this.onMessage(this.id, data)});
+        if (connection.connectionType == CONN_WS) {
+            connection.on('close', function() {_this.onDisconnect(client)});
+            connection.on('message', function(data) {_this.onMessage(client, data)});
             console.log(id + ' CONNECTED (WS)');
-        } else if (client.clientType == CONN_TCP) {
-            client.onMessage = function(data) {_this.onMessage(this.id, data)};
-            client.onDisconnect = function(){_this.onDisconnect(this.id)};
+        } else if (connection.connectionType == CONN_TCP) {
+            connection.onMessage = function(data) {_this.onMessage(client, data)};
+            connection.onDisconnect = function(){_this.onDisconnect(client)};
             console.log(id + ' CONNECTED (TCP)');
         } else {
             console.log('CONNECTION PROBLEM!');
         }
 
         //send handshake
-        this.sendString(id, new Messages.Handshake().serialize());
+        client.send(new Messages.Handshake().serialize());
     },
 
-    onDisconnect: function(id) {
-        delete this.clients[id];
-        this.game.onDisconnect(id);
-        console.log(id + ' DISCONNECTED');
+    onDisconnect: function(client) {
+        client.connected = false;
+        delete this.clients[client.id];
+        this.game.onDisconnect(client);
+        console.log(client.id + ' DISCONNECTED');
     },
 
-    onMessage: function(clientId, data) {
+    onMessage: function(client, data) {
         var msg = Messages.parse(data);
         if (msg == null) {
-            console.log('ERROR parsing message "' + data + '" from client ' + clientId);
+            console.log('ERROR parsing message "' + data + '" from client ' + client.id);
             return;
         }
 
-        if (msg.type === Messages.TYPES.PING) {
-            //just reply, server doesn't care about timing
-            this.sendString(clientId, Messages.PING);
-        } else if (msg.type == Messages.TYPES.GAMES) {
-            //return a list of active games/worlds
-            this.sendString(clientId, new Messages.GameList([this.game]).serialize());
-        } else if (msg.type === Messages.TYPES.JOIN) {
-            //client is ready to connect to a game
-            //TODO: check whether that game exists (for now there's only 1 game)
-            this.game.onConnect(clientId);
+        switch(msg.type) {
+            case Messages.TYPES.PING:
+                this.sendString(client, Messages.PING);
+                break;
+
+            case Messages.TYPES.USER:
+                this.onUserMessage(client, msg);
+                break;
+
+            case Messages.TYPES.WORLD:
+                this.onWorldMessage(client, msg);
+                break;
+
+            default:
+                if (client.game !== null)
+                    client.game.onMessage(client, msg);
+        }
+    },
+
+    onUserMessage: function(client, msg) {
+        if (!Messages.assertParams(msg, client.id, ['action', 'name', 'password']))
+            return;
+
+        var action = msg.params.action;
+
+        if (action === 'login') {
+            console.log('Client ' + client.id + ' attempting login as "' + msg.name + '"');
+            this.dao.tryLogin(client, msg.name, msg.password, this.onLoginAttempt);
+        } else if (action === 'create') {
+            if (MMOOUtil.isValidPlayerName(msg.name)) {
+                console.log('Client ' + client.id + ' attempting to create user "' + msg.name + '"');
+                this.dao.tryCreateUser(client, msg.name, msg.password, this.onCreateUserAttempt);
+            }
+        }
+    },
+
+    onWorldMessage: function(client, msg) {
+        if (client.username === null || !Messages.assertParams(msg, client.id, ['action']))
+            return;
+
+        var action = msg.params.action;
+
+        if (action === 'get') {
+            client.send(new Messages.WorldList([this.game]).serialize());
+        } else if (action === 'join') {
+            this.game.onConnect(client);
+        }
+    },
+
+    onLoginAttempt: function(client, success, name) {
+        var response = new Messages.Message(Messages.TYPES.USER, {action:'login', success:false, name:name});
+
+        if (success) {
+            console.log('Client ' + client.id + ' logged in as "' + name + '"');
+            client.username = name;
+            response.params.success = true;
         } else {
-            this.game.onMessage(clientId, msg);
+            console.log('Client ' + client.id + ' failed to log in as "' + name + '"');
+        }
+
+        client.send(reponse.serialize());
+    },
+
+    onCreateUserAttempt: function(client, success, name) {
+        if (success) {
+            console.log('Client ' + client.id + ' created user "' + name + '"');
+            this.onLoginAttempt(client, true, name);
+        } else {
+            console.log('Client ' + client.id + ' failed to create user "' + name + '"');
         }
     },
 
     sendString: function(id, s) {
         //console.log('to ' + id + ': ' + s);
         if (typeof this.clients[id] !== 'undefined') {
-            try {
-                this.clients[id].send(s);
-            } catch (e) {
-                console.log(e);
-            }
+            this.clients[id].send(s);
         }
     },
 
@@ -147,3 +201,25 @@ Servers.Server = Class({
     }
 });
 
+Servers.Client = Class({
+    $static: {
+        count:0
+    },
+
+    constructor: function(connection) {
+        this.id = (Servers.Client.count++).toString();
+        this.connection = connection;
+        this.username = null;
+        this.game = null;
+        this.connected = true;
+    },
+
+    send: function(s) {
+        try {
+            this.connection.send(s);
+        } catch (e) {
+            console.log("SEND ERROR");
+            console.log(e);
+        }
+    }
+})

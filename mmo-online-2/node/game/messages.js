@@ -24,9 +24,9 @@ Messages.TYPES = {
     CHAT:9,
     COMMAND:10,
     ERROR:11,
-    LOGIN:12,
-    HANDSHAKE:13,
-    GAMES:14,
+    USER:12,
+    CHARACTER:13,
+    WORLD:14,
     JOIN:15,
     DEATH:16,
     PATROL:17,
@@ -61,6 +61,7 @@ Messages.abbreviations = {};
         'destination',
         'queue',
         'killer',
+        'success',
         'moveSpeed',
         'attackDamage',
         'attackRange',
@@ -115,14 +116,20 @@ Messages.Message = Class({
 
 //NOTE: unique in that it doesn't serialize to standard message format, since the client wouldn't know how to read it
 Messages.Handshake = Class(Messages.Message, {
+    $static: {
+        str: null
+    },
+
     constructor: function() {},
 
     serialize: function() {
-        return JSON.stringify({
-            types: Messages.TYPES,
-            abbreviations: Messages.abbreviations,
-            expansions: Messages.expansions
-        });
+        if (Messages.Handshake.str === null) {
+            Messages.Handshake.str = JSON.stringify({
+                types: Messages.TYPES,
+                abbreviations: Messages.abbreviations
+            });
+        }
+        return Messages.Handshake.str;
     }
 })
 
@@ -134,7 +141,7 @@ Messages.LogInResponse = Class(Messages.Message, {
     }
 });
 
-Messages.GameList = Class(Messages.Message, {
+Messages.WorldList = Class(Messages.Message, {
     constructor: function(games) {
         var descriptions = [];
         for (var i = 0; i < games.length; i++) {
@@ -143,8 +150,8 @@ Messages.GameList = Class(Messages.Message, {
                 players: Object.keys(games[i].players).length
             });
         }
-        Messages.GameList.$super.call(this, Messages.TYPES.GAMES, {
-            games: descriptions
+        Messages.WorldList.$super.call(this, Messages.TYPES.WORLD, {
+            worlds: descriptions
         });
     }
 });
@@ -196,14 +203,8 @@ Messages.UnitDeath = Class(Messages.Message, {
 });
 
 Messages.Projectile = Class(Messages.Message, {
-    constructor: function(step, position, target, speed, graphic) {
-        Messages.Projectile.$super.call(this, Messages.TYPES.PROJECTILE, {
-            step: step,
-            position: position,
-            target: target,
-            speed: speed,
-            graphic: graphic
-        });
+    constructor: function(step, projectile) {
+        Messages.Projectile.$super.call(this, Messages.TYPES.PROJECTILE, projectile.messageParams);
     }
 });
 
@@ -313,4 +314,26 @@ Messages.parse = function(s) {
     Messages.expand(params);
 
     return new Messages.Message(msgType, params);
+};
+
+Messages.logError = function(msg, clientId, reason) {
+    console.log('ERROR in %s message from client %s, reason: %s',
+        Messages.TYPE_NAMES[msg.type],
+        clientId.toString(),
+        reason
+    );
+};
+
+Messages.assertParams = function(msg, clientId, params, noLog) {
+    var param;
+    for (var i = 0; i < params.length; i++) {
+        param = params[i];
+        if (!(param in msg.params)) {
+            if (!noLog)
+                Messages.logError(msg, clientId, 'missing param ' + param);
+            return false;
+        }
+    }
+
+    return true;
 };

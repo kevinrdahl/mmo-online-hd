@@ -35,11 +35,12 @@ Game.Game = Class({
         this.players = {};
         this.units = {};
         this.projectiles = [];
+        this.updateLengths = [];
     },
 
     start: function() {
         this.vision = new Vision.Vision();
-        this.startTime = new Date().getTime();
+        this.startTime = Date.now();
         this.lastStepTime = this.startTime - this.tickLen;
         this.nextStepTime = this.startTime;
 
@@ -51,6 +52,7 @@ Game.Game = Class({
 
     update: function() {
         var _this = this;
+        var updateBeginTime = Date.now();
         this.currentStep += 1;
 
         this.updateVision();
@@ -69,11 +71,29 @@ Game.Game = Class({
 
         GameLogic.update(this);
 
-        var currentTime = new Date().getTime();
+        var currentTime = Date.now();
+        this.logUpdateLength(currentTime - updateBeginTime);
         this.lastStepTime = currentTime;
         this.nextStepTime += this.tickLen;
 
         setTimeout(function(){_this.update();}, this.nextStepTime - currentTime);
+    },
+
+    logUpdateLength: function(len) {
+        var interval = 5000; //5 seconds
+        var max = interval / this.tickLen;
+        var lengths = this.updateLengths;
+
+        lengths.push(len);
+        if (lengths.length === max) {
+            var avg = 0;
+            for (var i = 0; i < lengths.length; i++) {
+                avg += lengths[i];
+            }
+            avg /= lengths.length;
+            lengths.splice(0, lengths.length);
+            console.log('AVG SIM TIME: ' + avg + 'ms (' + 1000/avg + ' fps)');
+        }
     },
 
     updateVision: function() {
@@ -114,11 +134,27 @@ Game.Game = Class({
 
     updateProjectiles: function() {
         var p;
+        var remove;
         for (var i = 0; i < this.projectiles.length; i++) {
+            remove = false;
             p = this.projectiles[i];
             p.update();
-            if (p.hit) {
-                //dunno yet
+
+            if (p.disjointed) {
+                remove = true;
+            } else if (p.hit) {
+                remove = true;
+                if (p instanceof Projectiles.AttackProjectile) {
+                    var target = p.target;
+                    if (target.alive) {
+                        target.takeDamage(p.source, p.damage, p.damageType);
+                    }
+                }
+            }
+
+            if (remove) {
+                this.projectiles.splice(i, 1);
+                i--;
             }
         }
     },
@@ -140,7 +176,7 @@ Game.Game = Class({
                 m = messages[i];
                 s = m.serialize();
 
-                console.log('Unit %s: %s', unit.id, m.debugString());
+                console.log('Unit %s: %s (%d chars)', unit.id, m.debugString(), s.length);
                 //console.log('         "' + s + '"');
 
                 hasStep = false;
@@ -182,7 +218,7 @@ Game.Game = Class({
         }
 
         this.players[clientId] = new Player(clientId);
-        var currentTime = new Date().getTime();
+        var currentTime = Date.now();
         //this.sendString(clientId, Messages.sync(clientId, this.currentStep, currentTime - this.lastStepTime));
         this.vision.addObserver(clientId);
     },
@@ -271,10 +307,7 @@ Game.Game = Class({
         //tell everyone! this needs to not be everyone
         this.broadcast(new Messages.Projectile(
             this.currentStep,
-            projectile.position,
-            projectile.target,
-            projectile.speed,
-            projectile.graphic
+            projectile
         ).serialize());
     },
 

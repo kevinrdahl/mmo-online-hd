@@ -34,6 +34,10 @@ Projectiles.Projectile = Class({
 		} else {
 			this.position.offsetTo(destination, this.speed);
 		}
+	},
+
+	messageParams: function() {
+		return {};
 	}
 });
 
@@ -49,6 +53,15 @@ Projectiles.TargetProjectile = Class(Projectiles.Projectile, {
 		} else {
 			this.disjointed = true;
 		}
+	},
+
+	messageParams: function() {
+		return {
+			position: this.position,
+			speed: this.speed,
+			graphic: this.graphic,
+			target: this.target.id
+		};
 	}
 });
 
@@ -63,6 +76,8 @@ Projectiles.AttackProjectile = Class(Projectiles.TargetProjectile, {
 		);
 
 		this.damage = source.attackDamage;
+		this.damageType = 'physical';
+		this.source = source;
 	}
 });
 
@@ -74,5 +89,14 @@ Projectiles.PointProjectile = Class(Projectiles.Projectile, {
 
 	update: function() {
 		this.stepTo(this.point);
+	},
+
+	messageParams: function() {
+		return {
+			position: this.position,
+			speed: this.speed,
+			graphic: this.graphic,
+			point: this.point
+		};
 	}
 });

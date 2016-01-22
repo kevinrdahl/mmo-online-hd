@@ -1,12 +1,10 @@
 var MMOOUtil = {};
+module.exports = MMOOUtil;
 
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = MMOOUtil;
-
-    var jsface = require("jsface"),
-        Class  = jsface.Class,
-        extend = jsface.extend;
-}
+var jsface = require("jsface"),
+    Class  = jsface.Class,
+    extend = jsface.extend;
+var regexp = require('node-regexp');
 
 MMOOUtil.IdPool = Class({
 	$static: {
@@ -71,4 +69,9 @@ MMOOUtil.rateToDelta = function(rate) {
 
 MMOOUtil.secondsToFrames = function(secs) {
 	return Math.round(secs * (1000.0 / GLOBAL.settings.tickLen));
+};
+
+MMOOUtil.isValidPlayerName = function(name) {
+	var re = new RegExp('^[A-Z][a-z]+(?:[\\s-][A-Z][a-z]+)?$');
+	return re.test(name);
 };

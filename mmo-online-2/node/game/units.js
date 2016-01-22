@@ -181,6 +181,7 @@ Units.Unit = Class({
                         //if not winding up, do so
                         if (this.windUp <= -1) {
                             this.windUp = this.attackWindUpFrames;
+                            this.messages.push(new Messages.UnitAttack(game.currentStep, this.id, order.unit.id));
                         }
 
                         //if just completed windUp (or there was none), attack!
@@ -196,8 +197,6 @@ Units.Unit = Class({
     attack: function(game, unit) {
         this.followThrough = this.attackFollowThroughFrames;
         this.cooldowns.attack = this.attackCooldownFrames;
-
-        this.messages.push(new Messages.UnitAttack(game.currentStep, this.id, unit.id));
  
         if (this.projectileSpeed > 0) {
             //spawn projectile

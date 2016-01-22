@@ -49,7 +49,7 @@ Fancy text:
 [X] Get rid of uses of the propIsVector2 function, since parse creates them now.
 
 
-[ ] Projectiles
+[~] Projectiles
 
 	There are two types of projectiles, point target and unit target.
 
