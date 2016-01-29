@@ -146,6 +146,7 @@ Messages.WorldList = Class(Messages.Message, {
         var descriptions = [];
         for (var i = 0; i < games.length; i++) {
             descriptions.push({
+                id: games[i].id,
                 name: games[i].name,
                 players: Object.keys(games[i].players).length
             });
@@ -213,6 +214,15 @@ Messages.Step = Class(Messages.Message, {
         Messages.Step.$super.call(this, Messages.TYPES.STEP, {step: step});
     }
 });
+
+Messages.UserResponse = Class(Messages.Message, {
+    constructor: function(action, success, failReason) {
+        var params = {action:action, success:success};
+        if (!success)
+            params.reason = failReason;
+        Messages.UserResponse.$super.call(this, Messages.TYPES.USER, params);
+    }
+})
 
 /*************
  * FUNCTIONS *

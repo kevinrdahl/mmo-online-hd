@@ -72,7 +72,7 @@ Servers.Server = Class({
 
     startGame: function() {
         console.log('\n' + this.bannerText + '\n');
-        this.game = new game.Game(this, "Game 1");
+        this.game = new game.Game(this, "Nova", 1);
         this.game.start();
     },
 
@@ -118,12 +118,7 @@ Servers.Server = Class({
                 break;
 
             case Messages.TYPES.USER:
-                this.onUserMessage(client, msg);
-                break;
-
-            case Messages.TYPES.WORLD:
-                this.onWorldMessage(client, msg);
-                break;
+                this.onReceiveDaoMessage(client, msg);
 
             default:
                 if (client.game !== null)
@@ -131,57 +126,197 @@ Servers.Server = Class({
         }
     },
 
-    onUserMessage: function(client, msg) {
-        if (!Messages.assertParams(msg, client.id, ['action', 'name', 'password']))
-            return;
+    onReceiveDaoMessage: function(client, msg) {
+        client.daoMessages.push(msg);
+        if (client.daoMessages.length === 1) {
+            this.processNextDaoMessage(client);
+        }
+    },
 
-        var action = msg.params.action;
+    onCompleteDaoMessage: function(client) {
+        client.daoMessages.shift();
+        if (client.daoMessages.length > 0) {
+            this.processNextDaoMessage(client);
+        }
+    },
 
-        if (action === 'login') {
-            console.log('Client ' + client.id + ' attempting login as "' + msg.name + '"');
-            this.dao.tryLogin(client, msg.name, msg.password, this.onLoginAttempt);
-        } else if (action === 'create') {
-            if (MMOOUtil.isValidPlayerName(msg.name)) {
-                console.log('Client ' + client.id + ' attempting to create user "' + msg.name + '"');
-                this.dao.tryCreateUser(client, msg.name, msg.password, this.onCreateUserAttempt);
+    processNextDaoMessage: function(client) {
+        var msg = client.daoMessages[0];
+        var discard = true;
+        var responded = false;
+        var sendOK = false;
+        var failReason = 'bad thing';
+
+        if (Messages.assertParams(msg, client.id, ['action'])) {
+            var action = msg.params.action;
+
+            switch(action) {
+                case 'loginUser':
+                    if (!Messages.assertParams(msg, client.id, ['action', 'name', 'password'])) {
+                        failReason = 'missing param';
+                    } else if (client.userId !== null) {
+                        failReason = 'already logged in';
+                    } else {
+                        discard = false;
+                        this.dao.login(client, msg.name, msg.password, this.onUserLogin);
+                    }
+                    break;
+
+                case 'createUser':
+                    if (!Messages.assertParams(msg, client.id, ['action', 'name', 'password'])) {
+                        failReason = 'missing param';
+                    } else if (client.userId !== null) {
+                        failReason = 'already logged in';
+                    } else if (!MMOO.isValidUserName(msg.params.name)) { 
+                        failReason = 'invalid user name';
+                    } else {
+                        discard = false;
+                        this.dao.createUser(client, msg.name, msg.password, this.onUserCreated);
+                    }
+                    break;
+
+                case 'getWorlds':
+                    if (user.userId === null) {
+                        failReason = 'not logged in';
+                    } else {
+                        discard = false;
+                        client.send(new Messages.WorldList([this.game]).serialize());
+                        responded = true;
+                    }
+                    break;
+
+                case 'loginWorld':
+                    if (!Messages.assertParams(msg, client.id, ['worldId'])) {
+                        failReason = 'missing param';
+                    } else if (user.userId === null) {
+                        failReason = 'not logged in';
+                    } else if (msg.params.worldId != 1) {
+                        failReason = 'world doesn\'t exist';
+                    } else {
+                        discard = false;
+                        sendOK = true;
+                        responded = true;
+
+                        client.worldId = msg.params.worldId;
+                    }
+                    break;
+
+                case 'getCharacters':
+                    if (!Messages.assertParams(msg, client.id, ['worldId'])) {
+                        failReason = 'missing param';
+                    } else if (client.userId === null) {
+                        failReason = 'not logged in';
+                    } else if (client.worldId === null) {
+                        failReason = 'no world joined';
+                    } else {
+                        discard = false;
+                        this.dao.getUserCharacters(client, this.onGetUserCharacters);
+                    }
+                    break;
+
+                case 'loginCharacter':
+                    if (!Messages.assertParams(msg, client.id, ['characterId'])) {
+                        failReason = 'missing param';
+                    } else if (client.userId === null) {
+                        failReason = 'not logged in';
+                    } else if (client.worldId === null) {
+                        failReason = 'no world joined';
+                    } else if (client.characterId !== null) {
+                        failReason = 'already playing a character';
+                    } else {
+                        discard = false;
+                        this.dao.getCharacter(client, msg.params.characterId, this.onGetCharacter);
+                    }
+                    break;
+
+                case 'createCharacter':
+                    if (!Messages.assertParams(msg, client.id, ['name', 'json'])) {
+                        failReason = 'missing param';
+                    } else if (client.userId === null) {
+                        failReason = 'not logged in';
+                    } else if (client.worldId === null) {
+                        failReason = 'no world joined';
+                    } else if (client.characterId !== null) {
+                        failReason = 'already playing a character';
+                    } else {
+                        var character = Characters.fromJSON(msg.params.name, msg.params.json);
+                        if (character === null) {
+                            failReason = 'invalid character json';
+                        } else {
+                            discard = false;
+                            this.dao.createCharacter(client, character.name, msg.params.json, this.onCreateCharacter);
+                        }
+                    }
+                    break;
+
+                default:
+                    failReason = 'invalid action';
+                    discard = true;
             }
-        }
-    },
-
-    onWorldMessage: function(client, msg) {
-        if (client.username === null || !Messages.assertParams(msg, client.id, ['action']))
-            return;
-
-        var action = msg.params.action;
-
-        if (action === 'get') {
-            client.send(new Messages.WorldList([this.game]).serialize());
-        } else if (action === 'join') {
-            this.game.onConnect(client);
-        }
-    },
-
-    onLoginAttempt: function(client, success, name) {
-        var response = new Messages.Message(Messages.TYPES.USER, {action:'login', success:false, name:name});
-
-        if (success) {
-            console.log('Client ' + client.id + ' logged in as "' + name + '"');
-            client.username = name;
-            response.params.success = true;
         } else {
-            console.log('Client ' + client.id + ' failed to log in as "' + name + '"');
+            msg.params.action = 'none';
+            failReason = 'no action';
+            discard = true;
         }
 
-        client.send(reponse.serialize());
+        if (discard) {
+            client.send(new Messages.UserResponse(msg.params.action, false, failReason).serialize());
+            responded = true;
+        } else if (sendOK) {
+            client.send(new Messages.UserResponse(msg.params.action, true).serialize());
+            responded = true;
+        }
+
+        if (responded) {
+            this.onCompleteDaoMessage(client);
+        }
     },
 
-    onCreateUserAttempt: function(client, success, name) {
+    onUserLogin: function(client, results) {
+        var response = new Messages.Message(Messages.TYPES.USER, {
+            action:'login', 
+            success:false
+        });
+
+        if (results !== null) {
+            //success!
+            client.userId = results.user_id;
+            client.userName = results.name
+            client.settings = JSON.parse(results.settings);
+
+            response.params.success = true;
+            response.params.settings = results.settings;
+            response.params.name = results.name;
+
+            console.log('Client ' + client.id + ' logged in as "' + results.name + '"');
+        } else {
+            console.log('Client ' + client.id + ' failed to log in.');
+        }
+
+        client.send(response.serialize());
+    },
+
+    onUserCreated: function(client, success, name) {
+        var response = new Messages.Message(Messages.TYPES.USER, {
+            action:'create', 
+            success:success
+        });
+
         if (success) {
             console.log('Client ' + client.id + ' created user "' + name + '"');
-            this.onLoginAttempt(client, true, name);
         } else {
-            console.log('Client ' + client.id + ' failed to create user "' + name + '"');
+            console.log('Client ' + client.id + ' failed to create user.');
         }
+
+        client.send(response.serialize());
+    },
+
+    onGetUserCharacters: function(client, results) {
+        var response = new Messages.Message(Messages.TYPES.CHARACTER, {
+            action:'get', 
+            characters:results
+        });
+        client.send(response.serialize());
     },
 
     sendString: function(id, s) {
@@ -210,8 +345,15 @@ Servers.Client = Class({
         this.id = (Servers.Client.count++).toString();
         this.connection = connection;
         this.username = null;
+        this.userId = null;
+        this.worldId = null;
+        this.characterId = null;
         this.game = null;
         this.connected = true;
+
+        //to avoid ordering shenanigans, and to prevent one user using multiple db connections
+        //a queue of actions which require SQL queries
+        this.daoMessages = [];
     },
 
     send: function(s) {

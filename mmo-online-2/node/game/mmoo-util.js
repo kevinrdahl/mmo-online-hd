@@ -59,10 +59,8 @@ MMOOUtil.IdPool = Class({
 });
 
 
-/*
- * Wherever possible, things are stored as rates, eg attacks/second.
- * This returns the appropriate tick delta, based on sim frequency.
- */
+// Wherever possible, things are stored as rates, eg attacks/second.
+// This returns the appropriate tick delta, based on sim frequency.
 MMOOUtil.rateToDelta = function(rate) {
 	return rate * (GLOBAL.settings.tickLen / 1000.0);
 };
@@ -71,7 +69,12 @@ MMOOUtil.secondsToFrames = function(secs) {
 	return Math.round(secs * (1000.0 / GLOBAL.settings.tickLen));
 };
 
-MMOOUtil.isValidPlayerName = function(name) {
-	var re = new RegExp('^[A-Z][a-z]+(?:[\\s-][A-Z][a-z]+)?$');
-	return re.test(name);
+MMOOUtil.isValidCharacterName = function(name) {
+	var re = new RegExp('^[A-Z][a-z]+(?:[\\s-\'][A-Z][a-z]+)?$');
+	return name.length <= 15 && re.test(name);
+};
+
+MMOOUtil.isValidUserName = function(name) {
+	var re = new RegExp('^[A-Za-z0-9]+(?:[\\s\\._-/\'][A-Za-z0-9]+)?(?:[\\s\\._-/\'][A-Za-z0-9]+)?$');
+	return name.length <= 25 && re.test(name);
 };

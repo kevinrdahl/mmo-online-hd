@@ -10,8 +10,10 @@ Players.Player = Class({
 		STEP_UPDATE_INTERVAL:5
 	},
 
-	constructor: function(id) {
+	constructor: function(id, client) {
 		this.id = id;
+		this.client = client;
 		this.lastMessageStep = -1000;
+		this.unit = null;
 	}
 });

@@ -22,8 +22,9 @@ var jsface = require("jsface"),
     extend = jsface.extend;
 
 Game.Game = Class({
-    constructor: function(server, name) {
+    constructor: function(server, name, id) {
         this.server = server;
+        this.id = id;
         this.name = name;
         this.startTime = null;
         this.currentStep = null;

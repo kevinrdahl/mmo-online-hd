@@ -3,6 +3,8 @@ module.exports = Data;
 
 var mysql = require('mysql');
 
+Data.DEFAULT_USER_SETTINGS = {};
+
 Data.DAO = function(config) {
 	this.config = config;
 
@@ -22,7 +24,7 @@ Data.DAO = function(config) {
 	this.query = function(query, callback) {
 		this.pool.query(query, function(err, rows) {
 			if (err) {
-				console.error('DAO query error: ' + err.stack);
+				console.error('SQL error: ' + err.stack);
 				return;
 			}
 
@@ -54,33 +56,100 @@ Data.DAO = function(config) {
 		}
 	};
 
-	this.tryLogin = function(client, name, password, callback) {
-		var queryString = 'SELECT COUNT(*) as num FROM User WHERE `name`=? and password=?;';
+	this.getWorlds = function(callback) {
+		this.pool.query(
+			'SELECT * FROM Worlds;',
+			function(err, results) {
+				if (err) {
+					console.log('SQL ERROR getting world data: ' + err.code);
+					callback([]);
+				} else {
+					callback(results);
+				}
+			}
+		);
+	};
+
+	this.getUserCharacters = function(client, callback) {
+		var queryString = 'SELECT character_id, `name`, summary' 
+			+ ' FROM `Character`'
+			+ ' WHERE user_id=? AND world_id=?;';
+
+		this.pool.query(queryString, [client.userId, client.worldId], function(err, results) {
+			if (err) {
+				console.log('SQL ERROR getting characters: ' + err.code);
+				callback(client, null);
+			} else {
+				callback(client, results);
+			}
+		});
+	};
+
+	this.getCharacter = function(client, characterId, callback) {
+		var queryString = 'SELECT character_id, `name`, json' 
+			+ ' FROM `Character`'
+			+ ' WHERE character_id=? AND user_id=? AND world_id=?;';
+
+		this.pool.query(queryString, [characterId, client.userId, client.worldId], function(err, results) {
+			if (err) {
+				console.log('SQL ERROR getting character ' + characterId + ': ' + err.code);
+				callback(client, null);
+			} else {
+				callback(client, results[0]);
+			}
+		});
+	};
+
+	this.createCharacter = function(client, characterName, json, callback) {
+		var queryString = 'INSERT INTO `Character` SET ?';
+		var queryParams = {
+			user_id: client.userId,
+			world_id: client.worldId,
+			name: characterName,
+			json: json
+		};
+
+		this.pool.query(queryString, queryParams, function(err, results) {
+			if (err) {
+				console.log('SQL ERROR creating character: ' + err.code);
+				callback(client, false);
+			} else {
+				callback(client, true);
+			}
+		});
+	};	
+
+	this.login = function(client, name, password, callback) {
+		var queryString = 'SELECT user_id, `name`, settings FROM User WHERE `name`=? and password=?;';
 
 		this.pool.query(queryString, [name, password], function(err, results) {
 			if (err) {
-				console.log('LOGIN ERROR: ' + err.code);
-				callback(client, false, name);
+				console.log('SQL ERROR logging in: ' + err.code);
+				callback(client, null);
 				return;
 			}
 			
-			var num = results[0]['num'];
-			callback(client, (num==1), name);
+			if (results.length === 1) {
+				callback(client, results[0]);
+			} else {
+				callback(client, null);
+			}
 		});
-	}
+	};
 
-	this.tryCreateUser = function(client, name, password, callback) {
+	this.createUser = function(client, name, password, callback) {
 		var queryString = 'INSERT INTO User SET ?';
+		var queryParams = {name:name, password:password, settings:JSON.stringify(Data.DEFAULT_USER_SETTINGS)};
 
-		this.pool.query(queryString, {name:name, password:password}, function(err, result) {
+		this.pool.query(queryString, queryParams, function(err, result) {
 			if (err) {
-				console.log('CREATE USER ERROR: ' + err.code);
+				console.log('SQL ERROR creating user: ' + err.code);
 				callback(client, false, name);
 				return;
 			}
 			callback(client, true, name);
 		});	
-	}
+	};
 };
 
 Data.noop = function(){};

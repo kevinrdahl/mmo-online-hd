@@ -1,55 +1,53 @@
 Websocket connection established
 
-Server sends communication info
+[S] Server sends communication info
 	JSON:
 		Message types
 		Abbreviations
 	All hereafter use normal message format
 
-Client requests either to log in or to create a new user.
+[S] Client requests either to log in or to create a new user.
 	type USER
 	action 'login' or 'create'
 
-If successful, server responds.
+[S] If successful, server responds.
 	type USER
 	action 'login'
 	username
 	userid
+	settings
 
-Client requests world list
+[S] Client requests world list
 	type WORLD
 	action 'get'
 
-Server sends world list
+[S] Server sends world list
 	type WORLD
 	list of worlds(games)
 
-Client requests to join world/game
+[S] Client requests to join world/game
 	type WORLD
 	action 'join'
 	worldId
 
 
-=== Server calls game's onConnect function ===
-=== Game adds player to pending list ===
-
-
-Game sends list of player's characters
+[ ] Game sends list of player's characters
 	type CHARACTER
 	list of characters
 
-Client might create a character
+[ ] Client might create a character
 	type CHARACTER
 	action 'create'
 	character name
 	character start params
 
-If create sent, game resends character list
+[ ] If create sent, game resends character list
 
-Enter world as character
+[ ] Enter world as character
 	type CHARACTER
 	action 'play'
 	character name
 
+=== Server calls game's onConnect function with client and character ===
 === Game spawns the character, adds player to players list ===
 === Begin normal interaction ===
