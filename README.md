@@ -1,12 +1,25 @@
-MMO Online HD
-=============
+#MMO Online HD
+MMO Online HD is basically a browser MMO, targeting up to date versions of Chrome and Firefox. If you have a bug in one of those browsers, tell me. If you're running something else, don't.
+
+This is nowhere near done, so pay it no mind.
+
+---
 ###Round Two 
-MMO Online spent too much time reinventing the wheel. Time to embrace the future, where everything is built on everything else. There are many reasons why this will be objectively better than the original.
+MMO Online was a learning experience. I learned a *lot* about JavaScript, got to make skellingtons, and basically made a lot of my own nifty tech. It's also a mess. MMO Online HD aims to be much better organized, in part by pulling in a bunch of other, more established tech.
 #####pixi.js
-The fastest JavaScript 2D graphics engine around, with tons of handy features. 
+Super fast 2D WebGL engine, with gobs of features. It has a canvas fallback too, not that target users will need that.
 #####CreateJS
-PreloadJS and SoundJS for asset loading and sound.
+PreloadJS and SoundJS for asset loading and sound. I've so far done neither of these, but it's in the works.
 #####Improved Latency Compensation
-The old system was modelled somewhat after TCP's "ramp up, fall back" mechanism. It was okay, but it wasn't great. The new scheme is much smarter, smoother, and all around better.
+The old system was modelled somewhat after TCP's "ramp up, fall back" mechanism. This meant that hiccups were guaranteed at semiregular intervals, and it was hard to make it behave exactly the way I wanted it to. The new model uses a weighted moving average, with a configurable aggressiveness. Neat.
 #####Better Practices
-The first game was basically thrown together. This time, things are actually organized. It helps.
+As it turns out, pretty much all the "nice" parts of JavaScript (callbacks, closures, dynamic objects, etc) make your codebase awful. I've been striving to treat it like any other OO language most of the time, and this has made the design aspect a lot more friendly. To this end, I'm using jsface tp give me some semblance of Class functionality.
+
+---
+###Misc Learning
+* Drastically reducing code clarity for minor speed improvements: NOT worth it.
+* Wherever possible, avoid adding properties to objects, or deleting existing ones. This changes their "hidden class", undoing any optimizations the JavaScript engine has done.
+* Similarly, always try to pass the same types of variables to a function. This lets the engine optimize better.
+* Disposable objects are actually pretty expensive compared to other OO languages. Internal messages, requests, events, etc should be minimized or recycled. Async I/O makes this a little easier.
+* Use native functions whenever possible. They're WAY faster.
+* Do NOT use array.sort() for insertion sort. Most implementations barely benefit from mostly-sorted data.
