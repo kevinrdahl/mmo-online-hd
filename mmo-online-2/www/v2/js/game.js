@@ -28,32 +28,32 @@ function initGame() {
 	//TODO: kibo
 
 	//logging
-	game.logger = new Logger();
+	window.logger = new Logger();
 
-	game.logger.types["debug"] = new Logger.LogType({
+	window.logger.types["debug"] = new Logger.LogType({
 		textColor:"#999" //grey
 	});
-	game.logger.types["error"] = new Logger.LogType({
+	window.logger.types["error"] = new Logger.LogType({
 		textColor:"#f00", //red
 		prefix:"ERROR"
 	});
-	game.logger.types["game"] = new Logger.LogType({
+	window.logger.types["game"] = new Logger.LogType({
 		textColor:"#093", //green
 		prefix:"game"
 	});
-	game.logger.types["conn"] = new Logger.LogType({
+	window.logger.types["conn"] = new Logger.LogType({
         textColor:"#fff", //white
         bgColor:"#06c" //blue
     });
-    game.logger.types["connRecv"] = new Logger.LogType({
+    window.logger.types["connRecv"] = new Logger.LogType({
         textColor:"#06c", //blue
         prefix:"RECV"
     });
-    game.logger.types["connSend"] = new Logger.LogType({
+    window.logger.types["connSend"] = new Logger.LogType({
         textColor:"#93f", //purple
         prefix:"SEND"
     });
-    game.logger.types["ui"] = new Logger.LogType({
+    window.logger.types["ui"] = new Logger.LogType({
         textColor:"#f90", //orange
         prefix:"ui"
     });
@@ -72,6 +72,9 @@ function initGame() {
 	//set up the view
 	resizeView();
 	drawStage();
+
+	//connect to the server
+	initConnection();
 
 	//load
 	loadAssets();
