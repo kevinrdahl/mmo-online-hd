@@ -1,10 +1,10 @@
-var InterfaceButton = Class(InterfaceElement, {
+var InterfaceTexture = Class(InterfaceElement, {
 	constructor: function(texture, options) {
-		this.enabled = true;
+		//this.enabled = true;
 		options.width = texture.width;
 		options.height = texture.height;
 
-		InterfaceButton.$super.call(this, options);
+		InterfaceTexture.$super.call(this, options);
 
 		this.isClickable = true;
 
@@ -12,7 +12,9 @@ var InterfaceButton = Class(InterfaceElement, {
 		this.displayObject.addChild(this.sprite);
 	},
 
-	setEnabled: function(enabled) {
+	//might be worth adding to base class
+
+	/*setEnabled: function(enabled) {
 		this.enabled = enabled;
 
 		if (enabled) {
@@ -30,9 +32,21 @@ var InterfaceButton = Class(InterfaceElement, {
 	disabledEffect: function() {
 		this.sprite.filters = [game.filters.gray];
 		this.sprite.tint = 0xaaaaaa;
+	},*/
+
+	getClassName: function() {
+		return "Texture";
+	}
+});
+
+var ActiveTexture = Class(InterfaceTexture, {
+	constructor: function(textures, startTexture, options) {
+		this.textures = textures;
+
+		ActiveTexture.$super.call(this, textures[startTexture], options);
 	},
 
 	getClassName: function() {
-		return "Button";
+		return "Active Texture";
 	}
 });

@@ -48,7 +48,6 @@ Messages.abbreviations = {};
 //create abbreviations
 //NOTE: To distinguish them from properties which are simply very short, they all begin with a '?'
 (function() {
-    //terms that should be shortened in communication
     var terms = [
         'step',
         'unit',
@@ -238,9 +237,8 @@ Messages.abbreviateRecursive = function(obj) {
         key = keys[i];
         val = obj[key];
 
-        //PERFORMANCE HIT PROBABLY TOO BIG
         if (val instanceof LinAlg.Vector2) {
-            //val = [val.x, val.y];
+            val = [val.x, val.y];
         } else if (typeof val === 'object' && val !== null && !Array.isArray(val)) {
             val = Messages.abbreviateRecursive(val);
         }

@@ -37,6 +37,7 @@ Units.Unit = Class({
 
         this.position = position.copy();
         this.nextPosition = position.copy();
+        this.lastBroadcastPosition = position.copy();
         this.direction = -2;
         this.lastDirection = -2;
 
@@ -261,6 +262,13 @@ Units.Unit = Class({
         var m = this.messages;
         this.messages = [];
         return m;
+    },
+
+    getPositionDelta: function(noUpdate) {
+        var v = this.position.copy().sub(this.lastBroadcastPosition);
+        if (!noUpdate)
+            this.lastBroadcastPosition.set(this.position);
+        return v;
     },
 
     updateDerivedStats: function() {

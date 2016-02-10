@@ -57,7 +57,7 @@ Servers.Server = Class({
 
         this.wsServer = new ws.Server({port:GLOBAL.settings.wsPort});
         this.wsServer.on("connection", function(connection){
-            client.connectionType = CONN_WS; 
+            connection.connectionType = CONN_WS; 
             _this.onConnection(connection);
         });
 
@@ -85,11 +85,11 @@ Servers.Server = Class({
         if (connection.connectionType == CONN_WS) {
             connection.on('close', function() {_this.onDisconnect(client)});
             connection.on('message', function(data) {_this.onMessage(client, data)});
-            console.log(id + ' CONNECTED (WS)');
+            console.log(client.id + ' CONNECTED (WS)');
         } else if (connection.connectionType == CONN_TCP) {
             connection.onMessage = function(data) {_this.onMessage(client, data)};
             connection.onDisconnect = function(){_this.onDisconnect(client)};
-            console.log(id + ' CONNECTED (TCP)');
+            console.log(client.id + ' CONNECTED (TCP)');
         } else {
             console.log('CONNECTION PROBLEM!');
         }

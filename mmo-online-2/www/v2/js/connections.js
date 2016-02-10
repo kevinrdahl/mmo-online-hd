@@ -11,23 +11,34 @@ Connections.Connection = Class({
         MmooUtil.applyProps(this, options);
 
         this.ws = null;
+
+        this.abbreviations = {};
+        this.expansions = {};
+        this.messageTypes = {};
+        this.commInfoReceived = false;
     },
 
-    connect: function(connString) {
-        if (this.ws !== null)
-            this.disconnect;
+    connect: function() {
+        var _this = this;
 
-        this.connString = connString;
+        if (this.ws !== null)
+            this.disconnect('reconnecting');
+
+        if (this.connString === null) {
+            logger.log('error', 'CONNECTION no connection string provided');
+            return;
+        }
+
         this.ws = new WebSocket(this.connString);
 
-        this.ws.addEventListener('open', this.onWsConnect);
-        this.ws.addEventListener('close', this.onWsDisconnect);
-        this.ws.addEventListener('message', this.onWsMessage);
-        this.ws.addEventListener('error', this.onWsError);
+        this.ws.addEventListener('open',    function()  { _this.onWsConnect();    });
+        this.ws.addEventListener('close',   function()  { _this.onWsDisconnect(); });
+        this.ws.addEventListener('message', function(m) { _this.onWsMessage(m);   });
+        this.ws.addEventListener('error',   function(e) { _this.onWsError(e);     });
     },
 
     disconnect: function(reason) {
-        reason = (typeof reason !== 'undefined') ? reason : ':)';
+        reason = (typeof reason !== 'undefined') ? reason : '???';
         this.ws.close(1000, reason);
         this.ws = null;
     },
@@ -55,7 +66,28 @@ Connections.Connection = Class({
     },
     onWsMessage: function(message) {
         window.logger.log('connRecv', message.data);
-        this.onMessage(message.data);
+
+        if (!this.commInfoReceived) {
+            this.onReceiveCommInfo(message.data);
+        } else {
+            this.onMessage(message.data);
+        }
+    },
+
+    onReceiveCommInfo: function(data) {
+        this.commInfoReceived = true;
+
+        try {
+            var obj = JSON.parse(data);
+
+            Messages.TYPES = obj.types;
+            Messages.abbreviations = obj.abbreviations;
+            for (var propName in Messages.abbreviations) {
+                Messages.expansions[Messages.abbreviations[propName]] = propName;
+            }
+        } catch(e) {
+            logger.log('error', 'parsing connection info, ' + err.toString());
+        }
     }
 });
 
@@ -107,13 +139,13 @@ Connections.ConnectionManager = Class({
         var timeCutoff = currentTime - this.pingSampleTime;
 
         for (var i = 0; i < this.pings.length; i++) {
-            if (this.pings[i].time >= timeCutoff) {
+            if (this.pings[i].time >= timeCutoff)
                 break;
         }
 
         //remove i elements
         this.pings.splice(0, i);
-    }
+    },
 
     /*
      * Figure out how far behind the server this client should be running.

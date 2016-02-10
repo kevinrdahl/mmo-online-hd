@@ -12,7 +12,7 @@ var Panel = Class(InterfaceElement, {
 
 		this.isClickable = true;
 
-		this.renderTexture = new PIXI.RenderTexture(this.width, this.height);
+		this.renderTexture = new PIXI.RenderTexture(game.renderer, this.width, this.height);
 		this.sprite = new PIXI.Sprite(this.renderTexture);
 		this.displayObject.addChild(this.sprite);
 		this.displayObject.alpha = this.alpha;
@@ -34,12 +34,14 @@ var Panel = Class(InterfaceElement, {
 	resize: function(w, h) {
 		Panel.$superp.resize.call(this,w,h);
 
-		this.renderTexture = new PIXI.RenderTexture(width, height);
+		this.renderTexture = new PIXI.RenderTexture(game.renderer, width, height);
 		this.drawNeeded = true;
 	},
 
-	getInnerSize: function() {
+	getInnerBounds: function() {
 		return {
+			x:this.borderWidth,
+			y:this.borderWidth,
 			width:this.width - (this.borderWidth*2),
 			height:this.height - (this.borderWidth*2)
 		}

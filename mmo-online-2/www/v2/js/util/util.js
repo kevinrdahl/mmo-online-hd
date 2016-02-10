@@ -9,7 +9,7 @@ MmooUtil.shallowClone = function(o) {
 };
 
 MmooUtil.applyProps = function(obj, props, onlyNew) {
-	if typeof props === 'undefined'
+	if (typeof props === 'undefined')
 		return
 
 	for (var propName in props) {

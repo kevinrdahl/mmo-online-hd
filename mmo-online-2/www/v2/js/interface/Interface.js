@@ -12,12 +12,12 @@ function setMouseEvents() {
 			game.leftMouseDown = game.lastMouseCoords;
 
 			var element = game.ui.getElementAtCoords(game.leftMouseDown);
-			if (element != null) {
-				game.logger.log("ui", element.getFullName() + " mousedown.");
 
-				game.clickedElement = element;
+			if (element != null) {
+				logger.log("ui", element.getFullName() + " mousedown.");
 
 				game.ui.moveChildToTop(element.findTopParent());
+				game.clickedElement = element;
 			}
 		}
 	});
@@ -33,11 +33,20 @@ function setMouseEvents() {
 				//click!
 				var element = game.clickedElement;
 				if (element != null) {
-					game.logger.log("ui", element.getFullName() + " clicked.");
+					logger.log("ui", element.getFullName() + " clicked.");
+					//console.log(element.width + ' ' + element.height);
+					//console.log(element.displayObject.getBounds());
+					//console.log(element);
 					if (element.name == "close") {
-						game.logger.log("ui", "close " + element.parent.getFullName());
+						logger.log("ui", "close " + element.parent.getFullName());
 						element.parent.parent.removeChild(element.parent);
+					} else if (element instanceof TextBox) {
+						setElementActive(element);
+					} else {
+						setElementActive(null);
 					}
+				} else {
+					setElementActive(null);
 				}
 			}
 
@@ -86,7 +95,7 @@ function getMouseCoords(evt) {
 }
 
 function beginDragElement(element) {
-	game.logger.log("ui", "Begin dragging " + element.getFullName());
+	logger.log("ui", "Begin dragging " + element.getFullName());
 	game.dragElement = element;
 	game.dragElementCoords = [game.dragElement.x, game.dragElement.y];
 }
@@ -94,7 +103,7 @@ function beginDragElement(element) {
 function endDrag() {
 	if (game.dragElement != null) {
 		game.dragElement.toNearestPixel();
-		game.logger.log("ui", "End drag");
+		logger.log("ui", "End drag");
 	}
 
 	game.dragElement = null;
@@ -110,7 +119,7 @@ function keepElementInView(element) {
 	if (diff > 0)
 		element.x += diff;
 
-	diff = position.x - (game.renderer.width - element.displayObject.width);
+	diff = position.x - (game.renderer.width - element.width);
 	if (diff > 0)
 		element.x -= diff;
 
@@ -119,15 +128,27 @@ function keepElementInView(element) {
 	if (diff > 0)
 		element.y += diff;
 
-	diff = position.y - (game.renderer.height - element.displayObject.height);
+	diff = position.y - (game.renderer.height - element.height);
 	if (diff > 0)
 		element.y -= diff;
+}
+
+function setElementActive(element) {
+	if (element !== null) {
+		element.active = true;
+	}
+
+	if (game.activeElement !== null) {
+		game.activeElement.active = false;
+	}
+
+	game.activeElement = element;
 }
 
 function resizeView() {
 	var viewWidth = game.viewDiv.width();
 	var viewHeight = game.viewDiv.height();
-	game.logger.log("debug", "Resize: " + viewWidth + "x" + viewHeight);
+	logger.log("debug", "Resize: " + viewWidth + "x" + viewHeight);
 	game.renderer.resize(viewWidth, viewHeight);
 
 	game.ui.resize(viewWidth, viewHeight);
@@ -138,8 +159,6 @@ function resizeView() {
 }
 
 function initTestInterface() {
-	return; //ayy
-
 	var testWindow = new WindowPanel({
 		id:"testWindow",
 		title:"cmd.exe",
@@ -166,39 +185,42 @@ function initTestInterface() {
 		}
 	}));
 
-	var size = testWindow.getInnerSize();
-	var maskEle = new MaskElement({
+	var bounds = testWindow.getInnerBounds();
+	var eleList = new ElementList({
+		id:"eleList",
 		parent:testWindow,
-		width:size.width - 2*UIConfig.elementListOuterPadding,
-		height:size.height - testWindow.headerBar.height-2,
+		width:bounds.width - 2*UIConfig.elementListOuterPadding,
+		height:bounds.height,
 		attach:{
 			where:[0,0],
 			parentWhere:[0,0],
-			offset:[testWindow.borderWidth + UIConfig.elementListOuterPadding, testWindow.headerBar.height + UIConfig.elementListOuterPadding]
+			offset:[UIConfig.elementListOuterPadding, UIConfig.elementListOuterPadding]
 		}
 	});
-	var eleList = new ElementList({
-		id:"eleList",
-		parent:maskEle,
-		width:maskEle.width,
-		height:maskEle.height
-	});
-	maskEle.addChild(eleList);
-	testWindow.addChild(maskEle);
+	testWindow.addChild(eleList);
+
+	testWindow.applyMask(bounds);
 
 	var textEle = new InterfaceText("Stuff", {font:UIConfig.titleText});
 	eleList.addChild(textEle);
 	textEle.fitToParent();
 
-	for (var i = 0; i < 15; i++) {
-		var j = i;
-		setTimeout(function() {
-			var textEle = new InterfaceText("Message " + (j+1), {font:UIConfig.bodyText});
+	function createElementAdder(num) {
+		return function() {
+			var textEle = new InterfaceText("Message " + num, {font:UIConfig.bodyText});
 			game.ui.findChildById("eleList").addChild(textEle);
 			textEle.fitToParent();
-		},
-		i*1000
-		);
-		
+		}
 	}
+
+	for (var i = 0; i < 15; i++) {
+		setTimeout(createElementAdder(i+1),i*1000);
+	}
+
+	var sprite = new PIXI.Sprite(PIXI.loader.resources['character/man'].texture);
+	game.stage.addChild(sprite);
+	sprite.position.x = 200;
+	sprite.position.y = 200;
+	sprite.scale.x = 2;
+	sprite.scale.y = 2;
 }

@@ -10,12 +10,16 @@ var InterfaceElement = Class({
 		this.y = 0;
 		this.width = 100;
 		this.height = 100;
-		this.displayObject = new PIXI.DisplayObjectContainer();
+		this.displayObject = new PIXI.Container();
 		this.children = [];
 		this.parent = null;
 		this.isClickable = false;
 		this.draggable = false;
 		this.dragElement = this;
+		this.maskSprite = null;
+
+		this.onClick = InterfaceElement.NOOP;
+		this.onHover = InterfaceElement.NOOP;
 
 		this.attach = {
 			where:[0,0],
@@ -24,10 +28,14 @@ var InterfaceElement = Class({
 			firstOnly:false
 		}
 
+		//hard override all properties with options
 		if (typeof options !== 'undefined') {
-			for (var prop in options) {
-				this[prop] = options[prop];
-			}	
+			MmooUtil.applyProps(this, options, false);	
+		}
+
+		if (this.maskSprite !== null) {
+			logger.log('ui', 'Specifying a mask is not supported at instantiation. Use the applyMask function instead.');
+			this.maskSprite = null;
 		}
 
 		this.reposition(true);
@@ -62,18 +70,38 @@ var InterfaceElement = Class({
 		return element;
 	},
 
-	addChild: function(child) {
+	addChild: function(child, noMask) {
 		this.children.push(child);
 		this.displayObject.addChild(child.displayObject);
 		child.parent = this;
+
+		if (!noMask && this.maskSprite !== null)
+			child.displayObject.mask = this.maskSprite;
 	},
 
 	removeChild: function(child) {
+		child.remove();
+
 		this.children.splice(this.children.indexOf(child), 1);
 		this.displayObject.removeChild(child.displayObject);
 
 		if (child.parent == this)
 			child.parent = null;
+
+		child.displayObject.mask = null;
+	},
+
+	remove: function() {
+		return;
+		console.log("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
+		while (this.children.length > 0) {
+			this.children[0].remove();
+		}
+		
+		if (this.parent !== null) {
+			this.parent.children.splice(this.parent.children.indexOf(this), 1);
+			this.parent.displayObject.removeChild(this.displayObject);
+		}
 	},
 
 	findChildById: function(id) {
@@ -116,7 +144,7 @@ var InterfaceElement = Class({
 	findTopParent: function(root) {
 		root = (typeof root !== "undefined") ? root : game.ui;
 		if (this == root || this.parent == null) {
-			game.logger.log("error", "Error in findTopParent on " + this.getFullName());
+			logger.log("error", "Error in findTopParent on " + this.getFullName());
 			return null;
 		}
 
@@ -147,7 +175,7 @@ var InterfaceElement = Class({
 		this.width = w;
 		this.height = h;
 
-		game.logger.log("ui", "resize " + this.getFullName() + " " + w + "x" + h);
+		logger.log("ui", "resize " + this.getFullName() + " " + w + "x" + h);
 
 		for (var i = 0; i < this.children.length; i++) {
 			this.children[i].reposition();
@@ -170,7 +198,7 @@ var InterfaceElement = Class({
 			this.parent.height * this.attach.parentWhere[1] - this.height * this.attach.where[1] + this.attach.offset[1]
 		];
 
-		//game.logger.log("ui", "position " + this.getFullName() + " " + JSON.stringify(coords));
+		//logger.log("ui", "position " + this.getFullName() + " " + JSON.stringify(coords));
 
 		this.x = coords[0];
 		this.y = coords[1];
@@ -188,5 +216,35 @@ var InterfaceElement = Class({
 		this.x = Math.round(this.x);
 		this.y = Math.round(this.y);
 		this.updateDisplayObjectPosition();
+	},
+
+	//this will show a big white rectangle if the element has no children
+	applyMask: function(bounds, exclude) {
+		exclude = (typeof exclude !== 'undefined') ? exclude : [];
+
+		this.maskSprite = new PIXI.Sprite(game.maskTexture);
+		this.displayObject.addChild(this.maskSprite);
+		
+		//apply to existing children
+		var child;
+		for (var i = 0; i < this.children.length; i++) {
+			child = this.children[i];
+			if (exclude.indexOf(child) === -1) {
+				child.displayObject.mask = this.maskSprite;
+			}
+		}
+
+		this.maskSprite.position.x = bounds.x;
+		this.maskSprite.position.y = bounds.y;
+		this.maskSprite.scale.x = bounds.width/10;
+		this.maskSprite.scale.y = bounds.height/10;
+	},
+
+	removeMask: function() {
+
+	},
+
+	onMouse: function(event) {
+
 	}
 });

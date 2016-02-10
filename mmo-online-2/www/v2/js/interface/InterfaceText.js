@@ -5,21 +5,23 @@ var InterfaceText = Class(InterfaceElement, {
 
 		InterfaceText.$super.call(this, options);
 
-		this.text = new PIXI.Text(str, this.font);
-		this.displayObject.addChild(this.text);
+		this.pixiText = new PIXI.Text(str, this.font);
+		this.displayObject.addChild(this.pixiText);
 		this.onResize();
 	},
 
 	changeFont: function(font) {
-		if (typeof font !== "undefined") { this.font = MmooUtil.shallowClone(font); }
-		this.text.setStyle(this.font);
+		if (typeof font !== "undefined") {
+			this.font = MmooUtil.shallowClone(font);
+			this.pixiText.style = this.font;
 		
-		this.onResize();
+			this.onResize();
+		}
 	},
 
 	changeString: function(str) {
 		this.str = str;
-		this.text.setText(str);
+		this.pixiText.text = str;
 
 		this.onResize();
 	},
@@ -30,19 +32,22 @@ var InterfaceText = Class(InterfaceElement, {
 		if (this.parent instanceof ElementList) {
 			this.parent.onChildResize(this);
 		}
+
+		for (var i = 0; i < this.children.length; i++) {
+			this.children[i].reposition(true);
+		}
 	},
 
 	updateDimensions: function() {
-		this.width = this.text.width;
-		this.height = this.text.height;
+		this.width = this.pixiText.width;
+		this.height = this.pixiText.height;
 	},
 
 	fitToParent: function() {
 		this.font.wordWrap = true;
 		this.font.wordWrapWidth = this.parent.width - this.x;
-		this.changeFont();
 
-		game.logger.log("ui", this.getFullName() + " wrap to " + this.font.wordWrapWidth + "px");
+		logger.log("ui", this.getFullName() + " wrap to " + this.font.wordWrapWidth + "px");
 	},
 
 	getClassName: function() {

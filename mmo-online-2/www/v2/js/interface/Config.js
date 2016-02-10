@@ -1,6 +1,7 @@
+
 var UIConfig = {
-	panelBgColor:0x333333,
-	headerBgColor:0x666666,
+	panelBgColor:0x151515,
+	headerBgColor:0x555555,
 	panelHighlightBgColor:0x999999,
 
 	headerHeight:24,
@@ -11,7 +12,7 @@ var UIConfig = {
 	headerTextY:4,
 	headerTextX:4,
 
-	windowBorderWidth:3,
+	windowBorderWidth:2,
 	closeButtonColor:0xaa3333,
 
 	buttonHeight:50,
@@ -21,18 +22,32 @@ var UIConfig = {
 	buttonBorderColor:0xffffff,
 	buttonText:{
 		fill:"#ffffff",
-		font:"bold 14px Monospace"
+		font:"bold 14px Verdana"
+	},
+	buttonTextInactive:{
+		fill:"#aaaaaa",
+		font:"bold 14px Verdana"
 	},
 
 	bodyText:{
 		fill:"#ffffff",
 		font:"12px Verdana"
 	},
+	formText:{
+		fill:"#ffffff",
+		font:"14px Verdana"
+	},
 	titleText:{
 		fill:"#ffffff",
 		font:"bold 18px Verdana"
 	},
+	bannerText:{
+		fill:"#ffffff",
+		font:"bold 40px Verdana"
+	},
 
 	elementListPadding:2,
-	elementListOuterPadding:4
+	elementListOuterPadding:4,
+
+	textBoxPadding:3
 }

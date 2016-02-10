@@ -30,19 +30,21 @@
     <script src="js/util/tweens.js"></script>
     <script src="js/util/texturegen.js"></script>
     <script src="js/game.js"></script>
+    <script src="js/mainmenu.js"></script>
     <script src="js/connections.js"></script>
     <script src="js/logger.js"></script>
     <script src="js/messages.js"></script>
 
+    <script src="js/interface/keys.js"></script>
     <script src="js/interface/Interface.js"></script>
     <script src="js/interface/Config.js"></script>
     <script src="js/interface/InterfaceElement.js"></script>
-    <script src="js/interface/MaskElement.js"></script>
     <script src="js/interface/InterfaceText.js"></script>
     <script src="js/interface/ElementList.js"></script>
     <script src="js/interface/Panel.js"></script>
     <script src="js/interface/Window.js"></script>
-    <script src="js/interface/Button.js"></script>
+    <script src="js/interface/InterfaceTexture.js"></script>
+    <script src="js/interface/TextBox.js"></script>
 
     <script src="js/assets/assetlist.js"></script>
 </head>
@@ -51,7 +53,9 @@
     <div id="viewDiv"></div>
 
     <script>
-        var QueryString = function () {
+        $('#viewDiv').focus();
+
+        window.urlArgs = function () {
             var query_string = {};
             var query = window.location.search.substring(1);
             var vars = query.split("&");
@@ -71,6 +75,43 @@
             }
             return query_string;
         } ();
+
+        window.serverWs = function() {
+            var host = (typeof urlArgs.host !== 'undefined') ? urlArgs.host : document.domain;
+            var port = (typeof urlArgs.port !== 'undefined') ? urlArgs.port : 8999;
+            return 'ws://' + host + ':' + port;
+        }();
+
+        //logging
+        window.logger = new Logger();
+
+        window.logger.types["debug"] = new Logger.LogType({
+            textColor:"#999" //grey
+        });
+        window.logger.types["error"] = new Logger.LogType({
+            textColor:"#f00", //red
+            prefix:"ERROR"
+        });
+        window.logger.types["game"] = new Logger.LogType({
+            textColor:"#093", //green
+            prefix:"game"
+        });
+        window.logger.types["conn"] = new Logger.LogType({
+            textColor:"#fff", //white
+            bgColor:"#06c" //blue
+        });
+        window.logger.types["connRecv"] = new Logger.LogType({
+            textColor:"#06c", //blue
+            prefix:"RECV"
+        });
+        window.logger.types["connSend"] = new Logger.LogType({
+            textColor:"#93f", //purple
+            prefix:"SEND"
+        });
+        window.logger.types["ui"] = new Logger.LogType({
+            textColor:"#f90", //orange
+            prefix:"ui"
+        });
 
         initGame();
     </script>
