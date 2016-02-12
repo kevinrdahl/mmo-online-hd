@@ -70,7 +70,8 @@ Messages.abbreviations = {};
         'password',
         'success',
         'alive',
-        'name'
+        'name',
+        'action'
     ];
 
     var pool = new MMOOUtil.IdPool();

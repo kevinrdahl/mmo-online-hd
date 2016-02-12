@@ -65,22 +65,28 @@ Connections.Connection = Class({
         this.onError(err);
     },
     onWsMessage: function(message) {
-        window.logger.log('connRecv', message.data);
-
         if (!this.commInfoReceived) {
+            window.logger.log('connRecv', message.data);
             this.onReceiveCommInfo(message.data);
         } else {
-            this.onMessage(message.data);
+            var msg = Messages.parse(message.data);
+            window.logger.log('connRecv', msg.debugString());
+            this.onMessage(msg);
         }
     },
 
     onReceiveCommInfo: function(data) {
         this.commInfoReceived = true;
+        clearStatus();
 
         try {
             var obj = JSON.parse(data);
 
             Messages.TYPES = obj.types;
+            for (var typeName in Messages.TYPES) {
+                Messages.TYPE_NAMES[Messages.TYPES[typeName]] = typeName;
+            }
+
             Messages.abbreviations = obj.abbreviations;
             for (var propName in Messages.abbreviations) {
                 Messages.expansions[Messages.abbreviations[propName]] = propName;

@@ -21,10 +21,11 @@
     </style>
 
     <script src="http://code.jquery.com/jquery-2.1.4.min.js"></script>
-    <script src="js/lib/jsface.min.js"></script>
-    <script src="js/lib/rsa.js"></script>
+    <script src="http://code.createjs.com/soundjs-0.6.2.min.js"></script></head>
 
-    <script src="../js/lib/pixi.js"></script>
+    <script src="js/lib/jsface.min.js"></script>
+
+    <script src="../js/lib/pixi.min.js"></script>
     <script src="js/util/util.js"></script>
     <script src="js/util/vectors.js"></script>
     <script src="js/util/tweens.js"></script>
@@ -34,6 +35,7 @@
     <script src="js/connections.js"></script>
     <script src="js/logger.js"></script>
     <script src="js/messages.js"></script>
+    <script src="../js/linalg.js"></script>
 
     <script src="js/interface/keys.js"></script>
     <script src="js/interface/Interface.js"></script>
@@ -112,6 +114,12 @@
             textColor:"#f90", //orange
             prefix:"ui"
         });
+
+        window.soundEnabled = true;
+        if (!createjs.Sound.initializeDefaultPlugins()) { 
+            soundEnabled = false;
+            console.warn('No sound support!');
+        }
 
         initGame();
     </script>

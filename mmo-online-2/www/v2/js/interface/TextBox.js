@@ -3,7 +3,31 @@ var TextBox = Class(Panel, {
 		alphanumeric:[[97,122],[65,90],[48,57]], //[a-z], [A-Z], [0-9]
 		characterName:[[97,122],[65,90],39,45,32], //apostrophe, dash, space
 		userName:[[97,122],[65,90],[48,57],39,45,32,95,46,47], //underscore, dot, slash,
-		any:[[32,95],[97,126]]
+		any:[[32,95],[97,126]],
+
+		createLabelled: function(label, name, hideInput, allowedCharacters) {
+			var box = new TextBox({
+				name:name,
+				hideInput:hideInput,
+				allowedCharacters:allowedCharacters,
+				width:250,
+				height:30
+			});
+
+			var labelText = new InterfaceText(label, {
+				name:"label",
+				font: UIConfig.bodyText,
+				parent: box,
+				attach:{
+					where:[0,0],
+					parentWhere:[0,1],
+					offset:[5,3]
+				}
+			});
+			box.addChild(labelText);
+
+			return box;
+		}
 	},
 
 	constructor: function(options) {

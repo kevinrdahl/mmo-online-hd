@@ -118,7 +118,7 @@ Servers.Server = Class({
                 break;
 
             case Messages.TYPES.USER:
-                this.onReceiveDaoMessage(client, msg);
+                this.onReceiveUserMessage(client, msg);
 
             default:
                 if (client.game !== null)
@@ -126,28 +126,31 @@ Servers.Server = Class({
         }
     },
 
-    onReceiveDaoMessage: function(client, msg) {
-        client.daoMessages.push(msg);
-        if (client.daoMessages.length === 1) {
-            this.processNextDaoMessage(client);
+    onReceiveUserMessage: function(client, msg) {
+        client.userMessages.push(msg);
+        if (client.userMessages.length === 1) {
+            this.processNextUserMessage(client);
+        } else {
+            console.log('Client ' + client.id + ' has ' + client.userMessages.length-1 + ' pending DAO messages, pushing to queue.');
         }
     },
 
-    onCompleteDaoMessage: function(client) {
-        client.daoMessages.shift();
-        if (client.daoMessages.length > 0) {
-            this.processNextDaoMessage(client);
+    onCompleteUserMessage: function(client) {
+        client.userMessages.shift();
+        if (client.userMessages.length > 0) {
+            this.processNextUserMessage(client);
         }
     },
 
-    processNextDaoMessage: function(client) {
-        var msg = client.daoMessages[0];
+    processNextUserMessage: function(client) {
+        var msg = client.userMessages[0];
         var discard = true;
         var responded = false;
         var sendOK = false;
         var failReason = 'bad thing';
 
         if (Messages.assertParams(msg, client.id, ['action'])) {
+            var _this = this;
             var action = msg.params.action;
 
             switch(action) {
@@ -158,7 +161,7 @@ Servers.Server = Class({
                         failReason = 'already logged in';
                     } else {
                         discard = false;
-                        this.dao.login(client, msg.name, msg.password, this.onUserLogin);
+                        this.dao.login(client, msg.name, msg.password, this.onUserLogin.bind(this));
                     }
                     break;
 
@@ -171,7 +174,7 @@ Servers.Server = Class({
                         failReason = 'invalid user name';
                     } else {
                         discard = false;
-                        this.dao.createUser(client, msg.name, msg.password, this.onUserCreated);
+                        this.dao.createUser(client, msg.name, msg.password, this.onUserCreated.bind(this));
                     }
                     break;
 
@@ -210,7 +213,7 @@ Servers.Server = Class({
                         failReason = 'no world joined';
                     } else {
                         discard = false;
-                        this.dao.getUserCharacters(client, this.onGetUserCharacters);
+                        this.dao.getUserCharacters(client, this.onGetUserCharacters.bind(this));
                     }
                     break;
 
@@ -225,7 +228,7 @@ Servers.Server = Class({
                         failReason = 'already playing a character';
                     } else {
                         discard = false;
-                        this.dao.getCharacter(client, msg.params.characterId, this.onGetCharacter);
+                        this.dao.getCharacter(client, msg.params.characterId, this.onGetCharacter.bind(this));
                     }
                     break;
 
@@ -244,7 +247,7 @@ Servers.Server = Class({
                             failReason = 'invalid character json';
                         } else {
                             discard = false;
-                            this.dao.createCharacter(client, character.name, msg.params.json, this.onCreateCharacter);
+                            this.dao.createCharacter(client, character.name, msg.params.json, this.onCreateCharacter.bind(this));
                         }
                     }
                     break;
@@ -268,7 +271,7 @@ Servers.Server = Class({
         }
 
         if (responded) {
-            this.onCompleteDaoMessage(client);
+            this.onCompleteUserMessage(client);
         }
     },
 
@@ -294,6 +297,7 @@ Servers.Server = Class({
         }
 
         client.send(response.serialize());
+        this.onCompleteUserMessage(client);
     },
 
     onUserCreated: function(client, success, name) {
@@ -309,6 +313,7 @@ Servers.Server = Class({
         }
 
         client.send(response.serialize());
+        this.onCompleteUserMessage(client);
     },
 
     onGetUserCharacters: function(client, results) {
@@ -317,6 +322,7 @@ Servers.Server = Class({
             characters:results
         });
         client.send(response.serialize());
+        this.onCompleteUserMessage(client);
     },
 
     sendString: function(id, s) {
@@ -353,7 +359,7 @@ Servers.Client = Class({
 
         //to avoid ordering shenanigans, and to prevent one user using multiple db connections
         //a queue of actions which require SQL queries
-        this.daoMessages = [];
+        this.userMessages = [];
     },
 
     send: function(s) {

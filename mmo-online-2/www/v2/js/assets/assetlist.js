@@ -1,23 +1,42 @@
-window.ASSET_LIST = {
+window.TEXTURE_LIST = {
 	"character":[
 		"man.png"
 	],
 
 	"terrain":[
-		"grass.png",
+		"grass1.png",
+		"grass2.png",
+		"grass3.png",
+		"grass4.png",
 		"dirt.png",
+		"dirtpatch1.png",
+		"dirtpatch2.png",
+		"dirtpatch3.png",
+		"tree1.png",
+		"tree2.png",
 		"wall.png"
 	]
 };
 
-function parseAssetList (assets) {
+window.SOUND_LIST = {
+	"music":[
+		"fortress.mp3"
+	],
+
+	"ui":[
+		"click.mp3",
+		"rollover.mp3"
+	]
+};
+
+function parseAssetList (list, prefix) {
 	var r = [];
 	var dir, fullpath, name;
 
-	for (var path in assets) {
-		dir = assets[path];
+	for (var path in list) {
+		dir = list[path];
 		for (var i = 0; i < dir.length; i++) {
-			fullpath = 'img/' + path + '/' + dir[i];
+			fullpath = prefix + path + '/' + dir[i];
 			name = path + '/' + dir[i].split('.')[0];
 
 			r.push(new Asset(name, fullpath));
@@ -34,20 +53,21 @@ var Asset = Class({
 	}
 });
 
-function loadAssets() {
+function loadTextures() {
 	var asset;
 
-	game.assetList = parseAssetList(ASSET_LIST);
-	game.numAssetsLoaded = 0;
+	game.textureList = parseAssetList(TEXTURE_LIST, 'img/');
+	game.numTexturesLoaded = 0;
+	delete TEXTURE_LIST;
 
-	for (var i = 0; i < game.assetList.length; i++) {
-		asset = game.assetList[i];
+	for (var i = 0; i < game.textureList.length; i++) {
+		asset = game.textureList[i];
 		PIXI.loader.add(asset.name, asset.path);
 	}
 
 	var loadPanel = new Panel({
 		id:"loadPanel",
-		width:200,
+		width:250,
 		height:60,
 		attach:{
 			where:[0.5, 0],
@@ -57,7 +77,8 @@ function loadAssets() {
 		parent:game.ui
 	});
 
-	loadPanel.addChild(new InterfaceText("LOADING", {
+	loadPanel.addChild(new InterfaceText("Loading Textures", {
+		id:'loadTitle',
 		font:UIConfig.titleText,
 		attach:{
 			where:[0.5,1],
@@ -67,7 +88,7 @@ function loadAssets() {
 		parent:loadPanel
 	}));
 
-	loadPanel.addChild(new InterfaceText("0/" + game.assetList.length, {
+	loadPanel.addChild(new InterfaceText("0%", {
 		id:"loadCountText",
 		font:UIConfig.bodyText,
 		attach:{
@@ -82,17 +103,41 @@ function loadAssets() {
 
 
     PIXI.loader.on('progress', function() {
-        game.numAssetsLoaded++;
-        game.ui.findChildById("loadCountText").changeString(game.numAssetsLoaded + "/" + game.assetList.length);
+        game.numTexturesLoaded++;
+        game.ui.findChildById("loadCountText").changeString(Math.round(game.numTexturesLoaded / game.textureList.length * 100).toString() + '%');
     });
 
     PIXI.loader.on('complete', function() {
-    	setTimeout(
-			function() {
-				onLoadComplete();
-			},
-			1000
-		);
+    	delete game.textureList;
+    	onLoadTextures();
     });
     PIXI.loader.load();
+}
+
+function loadSounds() {
+	var asset;
+	var soundPath = 'sound/';
+
+	game.soundList = parseAssetList(SOUND_LIST, soundPath);
+	game.numSoundsLoaded = 0;
+	delete SOUND_LIST;
+
+	//update ui
+	game.ui.findChildById('loadTitle').changeString("Loading Sounds");
+	game.ui.findChildById('loadCountText').changeString("0%");
+
+	createjs.Sound.addEventListener('fileload', onSoundLoaded);
+
+	for (var i = 0; i < game.soundList.length; i++) {
+		asset = game.soundList[i];
+		createjs.Sound.registerSound({id:asset.name, src:asset.path});
+	}
+}
+
+function onSoundLoaded() {
+	game.numSoundsLoaded += 1;
+	game.ui.findChildById("loadCountText").changeString(Math.round(game.numSoundsLoaded / game.soundList.length * 100).toString() + '%');
+
+	if (game.numSoundsLoaded >= game.soundList.length)
+		onLoadSounds();
 }

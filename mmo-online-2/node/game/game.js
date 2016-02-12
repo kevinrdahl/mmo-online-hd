@@ -93,7 +93,7 @@ Game.Game = Class({
             }
             avg /= lengths.length;
             lengths.splice(0, lengths.length);
-            console.log('AVG SIM TIME: ' + avg + 'ms (' + 1000/avg + ' fps)');
+            //console.log('AVG SIM TIME: ' + avg + 'ms (' + 1000/avg + ' fps)');
         }
     },
 

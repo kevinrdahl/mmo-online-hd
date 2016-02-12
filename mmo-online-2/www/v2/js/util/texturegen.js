@@ -4,7 +4,7 @@ var TextureGenerator = {};
 TextureGenerator.rectangle = function(width, height, color, borderWidth, borderColor, texture) {
 	if (texture) {
 		if (typeof texture.renderer === 'number')
-			console.log("EEP!");
+			console.error("renderer is a number");
 	}
 
 	var tex = (typeof texture !== "undefined") ? texture : new PIXI.RenderTexture(game.renderer, width, height);

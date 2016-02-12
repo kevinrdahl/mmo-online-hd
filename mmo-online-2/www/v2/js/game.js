@@ -5,7 +5,7 @@ function initGame() {
 
 	game.stage = new PIXI.Container();
 	game.renderer = new PIXI.autoDetectRenderer(300, 300, null, false, true);
-	game.renderer.backgroundColor = 0x3366ff;
+	game.renderer.backgroundColor = 0x489848;
 	game.viewDiv.append(game.renderer.view);
 	$(window).resize(function() { resizeView(); });
 	PIXI.SCALE_MODES.DEFAULT = PIXI.SCALE_MODES.NEAREST;
@@ -31,14 +31,13 @@ function initGame() {
 	game.dragElement = null;
 	game.dragElementCoords = null;
 	game.activeElement = null;
-
-	//TODO: kibo
+	game.hoverElement = null;
 
 	game.connection = new Connections.Connection({
 		connString: window.serverWs,
 		onConnect: function() {},
 		onDisconnect: function() {},
-		onMessage: function() {},
+		onMessage: onMainMenuMessage,
 		onError: function() {}
 	});
 
@@ -49,23 +48,39 @@ function initGame() {
     	dropShadow: new PIXI.filters.DropShadowFilter(),
     	ascii: 		new PIXI.filters.AsciiFilter(),
     	noise: 		new PIXI.filters.NoiseFilter(),
-    	pixelate: 	new PIXI.filters.PixelateFilter()
+    	pixelate: 	new PIXI.filters.PixelateFilter(),
+    	uiBlur:		new PIXI.filters.BlurFilter()
     };
     game.filters.dropShadow.distance = 2;
+    game.filters.bloom.blur = 4;
+    game.filters.uiBlur.blur = 2;
 
     //set up base UI
 	game.ui = new InterfaceElement({
 		id:"main"
 	});
 	game.stage.addChild(game.ui.displayObject);
-	game.ui.displayObject.filters = [game.filters.dropShadow];
+	game.ui.status = null;
 
 	//set up the view
 	resizeView();
 	drawStage();
 
 	//load
-	loadAssets();
+	loadTextures();
+}
+
+function onLoadTextures() {
+	if (soundEnabled)
+		loadSounds();
+	else
+		onLoadComplete();
+}
+
+function onLoadSounds() {
+	setTimeout(function() {
+		onLoadComplete();
+	}, 500);
 }
 
 function onLoadComplete() {
@@ -75,9 +90,11 @@ function onLoadComplete() {
 		initTestInterface();
 
 	//connect
+	initMainMenu();
+
 	initConnection();
 
-	initMainMenu();
+	setStatus('Connecting', 'Establishing connection to game server...');
 }
 
 function initConnection() {
@@ -88,11 +105,20 @@ function onConnect() {
 
 }
 
+function onMessage(msg) {
+	if (mainMenu !== null) {
+		onMainMenuMessage(msg);
+	}
+}
+
 function drawStage() {
     requestAnimationFrame(function () { drawStage(); });
 
   	game.ui.draw();
+  	if (menuBackground !== null)
+  		updateMenuBackground();
 
+  	//testUI
   	var eleList = game.ui.findChildById("eleList");
   	if (eleList != null) {
   		eleList.attach.offset[1] += 1;

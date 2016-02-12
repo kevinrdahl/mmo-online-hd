@@ -28,18 +28,11 @@ $(document).keydown(function(event) {
   	if (game.activeElement instanceof TextBox) {
   		if (event.which === Keys.keyCodes.BACKSPACE) {
 	  		game.activeElement.deleteCharacter();
-	  	} else if (event.which === Keys.keyCodes.TAB) {
-	  		//some next-level poor practice
-	  		if (typeof mainMenu !== 'undefined' && mainMenu !== null) {
-	  			if (game.activeElement == mainMenu.username) {
-	  				setElementActive(mainMenu.password);
-	  			} else if (game.activeElement == mainMenu.password) {
-	  				setElementActive(mainMenu.username);
-	  			}
-	  		}
-	  	} else if (event.which === Keys.keyCodes.ENTER) {
-
 	  	}
+  	}
+
+  	if (mainMenu !== null && game.ui.status === null) {
+  		onMainMenuKey(event);
   	}
 });
 

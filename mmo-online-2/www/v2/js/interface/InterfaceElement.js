@@ -17,9 +17,11 @@ var InterfaceElement = Class({
 		this.draggable = false;
 		this.dragElement = this;
 		this.maskSprite = null;
+		this.enabled = true;
 
 		this.onClick = InterfaceElement.NOOP;
-		this.onHover = InterfaceElement.NOOP;
+		this.onHoverStart = InterfaceElement.NOOP;
+		this.onHoverEnd = InterfaceElement.NOOP;
 
 		this.attach = {
 			where:[0,0],
@@ -74,14 +76,13 @@ var InterfaceElement = Class({
 		this.children.push(child);
 		this.displayObject.addChild(child.displayObject);
 		child.parent = this;
+		child.reposition(true);
 
 		if (!noMask && this.maskSprite !== null)
 			child.displayObject.mask = this.maskSprite;
 	},
 
 	removeChild: function(child) {
-		child.remove();
-
 		this.children.splice(this.children.indexOf(child), 1);
 		this.displayObject.removeChild(child.displayObject);
 
@@ -91,16 +92,14 @@ var InterfaceElement = Class({
 		child.displayObject.mask = null;
 	},
 
-	remove: function() {
-		return;
-		console.log("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
-		while (this.children.length > 0) {
-			this.children[0].remove();
-		}
-		
-		if (this.parent !== null) {
-			this.parent.children.splice(this.parent.children.indexOf(this), 1);
-			this.parent.displayObject.removeChild(this.displayObject);
+	removeAllChildren: function(exclude) {
+		exclude = (typeof exclude !== 'undefined') ? exclude : [];
+		var toRemove = this.children.filter(function(x) {
+			return (exclude.indexOf(x) > -1)
+		});
+
+		for (var i = 0; i < toRemove.length; i++) {
+			this.removeChild(toRemove[i]);
 		}
 	},
 
@@ -241,10 +240,50 @@ var InterfaceElement = Class({
 	},
 
 	removeMask: function() {
-
+		//TODO
 	},
 
-	onMouse: function(event) {
+	addFilter: function(filter) {
+		if (this.displayObject.filters == null || typeof this.displayObject.filters === 'undefined') {
+			this.displayObject.filters = [filter];
+		} else if (this.displayObject.filters.indexOf(filter) === -1) {
+			this.displayObject.filters = this.displayObject.filters.concat([filter]);
+		}
+	},
 
+	removeFilter: function(filter) {
+		try {
+			var index = this.displayObject.filters.indexOf(filter);
+			this.displayObject.filters = this.displayObject.filters.filter(function(val) {
+				return val != filter;
+			});
+
+			if (this.displayObject.filters.length == 0) {
+				this.displayObject.filters = null;
+			}
+		} catch (e) {
+			logger.log('ui', 'removeFilter ' + e.toString());
+		}
+	},
+
+	removeAllFilters: function() {
+		this.displayObject.filters = null;
+	},
+
+	addFilterToChildren: function(filter, exclude) {
+		exclude = (typeof exclude !== 'undefined') ? exclude : [];
+
+		for (var i = 0; i < this.children.length; i++) {
+			if (exclude.indexOf(this.children[i]) === -1)
+				this.children[i].addFilter(filter);
+		}
+	},
+
+	removeFilterFromChildren: function(filter, exclude) {
+		exclude = (typeof exclude !== 'undefined') ? exclude : [];
+		for (var i = 0; i < this.children.length; i++) {
+			if (exclude.indexOf(this.children[i]) === -1)
+				this.children[i].removeFilter(filter);
+		}
 	}
 });

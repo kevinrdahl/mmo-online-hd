@@ -1,6 +1,5 @@
 var InterfaceTexture = Class(InterfaceElement, {
 	constructor: function(texture, options) {
-		//this.enabled = true;
 		options.width = texture.width;
 		options.height = texture.height;
 
@@ -11,28 +10,6 @@ var InterfaceTexture = Class(InterfaceElement, {
 		this.sprite = new PIXI.Sprite(texture);
 		this.displayObject.addChild(this.sprite);
 	},
-
-	//might be worth adding to base class
-
-	/*setEnabled: function(enabled) {
-		this.enabled = enabled;
-
-		if (enabled) {
-			this.enabledEffect();
-		} else {
-			this.disabledEffect();
-		}
-	},
-
-	enabledEffect: function() {
-		this.sprite.filters = null;
-		this.sprite.tint = 0xffffff;
-	},
-
-	disabledEffect: function() {
-		this.sprite.filters = [game.filters.gray];
-		this.sprite.tint = 0xaaaaaa;
-	},*/
 
 	getClassName: function() {
 		return "Texture";

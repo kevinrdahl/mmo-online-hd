@@ -7,7 +7,7 @@ var UIConfig = {
 	headerHeight:24,
 	headerText:{
 		fill:"#ffffff",
-		font:"14px Verdana"
+		font:"14px Tahoma"
 	},
 	headerTextY:4,
 	headerTextX:4,
@@ -22,28 +22,28 @@ var UIConfig = {
 	buttonBorderColor:0xffffff,
 	buttonText:{
 		fill:"#ffffff",
-		font:"bold 14px Verdana"
-	},
-	buttonTextInactive:{
-		fill:"#aaaaaa",
-		font:"bold 14px Verdana"
+		font:"bold 14px Tahoma"
 	},
 
 	bodyText:{
 		fill:"#ffffff",
-		font:"12px Verdana"
+		font:"12px Tahoma"
 	},
 	formText:{
 		fill:"#ffffff",
-		font:"14px Verdana"
+		font:"14px Tahoma"
 	},
 	titleText:{
 		fill:"#ffffff",
-		font:"bold 18px Verdana"
+		font:"bold 18px Tahoma"
+	},
+	titleTextHover:{
+		fill:"#ffff33",
+		font:"bold 18px Tahoma"
 	},
 	bannerText:{
 		fill:"#ffffff",
-		font:"bold 40px Verdana"
+		font:"bold 40px Tahoma"
 	},
 
 	elementListPadding:2,

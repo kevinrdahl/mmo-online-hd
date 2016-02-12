@@ -1,5 +1,6 @@
 var Messages = {};
 Messages.TYPES = {};
+Messages.TYPE_NAMES = {};
 Messages.abbreviations = {};
 Messages.expansions = {};
 
@@ -18,6 +19,16 @@ Messages.Message = Class({
     debugString: function() {
         return Messages.TYPE_NAMES[this.type] + ' (' + this.type + ') ' + JSON.stringify(this.params);
     }
+});
+
+Messages.LoginUser = Class(Messages.Message, {
+	constructor: function(username, password) {
+		Messages.LoginUser.$super.call(this, Messages.TYPES.USER, {
+			action:'loginUser',
+			name:username,
+			password:password
+		})
+	}
 });
 
 /*

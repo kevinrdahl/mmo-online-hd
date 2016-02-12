@@ -16,8 +16,10 @@ function setMouseEvents() {
 			if (element != null) {
 				logger.log("ui", element.getFullName() + " mousedown.");
 
-				game.ui.moveChildToTop(element.findTopParent());
-				game.clickedElement = element;
+				if (game.ui.status === null) {
+					game.ui.moveChildToTop(element.findTopParent());
+					game.clickedElement = element;	
+				}
 			}
 		}
 	});
@@ -42,6 +44,8 @@ function setMouseEvents() {
 						element.parent.parent.removeChild(element.parent);
 					} else if (element instanceof TextBox) {
 						setElementActive(element);
+					} else if (mainMenu !== null) {
+						onMainMenuClick(element);
 					} else {
 						setElementActive(null);
 					}
@@ -76,6 +80,11 @@ function setMouseEvents() {
 			game.dragElement.y = c[1];
 
 			keepElementInView(game.dragElement);
+		}
+
+		if (game.leftMouseDown == null && game.ui.status === null) {
+			var hoverElement = game.ui.getElementAtCoords(coords);
+			setElementHover(hoverElement);
 		}
 	});
 
@@ -138,11 +147,25 @@ function setElementActive(element) {
 		element.active = true;
 	}
 
-	if (game.activeElement !== null) {
+	if (game.activeElement !== null && element != game.activeElement) {
 		game.activeElement.active = false;
 	}
 
 	game.activeElement = element;
+}
+
+function setElementHover(element) {
+	if (element !== null && element != game.hoverElement) {
+		logger.log('ui', 'hover ' + element.getFullName());
+		element.onHoverStart();
+	}
+
+	if (game.hoverElement !== null && element != game.hoverElement) {
+		logger.log('ui', 'end hover ' + game.hoverElement.getFullName());
+		game.hoverElement.onHoverEnd();
+	}
+
+	game.hoverElement = element;
 }
 
 function resizeView() {
@@ -223,4 +246,71 @@ function initTestInterface() {
 	sprite.position.y = 200;
 	sprite.scale.x = 2;
 	sprite.scale.y = 2;
+}
+
+function setStatus (title, message) {
+	clearStatus();
+	setElementActive(null);
+	setElementHover(null);
+
+	game.ui.addFilterToChildren(game.filters.uiBlur);
+	if (menuBackground !== null)
+		menuBackground.filters = [game.filters.uiBlur];
+
+	game.ui.status = new Panel({
+		id:"status",
+		width:200,
+		parent:game.ui,
+		attach:{
+			where:[0.5,0.5],
+			parentWhere:[0.5,0.5],
+			offset:[0,0]
+		}
+	});
+	game.ui.addChild(game.ui.status);
+
+	var titleText = new InterfaceText(title, {
+		font:UIConfig.titleText,
+		parent:game.ui.status,
+		attach:{
+			where:[0.5,0],
+			parentWhere:[0.5,0],
+			offset:[0, UIConfig.elementListOuterPadding*2]
+		}
+	});
+	game.ui.status.addChild(titleText);
+
+	var messageText = new InterfaceText(message, {
+		font:UIConfig.bodyText,
+		parent:game.ui.status,
+		attach:{
+			where:[0.5,0],
+			parentWhere:[0.5,0],
+			offset:[0, titleText.displayObject.height + UIConfig.elementListOuterPadding*2 + UIConfig.elementListPadding*2]
+		}
+	});
+	game.ui.status.addChild(messageText);
+	messageText.fitToParent();
+
+	var height = titleText.displayObject.height + messageText.displayObject.height + UIConfig.elementListOuterPadding*4 + UIConfig.elementListPadding*2;
+	game.ui.status.resize(game.ui.status.width, height);
+}
+
+function clearStatus () {
+	if (menuBackground !== null)
+		menuBackground.filters = null;
+
+	if (game.ui.status !== null) {
+		game.ui.removeChild(game.ui.status);
+		game.ui.removeFilterFromChildren(game.filters.uiBlur);
+		game.ui.status = null;
+	}
+}
+
+function uiMessage (title, message) {
+	setStatus(title, message);
+	setTimeout(function() {
+		clearStatus();
+	},
+	2000);
 }
