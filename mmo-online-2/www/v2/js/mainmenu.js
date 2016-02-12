@@ -234,8 +234,8 @@ function menuSpawnColumn () {
 			column[row] = 'g';
 		} else if (Math.random() < 0.05) {
 			texName = MmooUtil.chooseRandomCumulative (
-				['terrain/dirtpatch1', 'terrain/dirtpatch3', 'terrain/dirtpatch2'],
-				[0.4, 0.7, 1]
+				['terrain/flower1', 'terrain/flower2', 'terrain/flower3','terrain/dirtpatch1', 'terrain/dirtpatch3', 'terrain/dirtpatch2'],
+				[0.25, 0.4, 0.5, 0.75, 0.9, 1]
 			);
 			sprite = new PIXI.Sprite(PIXI.loader.resources[texName].texture);
 			column[row] = 'd';
