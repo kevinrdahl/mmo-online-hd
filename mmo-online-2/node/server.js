@@ -63,11 +63,11 @@ Servers.Server = Class({
 
         console.log('WebSocket server running on port ' + GLOBAL.settings.wsPort);
 
-        this.tcpServer = net.createServer(function(socket) {
+        /*this.tcpServer = net.createServer(function(socket) {
             var connection = new TCP.tcpClient(socket);
             connection.connectionType = CONN_TCP;
             _this.onConnection(connection);
-        }).listen(GLOBAL.settings.tcpPort);
+        }).listen(GLOBAL.settings.tcpPort);*/
     },
 
     startGame: function() {
