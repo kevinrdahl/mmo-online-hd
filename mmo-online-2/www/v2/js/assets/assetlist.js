@@ -23,12 +23,12 @@ window.TEXTURE_LIST = {
 
 window.SOUND_LIST = {
 	"music":[
-		"fortress.mp3"
+		"fortress.ogg"
 	],
 
 	"ui":[
-		"click.mp3",
-		"rollover.mp3"
+		"click.ogg",
+		"rollover.ogg"
 	]
 };
 
@@ -131,7 +131,7 @@ function loadSounds() {
 
 	createjs.Sound.addEventListener('fileload', onSoundLoaded);
 
-	createjs.Sound.alternateExtensions = ['ogg'];
+	createjs.Sound.alternateExtensions = ['mp3'];
 	for (var i = 0; i < game.soundList.length; i++) {
 		asset = game.soundList[i];
 		createjs.Sound.registerSound({id:asset.name, src:asset.path});
