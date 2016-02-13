@@ -131,6 +131,7 @@ function loadSounds() {
 
 	createjs.Sound.addEventListener('fileload', onSoundLoaded);
 
+	createjs.Sound.alternateExtensions = ['ogg'];
 	for (var i = 0; i < game.soundList.length; i++) {
 		asset = game.soundList[i];
 		createjs.Sound.registerSound({id:asset.name, src:asset.path});
