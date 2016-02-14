@@ -161,8 +161,18 @@ Servers.Server = Class({
                         failReason = 'already logged in';
                     } else {
                         discard = false;
-                        this.dao.login(client, msg.name, msg.password, this.onUserLogin.bind(this));
+                        this.dao.login(client, msg.params.name, msg.params.password, this.onUserLogin.bind(this));
                     }
+                    break;
+
+                case 'logoutUser':
+                    console.log('User ' + client.userName + ' logged out.');
+                    discard = false;
+                    responded = true; //no confirmation needed for logout
+                    client.userId = null;
+                    client.worldId = null;
+                    client.characterId = null;
+                    client.userName = null;
                     break;
 
                 case 'createUser':
@@ -174,12 +184,14 @@ Servers.Server = Class({
                         failReason = 'invalid user name';
                     } else {
                         discard = false;
-                        this.dao.createUser(client, msg.name, msg.password, this.onUserCreated.bind(this));
+                        if (msg.params.email && (typeof msg.params.email !== 'string' || msg.params.email.length < 6))
+                            delete msg.params.email;
+                        this.dao.createUser(client, msg.params.name, msg.params.password, msg.params.email, this.onUserCreated.bind(this));
                     }
                     break;
 
                 case 'getWorlds':
-                    if (user.userId === null) {
+                    if (client.userId === null) {
                         failReason = 'not logged in';
                     } else {
                         discard = false;
@@ -191,7 +203,7 @@ Servers.Server = Class({
                 case 'loginWorld':
                     if (!Messages.assertParams(msg, client.id, ['worldId'])) {
                         failReason = 'missing param';
-                    } else if (user.userId === null) {
+                    } else if (client.userId === null) {
                         failReason = 'not logged in';
                     } else if (msg.params.worldId != 1) {
                         failReason = 'world doesn\'t exist';
@@ -202,6 +214,13 @@ Servers.Server = Class({
 
                         client.worldId = msg.params.worldId;
                     }
+                    break;
+
+                case 'logoutWorld':
+                    discard = false;
+                    responded = true; //no confirmation needed for logout
+                    client.worldId = null;
+                    client.characterId = null;
                     break;
 
                 case 'getCharacters':
@@ -230,6 +249,12 @@ Servers.Server = Class({
                         discard = false;
                         this.dao.getCharacter(client, msg.params.characterId, this.onGetCharacter.bind(this));
                     }
+                    break;
+
+                case 'logoutCharacter':
+                    discard = false;
+                    responded = true; //no confirmation needed for logout
+                    client.characterId = null;
                     break;
 
                 case 'createCharacter':
@@ -276,23 +301,26 @@ Servers.Server = Class({
     },
 
     onUserLogin: function(client, results) {
-        var response = new Messages.Message(Messages.TYPES.USER, {
-            action:'login', 
-            success:false
-        });
+        var response;
 
         if (results !== null) {
             //success!
             client.userId = results.user_id;
-            client.userName = results.name
-            client.settings = JSON.parse(results.settings);
+            client.userName = results.name;
 
-            response.params.success = true;
+            try {
+                client.settings = JSON.parse(results.settings);
+            } catch (e) {
+                client.settings = {};
+            }
+
+
+            response = new Messages.UserResponse('loginUser', true);
             response.params.settings = results.settings;
-            response.params.name = results.name;
 
             console.log('Client ' + client.id + ' logged in as "' + results.name + '"');
         } else {
+            response = new Messages.UserResponse('loginUser', false, 'Bad credentials.');
             console.log('Client ' + client.id + ' failed to log in.');
         }
 
@@ -300,15 +328,19 @@ Servers.Server = Class({
         this.onCompleteUserMessage(client);
     },
 
-    onUserCreated: function(client, success, name) {
+    onUserCreated: function(client, success, name, failReason) {
         var response = new Messages.Message(Messages.TYPES.USER, {
-            action:'create', 
+            action:'createUser', 
             success:success
         });
 
+        var response;
+
         if (success) {
+            response = new Messages.UserResponse('createUser', true);
             console.log('Client ' + client.id + ' created user "' + name + '"');
         } else {
+            response = new Messages.UserResponse('createUser', false, failReason);
             console.log('Client ' + client.id + ' failed to create user.');
         }
 
@@ -318,7 +350,7 @@ Servers.Server = Class({
 
     onGetUserCharacters: function(client, results) {
         var response = new Messages.Message(Messages.TYPES.CHARACTER, {
-            action:'get', 
+            action:'getCharacters', 
             characters:results
         });
         client.send(response.serialize());

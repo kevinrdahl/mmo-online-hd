@@ -156,12 +156,12 @@ function setElementActive(element) {
 
 function setElementHover(element) {
 	if (element !== null && element != game.hoverElement) {
-		logger.log('ui', 'hover ' + element.getFullName());
+		//logger.log('ui', 'hover ' + element.getFullName());
 		element.onHoverStart();
 	}
 
 	if (game.hoverElement !== null && element != game.hoverElement) {
-		logger.log('ui', 'end hover ' + game.hoverElement.getFullName());
+		//logger.log('ui', 'end hover ' + game.hoverElement.getFullName());
 		game.hoverElement.onHoverEnd();
 	}
 
@@ -253,9 +253,9 @@ function setStatus (title, message) {
 	setElementActive(null);
 	setElementHover(null);
 
-	game.ui.addFilterToChildren(game.filters.uiBlur);
-	if (menuBackground !== null)
-		menuBackground.filters = [game.filters.uiBlur];
+	//game.ui.addFilterToChildren(game.filters.uiBlur);
+	//if (menuBackground !== null)
+	//	menuBackground.filters = [game.filters.uiBlur];
 
 	game.ui.status = new Panel({
 		id:"status",

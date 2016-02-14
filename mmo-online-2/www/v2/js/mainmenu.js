@@ -1,3 +1,5 @@
+//this file is a mess and I'm sorry
+
 window.mainMenu = null;
 window.menuBackground = null;
 
@@ -15,30 +17,50 @@ function initMainMenu() {
 		attach:{
 			where:[0.5,0.5],
 			parentWhere:[0.5,0.5],
-			offset:[0,30]
+			offset:[0,0]
 		}
 	});
 	game.ui.addChild(mainMenu);
 	mainMenu.displayObject.filters = [game.filters.dropShadow];
 
-	mainMenu.stage = 'login';
 	mainMenu.music = createjs.Sound.play('music/fortress', {loop:-1});
 	mainMenu.music.volume = 0.5;
 
+	initMainMenuLogin('', '');
+}
+
+function mainMenuClear() {
+	if (mainMenu.banner) {
+		mainMenu.removeChild(mainMenu.banner);
+		delete mainMenu.banner;
+	}
+
+	if (mainMenu.controls) {
+		mainMenu.removeChild(mainMenu.controls);
+		delete mainMenu.controls;
+	}
+}
+
+function mainMenuSetY() {
+	mainMenu.attach.offset[1] = mainMenu.displayObject.height/-2 + 50;
+	mainMenu.reposition(true);
+}
+
+function mainMenuBanner (title, subtitle) {
 	//Banner
-	mainMenu.banner = new InterfaceText("MMO Online", {
+	mainMenu.banner = new InterfaceText(title, {
 		font:UIConfig.bannerText,
 		attach:{
 			where:[0.5,1],
 			parentWhere:[0.5,0.5],
-			offset:[0,-130]
+			offset:[0,0]
 		},
 		parent:mainMenu
 	});
 	mainMenu.addChild(mainMenu.banner);
 
 	//Subtitle
-	mainMenu.banner2 = new InterfaceText("a video game", {
+	mainMenu.banner2 = new InterfaceText(subtitle, {
 		font:UIConfig.titleText,
 		attach:{
 			where:[0.5,0],
@@ -48,72 +70,196 @@ function initMainMenu() {
 		parent:mainMenu.banner
 	});
 	mainMenu.banner.addChild(mainMenu.banner2);
+}
 
-	//Username box
-	mainMenu.username = TextBox.createLabelled("Username", "username", false, TextBox.userName);
-	mainMenu.username.attach = {
-		where:[0.5,0],
-		parentWhere:[0.5,0.5],
-		offset:[0,-80]
-	};
-	mainMenu.addChild(mainMenu.username);
+function initMainMenuLogin () {
+	var username = (mainMenu.username) ? mainMenu.username.text : '';
+	var password = (mainMenu.password) ? mainMenu.password.text : '';
 
-	//Password box
-	mainMenu.password = TextBox.createLabelled("Password", "password", true, TextBox.any);
-	mainMenu.password.attach = {
-		where:[0.5,0],
-		parentWhere:[0.5,0.5],
-		offset:[0,-20]
-	};
-	mainMenu.addChild(mainMenu.password);
+	mainMenuClear();
+	mainMenu.screen = 'login';
 
-	mainMenu.loginButton = new InterfaceText("Login", {
-		name:'login',
-		font: UIConfig.titleText,
-		parent: mainMenu,
-		isClickable:true,
-		attach:{
+	mainMenuBanner('MMO Online', 'A video game');
+
+	mainMenu.controls = new ElementList({
+		padding:10,
+		attach: {
 			where:[0.5,0],
 			parentWhere:[0.5,0.5],
-			offset:[0,40]
+			offset:[0,50]
 		}
 	});
-	mainMenu.addChild(mainMenu.loginButton);
+	mainMenu.addChild(mainMenu.controls);
 
-	mainMenu.registerButton = new InterfaceText("Register", {
-		name: 'register',
-		font: UIConfig.titleText,
-		parent: mainMenu,
-		isClickable:true,
-		attach:{
+	mainMenu.username = TextBox.createLabelled('Username', 'username', username, false, TextBox.userName);
+	mainMenu.username.setAttachX(0.5, 0.5);
+	mainMenu.controls.addChild(mainMenu.username);
+
+	mainMenu.password = TextBox.createLabelled('Password', 'password', password, true, TextBox.any);
+	mainMenu.password.setAttachX(0.5, 0.5);
+	mainMenu.controls.addChild(mainMenu.password);
+
+	mainMenu.loginButton = InterfaceText.createMenuButton('Login', 'login');
+	mainMenu.loginButton.setAttachX(0.5, 0.5);
+	mainMenu.controls.addChild(mainMenu.loginButton, 30);
+
+	mainMenu.registerButton = InterfaceText.createMenuButton('Register', 'register');
+	mainMenu.registerButton.setAttachX(0.5, 0.5);
+	mainMenu.controls.addChild(mainMenu.registerButton);
+
+	mainMenuSetY();
+}
+
+function initMainMenuRegister () {
+	var username = (mainMenu.username) ? mainMenu.username.text : '';
+	var password = (mainMenu.password) ? mainMenu.password.text : '';
+
+	mainMenuClear();
+	mainMenu.screen = 'register';
+
+	mainMenuBanner('Register', 'Who are you?');
+
+	mainMenu.controls = new ElementList({
+		padding:10,
+		attach: {
 			where:[0.5,0],
 			parentWhere:[0.5,0.5],
-			offset:[0,75]
+			offset:[0,50]
 		}
 	});
-	mainMenu.addChild(mainMenu.registerButton);
+	mainMenu.addChild(mainMenu.controls);
 
-	function highlight() {
-		this.changeFont(UIConfig.titleTextHover);
-		createjs.Sound.play('ui/rollover');
+	mainMenu.username = TextBox.createLabelled('Username', 'username', username, false, TextBox.userName);
+	mainMenu.username.setAttachX(0.5, 0.5);
+	mainMenu.controls.addChild(mainMenu.username);
+
+	mainMenu.password = TextBox.createLabelled('Password', 'password', password, true, TextBox.any);
+	mainMenu.password.setAttachX(0.5, 0.5);
+	mainMenu.controls.addChild(mainMenu.password);
+
+	mainMenu.password2 = TextBox.createLabelled('Confirm Password', 'password2', '', true, TextBox.any);
+	mainMenu.password2.setAttachX(0.5, 0.5);
+	mainMenu.controls.addChild(mainMenu.password2);
+
+	mainMenu.email = TextBox.createLabelled('Email (optional)', 'email', '', false, TextBox.any);
+	mainMenu.email.setAttachX(0.5, 0.5);
+	mainMenu.controls.addChild(mainMenu.email);
+
+	mainMenu.registerButton = InterfaceText.createMenuButton('Register', 'register');
+	mainMenu.registerButton.setAttachX(0.5, 0.5);
+	mainMenu.controls.addChild(mainMenu.registerButton, 30);
+
+	mainMenu.cancelButton = InterfaceText.createMenuButton('Cancel', 'cancel');
+	mainMenu.cancelButton.setAttachX(0.5, 0.5);
+	mainMenu.controls.addChild(mainMenu.cancelButton);
+
+	mainMenuSetY();
+}
+
+function initMainMenuWorlds () {
+	if (!mainMenu.worlds) {
+		initMainMenuLogin();
+		uiMessage('Uh oh', 'Something is wrong, something is amiss.');
 	}
 
-	function revert() {
-		this.changeFont(UIConfig.titleText);
+	mainMenuClear();
+	mainMenu.screen = 'worlds';
+
+	mainMenuBanner('World Select', 'Choose a destination.');
+
+	mainMenu.controls = new ElementList({
+		padding:10,
+		attach: {
+			where:[0.5,0],
+			parentWhere:[0.5,0.5],
+			offset:[0,50]
+		}
+	});
+	mainMenu.addChild(mainMenu.controls);
+
+	var button, text;
+	for (var i = 0; i < mainMenu.worlds.length; i++) {
+		var text = mainMenu.worlds[i].name + ' (' + mainMenu.worlds[i].players + ' playing)';
+		button = InterfaceText.createMenuButton(text, 'world');
+		button.worldId = mainMenu.worlds[i].id;
+		button.setAttachX(0.5, 0.5);
+		mainMenu.controls.addChild(button);
 	}
 
-	mainMenu.loginButton.onHoverStart = highlight;
-	mainMenu.loginButton.onHoverEnd = revert;
-	mainMenu.registerButton.onHoverStart = highlight;
-	mainMenu.registerButton.onHoverEnd = revert;
+	mainMenu.cancelButton = InterfaceText.createMenuButton('Cancel', 'cancel');
+	mainMenu.cancelButton.setAttachX(0.5, 0.5);
+	mainMenu.controls.addChild(mainMenu.cancelButton, 30);
+
+	mainMenuSetY();
+}
+
+function initMainMenuCharacters () {
+	mainMenuClear();
+	mainMenu.screen = 'characters';
+
+	mainMenuBanner('Character Select', 'Who are you today?');
+
+	mainMenu.controls = new ElementList({
+		padding:10,
+		attach: {
+			where:[0.5,0],
+			parentWhere:[0.5,0.5],
+			offset:[0,50]
+		}
+	});
+	mainMenu.addChild(mainMenu.controls);
+
+	mainMenu.cancelButton = InterfaceText.createMenuButton('Cancel', 'cancel');
+	mainMenu.cancelButton.setAttachX(0.5, 0.5);
+	mainMenu.controls.addChild(mainMenu.cancelButton);
+
+	mainMenuSetY();
+}
+
+function initMainMenuCharacterCreate() {
+	mainMenuClear();
+	mainMenu.screen = 'characterCreate';
+
+	mainMenuBanner('Character Creation', 'You look like an Adventurer to me.');
+
+	mainMenu.controls = new ElementList({
+		padding:10,
+		attach: {
+			where:[0.5,0],
+			parentWhere:[0.5,0.5],
+			offset:[0,50]
+		}
+	});
+	mainMenu.addChild(mainMenu.controls);
+
+	mainMenu.cancelButton = InterfaceText.createMenuButton('Cancel', 'cancel');
+	mainMenu.cancelButton.setAttachX(0.5, 0.5);
+	mainMenu.controls.addChild(mainMenu.cancelButton);
+
+	mainMenuSetY();
 }
 
 function onMainMenuClick (element) {
-	if (element.name === 'login') {
-		tryLogin();
-	} else if (element.name === 'register') {
+	if (element instanceof InterfaceText)
 		createjs.Sound.play('ui/click');
-		uiMessage('Oops!', 'Not implemented.  :(');
+
+	if (element.name === 'login') {
+		tryLoginUser();
+	} else if (element.name === 'register') {
+		if (mainMenu.screen === 'login') {
+			initMainMenuRegister();
+		} else if (mainMenu.screen === 'register') {
+			tryCreateUser();
+		}
+	} else if (element.name === 'cancel') {
+		switch (mainMenu.screen) {
+			case 'register': initMainMenuLogin(); break;
+			case 'worlds': logoutUser(); initMainMenuLogin(); break;
+			case 'characters': logoutWorld(); initMainMenuWorlds(); break;
+			case 'characterCreate': initMainMenuCharacters();
+		}
+	} else if (element.name === 'world') {
+
 	}
 }
 
@@ -127,20 +273,20 @@ function onMainMenuKey (event) {
 			}
 			break;
 		case Keys.keyCodes.ENTER:
-			if (mainMenu.stage === 'login')
-				tryLogin();
+			if (mainMenu.screen === 'login')
+				tryLoginUser();
 			break;
 	}
 }
 
-function tryLogin () {
+function tryLoginUser () {
 	var username = mainMenu.username.text;
 	var password = mainMenu.password.text;
 
 	createjs.Sound.play('ui/click');
 
-	if (username.length < 2) {
-		uiMessage('Error', 'Username too short.');
+	if (username.length === 0) {
+		uiMessage('Error', 'Username is empty.');
 		return;
 	}
 
@@ -149,11 +295,106 @@ function tryLogin () {
 	setStatus('Logging In', 'Please wait...');
 }
 
+function logoutUser () {
+	game.connection.send(new Messages.LogoutUser().serialize());
+}
+
+function tryCreateUser () {
+	var username = mainMenu.username.text;
+	var password = mainMenu.password.text;
+
+	if (password !== mainMenu.password2.text) {
+		uiMessage('Error', 'Passwords don\'t match');
+		return;
+	} else if (username.length === 0) {
+		uiMessage('Error', 'Username is empty.');
+		return;
+	} else if (username.length === 1) {
+		uiMessage('Error', 'Username too short.');
+		return;
+	}
+
+	uiMessage('Oops!', 'Registration not implemented.  :(');
+}
+
+function loginWorld (id) {
+	game.connection.send(new Messages.LoginWorld(id).serialize());
+}
+
+function logoutWorld () {
+	game.connection.send(new Messages.LogoutWorld().serialize());
+}
+
+function loginCharacter (id) {
+	game.connection.send(new Messages.LoginCharacter(id).serialize());
+}
+
+function tryCreateCharacter () {
+	game.connection.send(new Messages.CreateCharacter().serialize());
+}
+
+function logoutCharacter () {
+	game.connection.send(new Messages.LogoutCharacter().serialize());
+}
+
 function onMainMenuMessage (msg) {
-	if (msg.params.success) {
-		setStatus('Success', 'Fetching world data...');
-	} else {
-		uiMessage('Login Failed', 'Username and Password didn\'t match any database entries.');
+	switch (msg.params.action) {
+		case 'loginUser':
+			if (msg.params.success) {
+				setStatus('Success', 'Fetching world list...');
+				game.connection.send(new Messages.GetWorlds().serialize());
+			} else {
+				uiMessage('Login Failed', msg.params.reason.toString());
+			}
+			break;
+		case 'createUser':
+			if (msg.params.success) {
+				initMainMenuLogin();
+				uiMessage('Success', 'You can log in now.');
+			} else {
+				uiMessage('Registration Failed', msg.params.reason.toString());
+			}
+			break;
+		case 'getWorlds':
+			clearStatus();
+			mainMenu.worlds = msg.params.worlds;
+			initMainMenuWorlds();
+			break;
+		case 'loginWorld':
+			if (msg.params.success) {	
+				setStatus('Success', 'Fetching character list...');
+				game.connection.send(new Messages.GetCharacters().serialize());
+			} else {
+				uiMessage('Join Failed', msg.params.reason.toString());
+			}
+			break;
+		case 'getCharacters':
+			if (msg.params.success) {	
+				clearStatus();
+				mainMenu.characters = msg.params.characters;
+				initMainMenuCharacters();
+			} else {
+				uiMessage('Get Failed', msg.params.reason.toString());
+			}
+			break;
+		case 'loginCharacter':
+			if (msg.params.success) {
+				initMainMenuLogin();
+				uiMessage('Oops!', 'Not implemented yet. :(');
+			} else {
+				uiMessage('Login Failed', msg.params.reason.toString());
+			}
+			break;
+		case 'createCharacter':
+			if (msg.params.success) {	
+				setStatus('Success', 'Updating character list...');
+				game.connection.send(new Messages.GetCharacters().serialize());
+			} else {
+				uiMessage('Creation Failed', msg.params.reason.toString());
+			}
+			break;
+		default:
+			uiMessage('Error', 'Unknown action "' + msg.params.action + '"');
 	}
 }
 

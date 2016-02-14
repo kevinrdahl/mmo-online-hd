@@ -1,4 +1,23 @@
 var InterfaceText = Class(InterfaceElement, {
+	$static: {
+		createMenuButton: function(text, name) {
+			var t = new InterfaceText(text, {
+				name: name,
+				font: UIConfig.titleText,
+				isClickable: true,
+				onHoverStart: function() {
+					this.changeFont(UIConfig.titleTextHover);
+					createjs.Sound.play('ui/rollover');
+				},
+				onHoverEnd: function() {
+					this.changeFont(UIConfig.titleText);
+				}
+			});
+
+			return t;
+		}
+	},
+
 	constructor: function(str, options) {
 		this.str = str;
 		if (typeof options.font === "undefined") { this.font = MmooUtil.shallowClone(UIConfig.bodyText); }

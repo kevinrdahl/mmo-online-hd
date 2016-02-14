@@ -9,6 +9,8 @@ function initGame() {
 	game.viewDiv.append(game.renderer.view);
 	$(window).resize(function() { resizeView(); });
 	PIXI.SCALE_MODES.DEFAULT = PIXI.SCALE_MODES.NEAREST;
+	game.TERRAIN_TILE_WIDTH = 24;
+	game.DEFAULT_SCALE = 2;
 
 	game.worldContainer = new PIXI.Container();
 	game.stage.addChild(game.worldContainer);
@@ -16,7 +18,7 @@ function initGame() {
 	//global graphics for RenderTextures to use
 	game.volatileGraphics = new PIXI.Graphics();
 
-	//global 1x1 texture for masking
+	//global texture for masking
 	game.maskTexture = TextureGenerator.rectangle(10, 10, 0xffffff, 0, 0x000000);
 
 	//mouse state

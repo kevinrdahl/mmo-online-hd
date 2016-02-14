@@ -5,8 +5,9 @@ var TextBox = Class(Panel, {
 		userName:[[97,122],[65,90],[48,57],39,45,32,95,46,47], //underscore, dot, slash,
 		any:[[32,95],[97,126]],
 
-		createLabelled: function(label, name, hideInput, allowedCharacters) {
+		createLabelled: function(label, name, text, hideInput, allowedCharacters) {
 			var box = new TextBox({
+				text:text,
 				name:name,
 				hideInput:hideInput,
 				allowedCharacters:allowedCharacters,

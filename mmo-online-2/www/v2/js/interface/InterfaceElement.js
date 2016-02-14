@@ -285,5 +285,22 @@ var InterfaceElement = Class({
 			if (exclude.indexOf(this.children[i]) === -1)
 				this.children[i].removeFilter(filter);
 		}
+	},
+
+	setAttachDimension: function(dimension, where, parentWhere, offset) {
+		this.attach.where[dimension] = where;
+		this.attach.parentWhere[dimension] = parentWhere;
+		if (typeof offset === 'number')
+			this.attach.offset[dimension] = offset;
+	},
+
+	//convenient alias
+	setAttachX: function(where, parentWhere, offset) {
+		this.setAttachDimension(0, where, parentWhere, offset);
+	},
+
+	//convenient alias
+	setAttachY: function(where, parentWhere, offset) {
+		this.setAttachDimension(1, where, parentWhere, offset);
 	}
 });

@@ -34,8 +34,6 @@ var Panel = Class(InterfaceElement, {
 	resize: function(w, h) {
 		Panel.$superp.resize.call(this,w,h);
 
-		console.log('Resize ' + w + ' ' + h);
-
 		this.renderTexture = new PIXI.RenderTexture(game.renderer, this.width, this.height);
 		this.sprite.texture = this.renderTexture;
 		this.drawNeeded = true;

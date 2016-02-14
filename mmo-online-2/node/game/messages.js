@@ -151,7 +151,8 @@ Messages.WorldList = Class(Messages.Message, {
                 players: Object.keys(games[i].players).length
             });
         }
-        Messages.WorldList.$super.call(this, Messages.TYPES.WORLD, {
+        Messages.WorldList.$super.call(this, Messages.TYPES.USER, {
+            action: 'getWorlds',
             worlds: descriptions
         });
     }

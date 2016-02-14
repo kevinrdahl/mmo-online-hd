@@ -31,6 +31,50 @@ Messages.LoginUser = Class(Messages.Message, {
 	}
 });
 
+Messages.LogoutUser = Class(Messages.Message, {
+    constructor: function() {
+        Messages.LogoutUser.$super.call(this, Messages.TYPES.USER, {
+            action:'logoutUser'
+        })
+    }
+});
+
+Messages.CreateUser = Class(Messages.Message, {
+    constructor: function(username, password, email) {
+        Messages.CreateUser.$super.call(this, Messages.TYPES.USER, {
+            action:'loginUser',
+            name:username,
+            password:password,
+            email:email
+        })
+    }
+});
+
+Messages.GetWorlds = Class(Messages.Message, {
+    constructor: function() {
+        Messages.GetWorlds.$super.call(this, Messages.TYPES.USER, {
+            action:'getWorlds'
+        });
+    }
+});
+
+Messages.LoginWorld = Class(Messages.Message, {
+    constructor: function(id) {
+        Messages.GetWorlds.$super.call(this, Messages.TYPES.USER, {
+            action:'loginWorld',
+            worldId: id
+        });
+    }
+});
+
+Messages.LogoutWorld = Class(Messages.Message, {
+    constructor: function() {
+        Messages.GetWorlds.$super.call(this, Messages.TYPES.USER, {
+            action:'logoutWorld'
+        });
+    }
+});
+
 /*
 	General purpose transformations are copy-pasted from server messages.js.
 	In theory they could be the same file, but node is poopy when things 

@@ -112,7 +112,7 @@ Data.DAO = function(config) {
 		this.pool.query(queryString, queryParams, function(err, results) {
 			if (err) {
 				console.log('SQL ERROR creating character: ' + err.code);
-				callback(client, false);
+				callback(client, false, err.code);
 			} else {
 				callback(client, true);
 			}
@@ -132,19 +132,22 @@ Data.DAO = function(config) {
 			if (results.length === 1) {
 				callback(client, results[0]);
 			} else {
+				console.log(results);
 				callback(client, null);
 			}
 		});
 	};
 
-	this.createUser = function(client, name, password, callback) {
+	this.createUser = function(client, name, password, email, callback) {
 		var queryString = 'INSERT INTO User SET ?';
 		var queryParams = {name:name, password:password, settings:JSON.stringify(Data.DEFAULT_USER_SETTINGS)};
+		if (typeof email !== 'undefined')
+			queryParams.email = email;
 
 		this.pool.query(queryString, queryParams, function(err, result) {
 			if (err) {
 				console.log('SQL ERROR creating user: ' + err.code);
-				callback(client, false, name);
+				callback(client, false, name, err.code);
 				return;
 			}
 			callback(client, true, name);
