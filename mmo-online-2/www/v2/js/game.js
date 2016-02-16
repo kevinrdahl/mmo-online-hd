@@ -5,7 +5,7 @@ function initGame() {
 
 	game.stage = new PIXI.Container();
 	game.renderer = new PIXI.autoDetectRenderer(300, 300, null, false, true);
-	game.renderer.backgroundColor = 0x489848;
+	game.renderer.backgroundColor = 0x489848; //dawnlike:0x6daa2c
 	game.viewDiv.append(game.renderer.view);
 	$(window).resize(function() { resizeView(); });
 	PIXI.SCALE_MODES.DEFAULT = PIXI.SCALE_MODES.NEAREST;

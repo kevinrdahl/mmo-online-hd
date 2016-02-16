@@ -9,7 +9,7 @@ var WindowPanel = Class(Panel, {
 
 				var group = new PIXI.Container();
 
-				g.beginFill(UIConfig.closeButtonColor);
+				g.beginFill(UIConfig.negativeColor);
 				g.drawRect(0,0,width,width);
 				g.endFill();
 
@@ -41,7 +41,7 @@ var WindowPanel = Class(Panel, {
 		this.headerBar = new Panel({
 			width:this.width,
 			height:UIConfig.headerHeight,
-			bgColor:UIConfig.headerBgColor,
+			bgColor:UIConfig.borderColor,
 			draggable:true,
 			dragElement:this,
 			attach: {
