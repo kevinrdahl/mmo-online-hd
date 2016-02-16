@@ -300,7 +300,7 @@ Servers.Server = Class({
         }
     },
 
-    onUserLogin: function(client, results) {
+    onUserLogin: function(client, results, wasError) {
         var response;
 
         if (results !== null) {
@@ -320,7 +320,8 @@ Servers.Server = Class({
 
             console.log('Client ' + client.id + ' logged in as "' + results.name + '"');
         } else {
-            response = new Messages.UserResponse('loginUser', false, 'Bad credentials.');
+            var reason = (wasError) ? 'Database error' : 'Bad credentials';
+            response = new Messages.UserResponse('loginUser', false, reason);
             console.log('Client ' + client.id + ' failed to log in.');
         }
 

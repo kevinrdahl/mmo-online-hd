@@ -125,7 +125,7 @@ Data.DAO = function(config) {
 		this.pool.query(queryString, [name, password], function(err, results) {
 			if (err) {
 				console.log('SQL ERROR logging in: ' + err.code);
-				callback(client, null);
+				callback(client, null, true);
 				return;
 			}
 			
