@@ -24,7 +24,7 @@ function initMainMenu() {
 	mainMenu.displayObject.filters = [game.filters.dropShadow];
 
 	mainMenu.music = createjs.Sound.play('music/fortress', {loop:-1});
-	mainMenu.music.volume = 0.5;
+	mainMenu.music.volume = 0.3;
 
 	initMainMenuLogin('', '');
 }
@@ -403,6 +403,7 @@ function updateMenuBackground () {
 	var currentTime = Date.now();
 	var timeDelta = currentTime - menuBackground.lastUpdate;
 	var pixelDelta = timeDelta / 1000 * speed;
+	var tileWidth = game.TERRAIN_TILE_WIDTH * game.DEFAULT_SCALE;
 
 	menuBackground.position.x -= pixelDelta;
 	menuBackground.lastUpdate = currentTime;
@@ -410,18 +411,19 @@ function updateMenuBackground () {
 	var child;
 	for (var i = 0; i < menuBackground.children.length; i++) {
 		child = menuBackground.children[i];
-		if (child.position.x + menuBackground.position.x <= -48)
+		if (child.position.x + menuBackground.position.x <= -tileWidth)
 			menuBackground.removeChild(child);
 	}
 
-	var col = Math.ceil((game.renderer.width - menuBackground.position.x) / 48);
+	var col = Math.ceil((game.renderer.width - menuBackground.position.x) / tileWidth);
 	while (menuBackground.lastSpawnedCol < col) {
 		menuSpawnColumn();
 	}
 }
 
 function menuSpawnColumn () {
-	var numRows = Math.ceil(game.renderer.height / 48);
+	var tileWidth = game.TERRAIN_TILE_WIDTH * game.DEFAULT_SCALE;
+	var numRows = Math.ceil(game.renderer.height / tileWidth);
 	var column = [];
 	var lastColumn = menuBackground.lastColumn;
 
@@ -485,10 +487,10 @@ function menuSpawnColumn () {
 		}
 
 		if (sprite !== null) {
-			sprite.position.x = menuBackground.lastSpawnedCol * 48;
-			sprite.position.y = row * 48;
-			sprite.scale.x = 2;
-			sprite.scale.y = 2;
+			sprite.position.x = menuBackground.lastSpawnedCol * tileWidth;
+			sprite.position.y = row * tileWidth;
+			sprite.scale.x = game.DEFAULT_SCALE;
+			sprite.scale.y = game.DEFAULT_SCALE;
 			menuBackground.addChild(sprite);
 		}
 	}
