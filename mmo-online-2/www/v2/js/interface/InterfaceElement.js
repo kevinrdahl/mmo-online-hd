@@ -76,7 +76,7 @@ var InterfaceElement = Class({
 		this.children.push(child);
 		this.displayObject.addChild(child.displayObject);
 		child.parent = this;
-		child.reposition(true);
+		child.reposition(false);
 
 		if (!noMask && this.maskSprite !== null)
 			child.displayObject.mask = this.maskSprite;
@@ -190,19 +190,22 @@ var InterfaceElement = Class({
 			this.updateDisplayObjectPosition();
 			return;
 		}
-			
 
-		var coords = [
-			this.parent.width * this.attach.parentWhere[0] - this.width * this.attach.where[0] + this.attach.offset[0],
-			this.parent.height * this.attach.parentWhere[1] - this.height * this.attach.where[1] + this.attach.offset[1]
-		];
+		var coords = this.getAttachCoords();
 
-		//logger.log("ui", "position " + this.getFullName() + " " + JSON.stringify(coords));
+		//logger.log("debug", "position " + this.getFullName() + " " + JSON.stringify(coords));
 
 		this.x = coords[0];
 		this.y = coords[1];
 
 		this.toNearestPixel();
+	},
+
+	getAttachCoords: function() {
+		return [
+			this.parent.width * this.attach.parentWhere[0] - this.width * this.attach.where[0] + this.attach.offset[0],
+			this.parent.height * this.attach.parentWhere[1] - this.height * this.attach.where[1] + this.attach.offset[1]
+		];
 	},
 
 	updateDisplayObjectPosition: function() {
@@ -241,6 +244,7 @@ var InterfaceElement = Class({
 
 	removeMask: function() {
 		//TODO
+		logger.log('ui', '---InterfaceElement.removeMask isn\'t implemented yet!---');
 	},
 
 	addFilter: function(filter) {
@@ -252,6 +256,9 @@ var InterfaceElement = Class({
 	},
 
 	removeFilter: function(filter) {
+		if (!Array.isArray(this.displayObject.filters))
+			return;
+
 		try {
 			var index = this.displayObject.filters.indexOf(filter);
 			this.displayObject.filters = this.displayObject.filters.filter(function(val) {
@@ -302,5 +309,11 @@ var InterfaceElement = Class({
 	//convenient alias
 	setAttachY: function(where, parentWhere, offset) {
 		this.setAttachDimension(1, where, parentWhere, offset);
+	},
+
+	setAttachToPosition: function() {
+		var coords = this.getAttachCoords();
+		this.attach[0] += this.x - coords[0];
+		this.attach[1] += this.y - coords[1];
 	}
 });

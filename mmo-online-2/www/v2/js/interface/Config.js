@@ -26,12 +26,13 @@ var UIConfig = {
 
 //this way I can use values defined above
 MmooUtil.applyProps(UIConfig, {	
-	headerText: MmooUtil.createFontDef({size:16}),
-	bodyText: MmooUtil.createFontDef({size:14}),
-	formText: MmooUtil.createFontDef({size:16}),
-	titleText: MmooUtil.createFontDef({size:20, bold:true}),
-	titleTextHover:MmooUtil.createFontDef({size:20, bold:true, color:UIConfig.fontHighlightColor}),
-	bannerText:MmooUtil.createFontDef({size:44, bold:true}),
+	headerText: 	MmooUtil.createFontDef({size:16}),
+	bodyText: 		MmooUtil.createFontDef({size:14}),
+	formText: 		MmooUtil.createFontDef({size:16}),
+	titleText: 		MmooUtil.createFontDef({size:20, bold:true}),
+	titleTextHover: MmooUtil.createFontDef({size:20, bold:true, color:UIConfig.fontHighlightColor}),
+	bannerText: 	MmooUtil.createFontDef({size:44, bold:true}),
+
 
 	elementListPadding:2,
 	elementListOuterPadding:4,
