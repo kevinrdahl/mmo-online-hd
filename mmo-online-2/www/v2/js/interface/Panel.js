@@ -1,11 +1,11 @@
 var Panel = Class(InterfaceElement, {
 	constructor: function(options) {
-		this.bgColor = UIConfig.panelBgColor;
+		this.bgColor = UIConfig.backgroundColor;
 
 		if (typeof options.borderWidth === "undefined")
 			options.borderWidth = UIConfig.windowBorderWidth;
 		if (typeof options.borderColor === "undefined")
-			options.borderColor = UIConfig.headerBgColor;
+			options.borderColor = UIConfig.borderColor;
 		this.alpha = 1;
 
 		Panel.$super.call(this, options);

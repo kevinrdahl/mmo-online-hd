@@ -476,10 +476,16 @@ function menuSpawnColumn () {
 			sprite = new PIXI.Sprite(PIXI.loader.resources[texName].texture);
 			column[row] = 'g';
 		} else if (Math.random() < 0.05) {
-			texName = MmooUtil.chooseRandomCumulative (
+			/*texName = MmooUtil.chooseRandomCumulative (
 				['terrain/flower1', 'terrain/flower2', 'terrain/flower3','terrain/dirtpatch1', 'terrain/dirtpatch3', 'terrain/dirtpatch2'],
 				[0.25, 0.4, 0.5, 0.75, 0.9, 1]
+			);*/
+
+			texName = MmooUtil.chooseRandomWeighted (
+				['terrain/flower1', 'terrain/flower2', 'terrain/flower3','terrain/dirtpatch1', 'terrain/dirtpatch3', 'terrain/dirtpatch2'],
+				[25,15,10,25,15,10]
 			);
+
 			sprite = new PIXI.Sprite(PIXI.loader.resources[texName].texture);
 			column[row] = 'd';
 		} else {
