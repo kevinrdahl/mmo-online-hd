@@ -25,7 +25,7 @@ var TextBox = Class(Panel, {
 					offset:[5,3]
 				}
 			});
-			box.addChild(labelText);
+			box.addChild(labelText, {noMask:true});
 
 			return box;
 		}
@@ -33,7 +33,7 @@ var TextBox = Class(Panel, {
 
 	constructor: function(options) {
 		this.hideInput = false;
-		this.maxChars = 25;
+		this.maxChars = 30;
 		this.text = '';
 		this.active = false;
 		this.cursorBlinkInterval = 500;
@@ -65,6 +65,11 @@ var TextBox = Class(Panel, {
 
 		if (this.hideInput)
 			this.updateDisplay();
+
+		var localBounds = this.getInnerBounds();
+		localBounds.x -= this.x;
+		localBounds.y -= this.y;
+		this.applyMask(localBounds);
 	},
 
 	draw: function() {
@@ -79,8 +84,10 @@ var TextBox = Class(Panel, {
 
 	addCharacter: function(c) {
 		//logger.log('ui', 'add character "' + c + '" to ' + this.getFullName());
-		if (!this.characterAllowed(c) || this.text.length >= this.maxChars)
+		if (!this.characterAllowed(c) || this.text.length >= this.maxChars) {
+			createjs.Sound.play('ui/nope');
 			return;
+		}		
 
 		this.text += c;
 		this.updateDisplay();
@@ -102,6 +109,17 @@ var TextBox = Class(Panel, {
 		} else {
 			this.displayText.changeString(this.text);
 		}
+
+		//ensure cursor is in view
+		var width = this.width - 2*this.borderWidth - 2*UIConfig.textBoxPadding;
+		var textWidth = this.displayText.width + this.cursor.width;
+		
+		this.displayText.attach.offset[0] = this.borderWidth + UIConfig.textBoxPadding;
+		if (textWidth > width) {
+			this.displayText.attach.offset[0] -= textWidth - width;
+		}
+
+		this.displayText.reposition();
 	},
 
 	characterAllowed: function(c) {

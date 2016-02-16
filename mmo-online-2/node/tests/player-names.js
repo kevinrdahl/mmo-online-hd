@@ -19,5 +19,5 @@ var names = [
 ];
 
 for (var i = 0; i < names.length; i++) {
-	console.log(names[i] + ':  ' + Util.isValidPlayerName(names[i]));
+	console.log(names[i] + ':  ' + Util.isValidUserName(names[i]));
 }

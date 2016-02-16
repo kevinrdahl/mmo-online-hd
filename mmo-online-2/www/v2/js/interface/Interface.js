@@ -253,10 +253,6 @@ function setStatus (title, message) {
 	setElementActive(null);
 	setElementHover(null);
 
-	//game.ui.addFilterToChildren(game.filters.uiBlur);
-	//if (menuBackground !== null)
-	//	menuBackground.filters = [game.filters.uiBlur];
-
 	var totalHeight = 0;
 
 	var eleList = new ElementList({
@@ -269,6 +265,7 @@ function setStatus (title, message) {
 	});
 
 	var titleText = new InterfaceText(title, {
+		id:'statusTitle',
 		font:UIConfig.titleText,
 		parent:eleList,
 		attach:{
@@ -282,6 +279,7 @@ function setStatus (title, message) {
 
 	if (typeof message === 'string') {
 		var messageText = new InterfaceText(message, {
+			id:'statusMessage',
 			font:UIConfig.bodyText,
 			parent:eleList,
 			attach:{
@@ -312,12 +310,8 @@ function setStatus (title, message) {
 }
 
 function clearStatus () {
-	if (menuBackground !== null)
-		menuBackground.filters = null;
-
 	if (game.ui.status !== null) {
 		game.ui.removeChild(game.ui.status);
-		game.ui.removeFilterFromChildren(game.filters.uiBlur);
 		game.ui.status = null;
 	}
 }

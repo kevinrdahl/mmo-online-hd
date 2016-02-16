@@ -28,7 +28,8 @@ window.SOUND_LIST = {
 
 	"ui":[
 		"click.ogg",
-		"rollover.ogg"
+		"rollover.ogg",
+		"nope.ogg"
 	]
 };
 
@@ -68,7 +69,7 @@ function loadTextures() {
 		PIXI.loader.add(asset.name, asset.path);
 	}
 
-	var loadPanel = new Panel({
+	/*var loadPanel = new Panel({
 		id:"loadPanel",
 		width:250,
 		height:60,
@@ -102,16 +103,24 @@ function loadTextures() {
 		parent:loadPanel
 	}));
 
-	game.ui.addChild(loadPanel);
+	game.ui.addChild(loadPanel);*/
 
+	setStatus('Loading Textures', '0%');
 
     PIXI.loader.on('progress', function() {
         game.numTexturesLoaded++;
-        game.ui.findChildById("loadCountText").changeString(Math.round(game.numTexturesLoaded / game.textureList.length * 100).toString() + '%');
+        game.ui.status.findChildById("statusMessage").changeString(Math.round(game.numTexturesLoaded / game.textureList.length * 100).toString() + '%');
     });
 
     PIXI.loader.on('complete', function() {
     	delete game.textureList;
+    	game.textures = {};
+    	var tex;
+    	for (var name in PIXI.loader.resources) {
+    		tex = PIXI.loader.resources[name].texture;
+    		tex.baseTexture.scaleMode = PIXI.SCALE_MODES.NEAREST;
+    		game.textures[name] = tex;
+    	}
     	onLoadTextures();
     });
     PIXI.loader.load();
@@ -126,8 +135,8 @@ function loadSounds() {
 	delete SOUND_LIST;
 
 	//update ui
-	game.ui.findChildById('loadTitle').changeString("Loading Sounds");
-	game.ui.findChildById('loadCountText').changeString("0%");
+	game.ui.status.findChildById('statusTitle').changeString("Loading Sounds");
+	game.ui.status.findChildById('statusMessage').changeString("0%");
 
 	createjs.Sound.addEventListener('fileload', onSoundLoaded);
 
@@ -140,8 +149,9 @@ function loadSounds() {
 
 function onSoundLoaded() {
 	game.numSoundsLoaded += 1;
-	game.ui.findChildById("loadCountText").changeString(Math.round(game.numSoundsLoaded / game.soundList.length * 100).toString() + '%');
+	game.ui.status.findChildById("statusMessage").changeString(Math.round(game.numSoundsLoaded / game.soundList.length * 100).toString() + '%');
 
-	if (game.numSoundsLoaded >= game.soundList.length)
+	if (game.numSoundsLoaded >= game.soundList.length) {
 		onLoadSounds();
+	}
 }

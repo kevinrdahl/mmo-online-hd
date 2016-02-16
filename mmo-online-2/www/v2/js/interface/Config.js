@@ -8,7 +8,7 @@ var UIConfig = {
 	fontColor:0xffffff,
 	fontHighlightColor:0xffff33,
 
-	fontName: "Roboto Condensed",
+	fontName: 'Open Sans',
 	fontSize: 14,
 
 	headerTextY:6,
@@ -37,7 +37,7 @@ MmooUtil.applyProps(UIConfig, {
 	elementListPadding:2,
 	elementListOuterPadding:4,
 
-	alertOuterPadding:5,
+	alertOuterPadding:10,
 	alertInnerPadding:5,
 	alertWidth: 200,
 

@@ -40,12 +40,13 @@ var Panel = Class(InterfaceElement, {
 	},
 
 	getInnerBounds: function() {
-		return {
-			x:this.borderWidth,
-			y:this.borderWidth,
-			width:this.width - (this.borderWidth*2),
-			height:this.height - (this.borderWidth*2)
-		}
+		var coords = this.getGlobalPosition();
+		return new PIXI.Rectangle(
+			coords[0] + this.borderWidth,
+			coords[1] + this.borderWidth,
+			this.width - (this.borderWidth*2),
+			this.height - (this.borderWidth*2)
+		)
 	},
 
 	getClassName: function() {

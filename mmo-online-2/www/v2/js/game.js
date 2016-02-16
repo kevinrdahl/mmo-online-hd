@@ -8,7 +8,7 @@ function initGame() {
 	game.renderer.backgroundColor = 0x489848; //dawnlike:0x6daa2c
 	game.viewDiv.append(game.renderer.view);
 	$(window).resize(function() { resizeView(); });
-	PIXI.SCALE_MODES.DEFAULT = PIXI.SCALE_MODES.NEAREST;
+	//PIXI.SCALE_MODES.DEFAULT = PIXI.SCALE_MODES.NEAREST;
 	game.TERRAIN_TILE_WIDTH = 24;
 	game.DEFAULT_SCALE = 2;
 
@@ -86,8 +86,6 @@ function onLoadSounds() {
 }
 
 function onLoadComplete() {
-	game.ui.removeChild(game.ui.findChildById("loadPanel"));
-
 	if (urlArgs.testUI)
 		initTestInterface();
 

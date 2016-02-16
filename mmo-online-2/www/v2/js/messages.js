@@ -42,7 +42,7 @@ Messages.LogoutUser = Class(Messages.Message, {
 Messages.CreateUser = Class(Messages.Message, {
     constructor: function(username, password, email) {
         Messages.CreateUser.$super.call(this, Messages.TYPES.USER, {
-            action:'loginUser',
+            action:'createUser',
             name:username,
             password:password,
             email:email
@@ -74,6 +74,34 @@ Messages.LogoutWorld = Class(Messages.Message, {
         });
     }
 });
+
+Messages.GetCharacters = Class(Messages.Message, {
+    constructor: function() {
+        Messages.GetCharacters.$super.call(this, Messages.TYPES.USER, {
+            action:'getCharacters'
+        });
+    }
+});
+
+Messages.LoginCharacter = Class(Messages.Message, {
+    constructor: function(id) {
+        Messages.LoginCharacter.$super.call(this, Messages.TYPES.USER, {
+            action:'loginCharacter',
+            characterId: id
+        });
+    }
+});
+
+Messages.CreateCharacter = Class(Messages.Message, {
+    constructor: function(name, json) {
+        Messages.CreateCharacter.$super.call(this, Messages.TYPES.USER, {
+            action:'createCharacter',
+            name:name,
+            json:json
+        });
+    }
+});
+
 
 /*
 	General purpose transformations are copy-pasted from server messages.js.

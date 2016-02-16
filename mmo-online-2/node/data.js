@@ -146,8 +146,12 @@ Data.DAO = function(config) {
 
 		this.pool.query(queryString, queryParams, function(err, result) {
 			if (err) {
+				var reason = err.code;
+				if (reason == 'ER_DUP_ENTRY') {
+					reason = 'duplicate username';
+				}
 				console.log('SQL ERROR creating user: ' + err.code);
-				callback(client, false, name, err.code);
+				callback(client, false, name, reason);
 				return;
 			}
 			callback(client, true, name);

@@ -180,7 +180,7 @@ Servers.Server = Class({
                         failReason = 'missing param';
                     } else if (client.userId !== null) {
                         failReason = 'already logged in';
-                    } else if (!MMOO.isValidUserName(msg.params.name)) { 
+                    } else if (!MMOOUtil.isValidUserName(msg.params.name)) { 
                         failReason = 'invalid user name';
                     } else {
                         discard = false;
@@ -224,9 +224,7 @@ Servers.Server = Class({
                     break;
 
                 case 'getCharacters':
-                    if (!Messages.assertParams(msg, client.id, ['worldId'])) {
-                        failReason = 'missing param';
-                    } else if (client.userId === null) {
+                    if (client.userId === null) {
                         failReason = 'not logged in';
                     } else if (client.worldId === null) {
                         failReason = 'no world joined';
@@ -352,7 +350,8 @@ Servers.Server = Class({
     onGetUserCharacters: function(client, results) {
         var response = new Messages.Message(Messages.TYPES.CHARACTER, {
             action:'getCharacters', 
-            characters:results
+            characters:results,
+            success:true
         });
         client.send(response.serialize());
         this.onCompleteUserMessage(client);

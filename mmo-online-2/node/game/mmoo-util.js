@@ -68,11 +68,11 @@ MMOOUtil.secondsToFrames = function(secs) {
 };
 
 MMOOUtil.isValidCharacterName = function(name) {
-	var re = new RegExp('^[A-Z][a-z]+(?:[\\s-\'][A-Z][a-z]+)?$');
+	var re = new RegExp('^[A-Z][a-z]+(?:[\\s\\-\'][A-Z][a-z]+)?$');
 	return name.length <= 15 && re.test(name);
 };
 
 MMOOUtil.isValidUserName = function(name) {
-	var re = new RegExp('^[A-Za-z0-9]+(?:[\\s\\._-/\'][A-Za-z0-9]+)?(?:[\\s\\._-/\'][A-Za-z0-9]+)?$');
+	var re = new RegExp('^[A-Za-z0-9]+(?:[\\s\\._\\-\\/\'][A-Za-z0-9]+)*$');
 	return name.length <= 25 && re.test(name);
 };

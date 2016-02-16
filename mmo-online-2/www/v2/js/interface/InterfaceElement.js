@@ -72,13 +72,15 @@ var InterfaceElement = Class({
 		return element;
 	},
 
-	addChild: function(child, noMask) {
+	addChild: function(child, options) {
+		options = (typeof options === 'object') ? options : {};
+
 		this.children.push(child);
 		this.displayObject.addChild(child.displayObject);
 		child.parent = this;
 		child.reposition(false);
 
-		if (!noMask && this.maskSprite !== null)
+		if (!options.noMask && this.maskSprite !== null)
 			child.displayObject.mask = this.maskSprite;
 	},
 
@@ -199,6 +201,19 @@ var InterfaceElement = Class({
 		this.y = coords[1];
 
 		this.toNearestPixel();
+	},
+
+	getGlobalPosition: function() {
+		var x = this.x;
+		var y = this.y;
+		var parent = this.parent;
+		while (parent != null) {
+			x += parent.x;
+			y += parent.y;
+			parent = parent.parent;
+		}
+
+		return [x,y];
 	},
 
 	getAttachCoords: function() {

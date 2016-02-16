@@ -92,10 +92,12 @@ function initMainMenuLogin () {
 	mainMenu.addChild(mainMenu.controls);
 
 	mainMenu.username = TextBox.createLabelled('Username', 'username', username, false, TextBox.userName);
+	mainMenu.username.maxChars = 25;
 	mainMenu.username.setAttachX(0.5, 0.5);
 	mainMenu.controls.addChild(mainMenu.username);
 
 	mainMenu.password = TextBox.createLabelled('Password', 'password', password, true, TextBox.any);
+	mainMenu.password.maxChars = 100;
 	mainMenu.password.setAttachX(0.5, 0.5);
 	mainMenu.controls.addChild(mainMenu.password);
 
@@ -130,18 +132,22 @@ function initMainMenuRegister () {
 	mainMenu.addChild(mainMenu.controls);
 
 	mainMenu.username = TextBox.createLabelled('Username', 'username', username, false, TextBox.userName);
+	mainMenu.username.maxChars = 25;
 	mainMenu.username.setAttachX(0.5, 0.5);
 	mainMenu.controls.addChild(mainMenu.username);
 
 	mainMenu.password = TextBox.createLabelled('Password', 'password', password, true, TextBox.any);
+	mainMenu.password.maxChars = 100;
 	mainMenu.password.setAttachX(0.5, 0.5);
 	mainMenu.controls.addChild(mainMenu.password);
 
 	mainMenu.password2 = TextBox.createLabelled('Confirm Password', 'password2', '', true, TextBox.any);
+	mainMenu.password.maxChars = 100;
 	mainMenu.password2.setAttachX(0.5, 0.5);
 	mainMenu.controls.addChild(mainMenu.password2);
 
 	mainMenu.email = TextBox.createLabelled('Email (optional)', 'email', '', false, TextBox.any);
+	mainMenu.email.maxChars = 100;
 	mainMenu.email.setAttachX(0.5, 0.5);
 	mainMenu.controls.addChild(mainMenu.email);
 
@@ -239,7 +245,7 @@ function initMainMenuCharacterCreate() {
 	mainMenuClear();
 	mainMenu.screen = 'characterCreate';
 
-	mainMenuBanner('Character Creation', 'You look like an Adventurer to me.');
+	mainMenuBanner('Character Creation', 'Meet the new you.');
 
 	mainMenu.controls = new ElementList({
 		padding:10,
@@ -275,14 +281,18 @@ function onMainMenuClick (element) {
 			case 'register': initMainMenuLogin(); break;
 			case 'worlds': logoutUser(); initMainMenuLogin(); break;
 			case 'characters': logoutWorld(); initMainMenuWorlds(); break;
-			case 'characterCreate': initMainMenuCharacters();
+			case 'characterCreate': 
+				if (mainMenu.characters.length > 0)
+					initMainMenuCharacters();
+				else
+					initMainMenuWorlds();
 		}
 	} else if (element.name === 'world') {
 		//world list format is kinda dumb
 		var world = null;
 		for (var i = 0; i < mainMenu.worlds.length; i++) {
 			if (mainMenu.worlds[i].id === element.worldId) {
-				world = mainMenu.worlds[i].id;
+				world = mainMenu.worlds[i];
 				break;
 			}
 		}
@@ -318,6 +328,13 @@ function onMainMenuKey (event) {
 			if (game.activeElement == mainMenu.username) {
 				setElementActive(mainMenu.password);
 			} else if (game.activeElement == mainMenu.password) {
+				if (mainMenu.screen === 'register')
+					setElementActive(mainMenu.password2);
+				else
+					setElementActive(mainMenu.username);
+			} else if (game.activeElement == mainMenu.password2) {
+				setElementActive(mainMenu.email);
+			} else if (game.activeElement == mainMenu.email) {
 				setElementActive(mainMenu.username);
 			}
 			break;
@@ -363,7 +380,8 @@ function tryCreateUser () {
 		return;
 	}
 
-	uiMessage('Oops!', 'Registration not implemented.  :(');
+	var msg = new Messages.CreateUser(username, password, mainMenu.email.text);
+	game.connection.send(msg.serialize());
 }
 
 function loginWorld (id) {
@@ -390,6 +408,7 @@ function onMainMenuMessage (msg) {
 	switch (msg.params.action) {
 		case 'loginUser':
 			if (msg.params.success) {
+				game.userSettings = msg.params.settings;
 				setStatus('Success', 'Fetching world list...');
 				game.connection.send(new Messages.GetWorlds().serialize());
 			} else {
@@ -398,8 +417,8 @@ function onMainMenuMessage (msg) {
 			break;
 		case 'createUser':
 			if (msg.params.success) {
-				initMainMenuLogin();
-				uiMessage('Success', 'You can log in now.');
+				setStatus('Success', 'Logging in...');
+				tryLoginUser();
 			} else {
 				uiMessage('Registration Failed', msg.params.reason.toString());
 			}
@@ -423,7 +442,7 @@ function onMainMenuMessage (msg) {
 				mainMenu.characters = msg.params.characters;
 				initMainMenuCharacters();
 			} else {
-				uiMessage('Get Failed', msg.params.reason.toString());
+				uiMessage('Error', msg.params.reason.toString());
 			}
 			break;
 		case 'loginCharacter':
@@ -448,7 +467,7 @@ function onMainMenuMessage (msg) {
 }
 
 function updateMenuBackground () {
-	var speed = 20.0; //pixels/sec
+	var speed = game.TERRAIN_TILE_WIDTH; //pixels/sec
 	var currentTime = Date.now();
 	var timeDelta = currentTime - menuBackground.lastUpdate;
 	var pixelDelta = timeDelta / 1000 * speed;
@@ -515,14 +534,14 @@ function menuSpawnColumn () {
 				['terrain/tree1', 'terrain/tree2'],
 				[0.95, 1]
 			);
-			sprite = new PIXI.Sprite(PIXI.loader.resources[texName].texture);
+			sprite = new PIXI.Sprite(game.textures[texName]);
 			column[row] = 't';
 		} else if (Math.random() < grassChance) {
 			texName = MmooUtil.chooseRandomCumulative (
 				['terrain/grass2', 'terrain/grass3', 'terrain/grass4'],
 				[0.33, 0.66, 1]
 			);
-			sprite = new PIXI.Sprite(PIXI.loader.resources[texName].texture);
+			sprite = new PIXI.Sprite(game.textures[texName]);
 			column[row] = 'g';
 		} else if (Math.random() < 0.05) {
 			/*texName = MmooUtil.chooseRandomCumulative (
@@ -535,7 +554,7 @@ function menuSpawnColumn () {
 				[25,15,10,25,15,10]
 			);
 
-			sprite = new PIXI.Sprite(PIXI.loader.resources[texName].texture);
+			sprite = new PIXI.Sprite(game.textures[texName]);
 			column[row] = 'd';
 		} else {
 			column[row] = 'g';
