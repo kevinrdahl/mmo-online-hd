@@ -257,9 +257,46 @@ function setStatus (title, message) {
 	//if (menuBackground !== null)
 	//	menuBackground.filters = [game.filters.uiBlur];
 
+	var totalHeight = 0;
+
+	var eleList = new ElementList({
+		padding:UIConfig.alertInnerPadding,
+		attach: {
+			where:[0.5,0],
+			parentWhere:[0.5,0],
+			offset:[0,UIConfig.alertOuterPadding]
+		}
+	});
+
+	var titleText = new InterfaceText(title, {
+		font:UIConfig.titleText,
+		parent:eleList,
+		attach:{
+			where:[0.5,0],
+			parentWhere:[0.5,0],
+			offset:[0,0]
+		}
+	});
+	titleText.fitToWidth(UIConfig.alertWidth - UIConfig.alertOuterPadding*2);
+	eleList.addChild(titleText);
+
+	if (typeof message === 'string') {
+		var messageText = new InterfaceText(message, {
+			font:UIConfig.bodyText,
+			parent:eleList,
+			attach:{
+				where:[0.5,0],
+				parentWhere:[0.5,0],
+				offset:[0,0]
+			}
+		});
+		messageText.fitToWidth(UIConfig.alertWidth - UIConfig.alertOuterPadding*2);
+		eleList.addChild(messageText);
+	}
+
 	game.ui.status = new Panel({
 		id:"status",
-		width:200,
+		width:UIConfig.alertWidth,
 		parent:game.ui,
 		attach:{
 			where:[0.5,0.5],
@@ -268,31 +305,9 @@ function setStatus (title, message) {
 		}
 	});
 	game.ui.addChild(game.ui.status);
+	game.ui.status.addChild(eleList);
 
-	var titleText = new InterfaceText(title, {
-		font:UIConfig.titleText,
-		parent:game.ui.status,
-		attach:{
-			where:[0.5,0],
-			parentWhere:[0.5,0],
-			offset:[0, UIConfig.elementListOuterPadding*2]
-		}
-	});
-	game.ui.status.addChild(titleText);
-
-	var messageText = new InterfaceText(message, {
-		font:UIConfig.bodyText,
-		parent:game.ui.status,
-		attach:{
-			where:[0.5,0],
-			parentWhere:[0.5,0],
-			offset:[0, titleText.displayObject.height + UIConfig.elementListOuterPadding*2 + UIConfig.elementListPadding*2]
-		}
-	});
-	game.ui.status.addChild(messageText);
-	messageText.fitToParent();
-
-	var height = titleText.displayObject.height + messageText.displayObject.height + UIConfig.elementListOuterPadding*4 + UIConfig.elementListPadding*2;
+	var height = eleList.displayObject.height + UIConfig.alertOuterPadding*2;
 	game.ui.status.resize(game.ui.status.width, height);
 }
 

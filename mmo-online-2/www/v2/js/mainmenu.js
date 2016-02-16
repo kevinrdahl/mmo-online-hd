@@ -194,10 +194,15 @@ function initMainMenuWorlds () {
 }
 
 function initMainMenuCharacters () {
+	if (mainMenu.characters.length === 0) {
+		initMainMenuCharacterCreate();
+		return;
+	}
+
 	mainMenuClear();
 	mainMenu.screen = 'characters';
 
-	mainMenuBanner('Character Select', 'Who are you today?');
+	mainMenuBanner('Character Select', 'Which you is you?');
 
 	mainMenu.controls = new ElementList({
 		padding:10,
@@ -208,6 +213,20 @@ function initMainMenuCharacters () {
 		}
 	});
 	mainMenu.addChild(mainMenu.controls);
+
+	var character;
+	for (var i = 0; i < mainMenu.characters.length; i++) {
+		var character = mainMenu.characters[i];
+		var text = character.name + ' (' + character.summary + ')';
+		button = InterfaceText.createMenuButton(text, 'character');
+		button.characterId = character.id;
+		button.setAttachX(0.5, 0.5);
+		mainMenu.controls.addChild(button);
+	}
+
+	mainMenu.createButton = InterfaceText.createMenuButton('New Character', 'create');
+	mainMenu.createButton.setAttachX(0.5, 0.5);
+	mainMenu.controls.addChild(mainMenu.createButton);
 
 	mainMenu.cancelButton = InterfaceText.createMenuButton('Cancel', 'cancel');
 	mainMenu.cancelButton.setAttachX(0.5, 0.5);
@@ -259,7 +278,37 @@ function onMainMenuClick (element) {
 			case 'characterCreate': initMainMenuCharacters();
 		}
 	} else if (element.name === 'world') {
+		//world list format is kinda dumb
+		var world = null;
+		for (var i = 0; i < mainMenu.worlds.length; i++) {
+			if (mainMenu.worlds[i].id === element.worldId) {
+				world = mainMenu.worlds[i].id;
+				break;
+			}
+		}
 
+		if (world == null) {
+			initMainMenuLogin();
+			uiMessage('Error', 'Can\'t find world with id ' + element.worldId);
+		} else {
+			setStatus('Joining "' + world.name + '"');
+			loginWorld(world.id);
+		}
+	} else if (element.name === 'character') {
+		//character list name is also dumb
+		var character;
+		for (var i = 0; i < mainMenu.characters.length; i++) {
+			if (mainMenu.characters[i].id === element.characterId) {
+				character = mainMenu.characters[i];
+				break;
+			}
+		}
+
+		if (character === null) {
+			uiMessage('Error', 'Can\'t find character with id ' + element.characterId);
+		} else {
+			setStatus('')
+		}
 	}
 }
 

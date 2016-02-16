@@ -62,14 +62,18 @@ var InterfaceText = Class(InterfaceElement, {
 		this.height = this.pixiText.height;
 	},
 
-	fitToParent: function() {
+	fitToWidth: function(width) {
 		this.font = MmooUtil.shallowClone(this.font);
 		this.font.wordWrap = true;
-		this.font.wordWrapWidth = this.parent.width - UIConfig.elementListOuterPadding*2;
+		this.font.wordWrapWidth = width;
 		this.pixiText.style = this.font;
 
 		logger.log("ui", this.getFullName() + " wrap to " + this.font.wordWrapWidth + "px");
 		this.onResize();
+	},
+
+	fitToParent: function() {
+		this.fitToWidth(this.parent.width - UIConfig.elementListOuterPadding*2);
 	},
 
 	getClassName: function() {

@@ -62,6 +62,9 @@ var TextBox = Class(Panel, {
 			}
 		});
 		this.displayText.addChild(this.cursor);
+
+		if (this.hideInput)
+			this.updateDisplay();
 	},
 
 	draw: function() {

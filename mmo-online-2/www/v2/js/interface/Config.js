@@ -49,5 +49,9 @@ var UIConfig = {
 	elementListPadding:2,
 	elementListOuterPadding:4,
 
+	alertOuterPadding:5,
+	alertInnerPadding:5,
+	alertWidth: 200,
+
 	textBoxPadding:3
 }
