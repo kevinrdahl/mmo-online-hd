@@ -1,0 +1,136 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Hello World</title>
+<body>
+<script src="../js/lib/pixi.min.js"></script>
+<script>
+
+var walk = [
+    [
+        {image:'foot', x:5, y:21},
+        {image:'foot', x:12, y:21},
+        {image:'bodywalk0', x:5, y:11},
+        {image:'hand', x:13, y:14},
+        {image:'handwalk0', x:5, y:16},
+        {image:'head', x:6, y:3},
+        {image:'hair', x:6, y:2}
+    ],
+    [
+        {image:'foot', x:7, y:21},
+        {image:'foot', x:11, y:20},
+        {image:'body', x:5, y:11},
+        {image:'hand', x:14, y:15},
+        {image:'handwalk1', x:4, y:15},
+        {image:'head', x:6, y:3},
+        {image:'hair', x:6, y:2}
+    ],
+    [
+        {image:'foot', x:9, y:21},
+        {image:'foot', x:9, y:20},
+        {image:'body', x:5, y:10},
+        {image:'hand', x:15, y:15},
+        {image:'handwalk2', x:3, y:13},
+        {image:'head', x:6, y:2},
+        {image:'hair', x:6, y:1}
+    ],
+    [
+        {image:'foot', x:10, y:21},
+        {image:'foot', x:7, y:21},
+        {image:'bodywalk3', x:5, y:11},
+        {image:'hand', x:16, y:16},
+        {image:'handwalk3', x:2, y:13},
+        {image:'head', x:6, y:3},
+        {image:'hair', x:6, y:2}
+    ],
+    [
+        {image:'foot', x:9, y:20},
+        {image:'foot', x:9, y:21},
+        {image:'body', x:5, y:11},
+        {image:'hand', x:15, y:16},
+        {image:'handwalk2', x:3, y:13},
+        {image:'head', x:6, y:3},
+        {image:'hair', x:6, y:2}
+    ],
+    [
+        {image:'foot', x:6, y:20},
+        {image:'footwalk5', x:10, y:20},
+        {image:'body', x:5, y:10},
+        {image:'hand', x:14, y:14},
+        {image:'handwalk1', x:4, y:15},
+        {image:'head', x:6, y:2},
+        {image:'hair', x:6, y:1}
+    ]
+];
+
+PIXI.SCALE_MODES.DEFAULT = PIXI.SCALE_MODES.NEAREST;
+
+//Create the renderer
+var width = 24;
+var scale = 3;
+var renderer = PIXI.autoDetectRenderer(width*scale, width*scale);
+renderer.backgroundColor = 0xffffff;
+
+//Add the canvas to the HTML document
+document.body.appendChild(renderer.view);
+
+//Create a container object called the `stage`
+var stage = new PIXI.Container();
+
+//Tell the `renderer` to `render` the `stage`
+renderer.render(stage);
+
+PIXI.loader.add('sprite', 'img/test/test.png');
+
+PIXI.loader.add('hand', 'img/test/hand.png');
+PIXI.loader.add('handwalk0', 'img/test/handwalk0.png');
+PIXI.loader.add('handwalk1', 'img/test/handwalk1.png');
+PIXI.loader.add('handwalk2', 'img/test/handwalk2.png');
+PIXI.loader.add('handwalk3', 'img/test/handwalk3.png');
+PIXI.loader.add('foot', 'img/test/foot.png');
+PIXI.loader.add('footwalk5', 'img/test/footwalk5.png');
+PIXI.loader.add('head', 'img/test/head.png');
+PIXI.loader.add('hair', 'img/test/hair.png');
+PIXI.loader.add('body', 'img/test/body.png');
+PIXI.loader.add('bodywalk0', 'img/test/bodywalk0.png');
+PIXI.loader.add('bodywalk3', 'img/test/bodywalk3.png');
+
+PIXI.loader.load(function(loader, resources) {
+    window.resources = resources;
+    window.tex = createAnimTex(walk);//resources['sprite'].texture;
+    console.log(tex);
+    window.spr = new PIXI.Sprite(tex);
+    spr.scale.x = scale;
+    spr.scale.y = scale;
+    window.numFrames = tex.width / width;
+    window.currentFrame = 0;
+
+    stage.addChild(spr);
+
+    setInterval(function() {
+        var rect = new PIXI.Rectangle(currentFrame*width,0,width,width);
+        tex.frame = rect;
+        currentFrame = (currentFrame + 1) % numFrames;
+        renderer.render(stage);
+    },
+    150);
+});
+
+function createAnimTex(animation) {
+    var canvas = document.createElement('canvas');
+    var ctx = canvas.getContext('2d');
+    var item;
+    canvas.height = width;
+    canvas.width = width * animation.length;
+
+    for (var frame = 0; frame < animation.length; frame++) {
+        for (var i = 0; i < animation[frame].length; i++) {
+            item = animation[frame][i];
+            ctx.drawImage(resources[item.image].texture.baseTexture.source, (item.x + width*frame), item.y);
+        }
+    }
+
+    return PIXI.Texture.fromCanvas(canvas);
+}
+
+</script>
+</body>

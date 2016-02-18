@@ -118,7 +118,6 @@ function loadTextures() {
     	var tex;
     	for (var name in PIXI.loader.resources) {
     		tex = PIXI.loader.resources[name].texture;
-    		tex.baseTexture.scaleMode = PIXI.SCALE_MODES.NEAREST;
     		game.textures[name] = tex;
     	}
     	onLoadTextures();
