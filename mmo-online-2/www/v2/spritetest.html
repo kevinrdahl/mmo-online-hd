@@ -13,7 +13,8 @@ var walk = [
         {image:'hand', x:13, y:14},
         {image:'handwalk0', x:5, y:16},
         {image:'head', x:6, y:3},
-        {image:'hair', x:6, y:2}
+        {image:'hair', x:6, y:2},
+        {image:'shield', x:9, y:11}
     ],
     [
         {image:'foot', x:7, y:21},
@@ -22,7 +23,8 @@ var walk = [
         {image:'hand', x:14, y:15},
         {image:'handwalk1', x:4, y:15},
         {image:'head', x:6, y:3},
-        {image:'hair', x:6, y:2}
+        {image:'hair', x:6, y:2},
+        {image:'shield', x:10, y:12}
     ],
     [
         {image:'foot', x:9, y:21},
@@ -31,34 +33,38 @@ var walk = [
         {image:'hand', x:15, y:15},
         {image:'handwalk2', x:3, y:13},
         {image:'head', x:6, y:2},
-        {image:'hair', x:6, y:1}
+        {image:'hair', x:6, y:1},
+        {image:'shield', x:11, y:12}
     ],
     [
         {image:'foot', x:10, y:21},
         {image:'foot', x:7, y:21},
         {image:'bodywalk3', x:5, y:11},
         {image:'hand', x:16, y:16},
-        {image:'handwalk3', x:2, y:13},
+        {image:'handwalk3', x:3, y:13},
         {image:'head', x:6, y:3},
-        {image:'hair', x:6, y:2}
+        {image:'hair', x:6, y:2},
+        {image:'shield', x:12, y:13}
     ],
     [
         {image:'foot', x:9, y:20},
         {image:'foot', x:9, y:21},
         {image:'body', x:5, y:11},
         {image:'hand', x:15, y:16},
-        {image:'handwalk2', x:3, y:13},
+        {image:'handwalk2', x:3, y:14},
         {image:'head', x:6, y:3},
-        {image:'hair', x:6, y:2}
+        {image:'hair', x:6, y:2},
+        {image:'shield', x:11, y:13}
     ],
     [
         {image:'foot', x:6, y:20},
         {image:'footwalk5', x:10, y:20},
         {image:'body', x:5, y:10},
         {image:'hand', x:14, y:14},
-        {image:'handwalk1', x:4, y:15},
+        {image:'handwalk1', x:4, y:14},
         {image:'head', x:6, y:2},
-        {image:'hair', x:6, y:1}
+        {image:'hair', x:6, y:1},
+        {image:'shield', x:10, y:11}
     ]
 ];
 
@@ -66,7 +72,7 @@ PIXI.SCALE_MODES.DEFAULT = PIXI.SCALE_MODES.NEAREST;
 
 //Create the renderer
 var width = 24;
-var scale = 3;
+var scale = 5;
 var renderer = PIXI.autoDetectRenderer(width*scale, width*scale);
 renderer.backgroundColor = 0xffffff;
 
@@ -93,6 +99,7 @@ PIXI.loader.add('hair', 'img/test/hair.png');
 PIXI.loader.add('body', 'img/test/body.png');
 PIXI.loader.add('bodywalk0', 'img/test/bodywalk0.png');
 PIXI.loader.add('bodywalk3', 'img/test/bodywalk3.png');
+PIXI.loader.add('shield', 'img/test/shield.png');
 
 PIXI.loader.load(function(loader, resources) {
     window.resources = resources;
