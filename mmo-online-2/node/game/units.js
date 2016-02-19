@@ -160,7 +160,7 @@ Units.Unit = Class({
         }
 
         if (this.direction !== this.lastDirection) {
-            this.messages.push(new Messages.UnitMove(game.currentStep, this.id, this.direction, this.nextPosition.copy()));
+            this.messages.push(new Messages.UnitMove(game.currentStep, this.id, this.direction, this.getPositionDelta()));
         }
     },
 
@@ -265,9 +265,9 @@ Units.Unit = Class({
     },
 
     getPositionDelta: function(noUpdate) {
-        var v = this.position.copy().sub(this.lastBroadcastPosition);
+        var v = this.nextPosition.copy().sub(this.lastBroadcastPosition);
         if (!noUpdate)
-            this.lastBroadcastPosition.set(this.position);
+            this.lastBroadcastPosition.set(this.nextPosition);
         return v;
     },
 

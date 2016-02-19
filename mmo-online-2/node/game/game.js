@@ -104,6 +104,11 @@ Game.Game = Class({
                 if (visionChanges[pId][uId] == false) {
                     //this.sendString(pId, JSON.stringify({step:this.currentStep, type:'unsee', unit:uId}));
                 } else {
+                    //IMPORTANT: for unit position delta encoding to work, make sure to broascast the unit's lastBroadcastPosition,
+                    //           not just its position
+
+                    //also, vision is probably pretty brute force right now, it will need to be part of the grid overhaul
+
                     //this.sendString(pId, JSON.stringify({step:this.currentStep, type:'see', unit:this.units[uId]}));
                 }
             }
