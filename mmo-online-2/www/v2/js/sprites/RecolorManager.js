@@ -5,9 +5,6 @@ taking them away from something else.
 var RecolorManager = Class({
 	constructor: function() {
 		this.capacity = 50;
-		this.canvas = document.createElement('canvas');
-		this.ctx = this.canvas.getContext('2d');
-
 		this.images = {};
 		this.queue = [];
 	},
@@ -17,23 +14,24 @@ var RecolorManager = Class({
 	*/
 	getImage: function(name, colorMap) {
 		var image;
-		var key = name + '|' + JSON.stringify(colorMap);
+		var key = name + ':' + JSON.stringify(colorMap.to);
 		
-		if (!(key in this.images)) {
+		image = this.images[key];
+		if (typeof image === 'undefined')
 			return this.createImage(name, colorMap, key);
-		} else {
-			return this.images[key];
-		}
-	}
+		return image;
+	},
 
 	createImage: function(name, colorMap, key) {
+		var canvas = document.createElement('canvas');
+		var ctx = canvas.getContext('2d');
 		var baseTex = resources[name].texture.baseTexture;
 		var width = baseTex.width;
 		var height = baseTex.height;
-		this.canvas.width = width;
-		this.canvas.height = height;
-		this.ctx.clearRect(0, 0, width, height);
-		this.ctx.drawImage(0, 0, baseTex.source);
+		canvas.width = width;
+		canvas.height = height;
+		ctx.clearRect(0, 0, width, height);
+		ctx.drawImage(baseTex.source, 0, 0);
 
 		var fromR = [];
 		var toRGB = [];
@@ -43,17 +41,29 @@ var RecolorManager = Class({
 			toRGB.push(hexToRGB(colorMap.to[i]));
 		}
 
-		var imgData = getImageData(0, 0, width, height);
+		var imgData = ctx.getImageData(0, 0, width, height);
 		var data = imgData.data;
 		var x,y,red,toColor;
 		for (x = 0; x < width; x++) {
 			for (y = 0; y < height; y++) {
 				red = (y*width + x)*4;
 				toColor = toRGB[fromR.indexOf(data[red])];
+				if (!toColor)
+					continue;
 				ctx.fillStyle = 'rgba(' + toColor[0] + ',' + toColor[1] + ',' + toColor[2] + ',1)';
 				ctx.fillRect(x,y,1,1); //for some reason, this is the most consistently fast approach
 			}
 		}
+
+		this.cacheImage(canvas, key);
+		return canvas;
+	},
+
+	cacheImage: function(image, key) {
+		this.images[key] = image;
+		this.queue.push(key);
+		if (this.queue.length > this.capacity)
+			delete this.images(queue.shift());
 	}
 });
 

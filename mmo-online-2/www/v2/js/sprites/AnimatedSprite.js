@@ -1,8 +1,8 @@
 var AnimatedSprite = Class({
-	constructor: function(animSet, parts, colorSet) {
+	constructor: function(animSet, parts, colorMap) {
 		this.animSet = animSet;
 		this.parts = parts;
-		this.colorSet = colorSet;
+		this.colorMap = colorMap;
 		this.texture = null;
 		this.atlas = {}; //lists starting y of each animation
 	},
@@ -16,6 +16,7 @@ var AnimatedSprite = Class({
 	},
 
 	render: function() {
+		console.time('AnimatedSprite.render()');
 		this.cleanup();
 
 		var dimensions = this.getDimensions();
@@ -26,7 +27,9 @@ var AnimatedSprite = Class({
 		canvas.height = dimensions[1];
 
 		var x = 0, y = 0;
-		var point, attached, image, partVersion, drawX, drawY, frameOrigin, altNum, altStar;
+		var point, attached, image, partVersion, drawX, drawY, frameOrigin, altNum, altStar, colorMap;
+
+		var partColorMaps = {};
 
 		//loops!
 		var animName, t, i, j, len1, len2, len3;
@@ -67,7 +70,10 @@ var AnimatedSprite = Class({
 							partVersion = attached[j].part[altStar];
 						else
 							partVersion = attached[j].part.basic;
-						image = resources[partVersion.image].texture.baseTexture.source;
+
+						colorMap = this.getPartColorMap(attached[j].part, partColorMaps);
+						image = recolorManager.getImage(partVersion.image, colorMap);
+						//image = resources[partVersion.image].texture.baseTexture.source;
 
 						drawX = x + frameOrigin[0] + point.x - partVersion.attach[0];
 						drawY = y + frameOrigin[1] + point.y - partVersion.attach[1];
@@ -89,6 +95,30 @@ var AnimatedSprite = Class({
 		}
 
 		this.texture = PIXI.Texture.fromCanvas(canvas);
+		console.timeEnd('AnimatedSprite.render()');
+		console.log('Final size ' + this.texture.width + 'x' + this.texture.height);
+	},
+
+	getPartColorMap: function(part, mapList) {
+		var map = mapList[part.name];
+		if (map)
+			return map;
+
+		map = {from:[], to:[]};
+		if (this.colorMap === null)
+			return map;
+
+		var to;
+		for (var colorName in part.colors) {
+			to = this.colorMap[colorName];
+			if (!to)
+				continue;
+			map.from.push(part.colors[colorName]);
+			map.to.push(to);
+		}
+
+		mapList[part.name] = map;
+		return map;
 	},
 
 	//return widest anim, and sum of height

@@ -8,6 +8,8 @@
 <script src="js/sprites/AnimatedSprite.js"></script>
 <script src="js/sprites/Animations.js"></script>
 <script src="js/sprites/Parts.js"></script>
+<script src="js/sprites/RecolorManager.js"></script>
+<script src="js/sprites/Materials.js"></script>
 <script>
 
 PIXI.SCALE_MODES.DEFAULT = PIXI.SCALE_MODES.NEAREST;
@@ -27,78 +29,61 @@ var stage = new PIXI.Container();
 //Tell the `renderer` to `render` the `stage`
 renderer.render(stage);
 
-PIXI.loader.add('sprite', 'img/test/test.png');
-
-PIXI.loader.add('hand', 'img/test/hand.png');
-PIXI.loader.add('handwalk0', 'img/test/handwalk0.png');
-PIXI.loader.add('handwalk1', 'img/test/handwalk1.png');
-PIXI.loader.add('handwalk2', 'img/test/handwalk2.png');
-PIXI.loader.add('handwalk3', 'img/test/handwalk3.png');
-PIXI.loader.add('foot', 'img/test/foot.png');
-PIXI.loader.add('footwalk5', 'img/test/footwalk5.png');
-PIXI.loader.add('head', 'img/test/head.png');
-PIXI.loader.add('hair', 'img/test/hair.png');
-PIXI.loader.add('body', 'img/test/body.png');
-PIXI.loader.add('bodywalk0', 'img/test/bodywalk0.png');
-PIXI.loader.add('bodywalk3', 'img/test/bodywalk3.png');
-PIXI.loader.add('shield', 'img/test/shield.png');
-PIXI.loader.add('shield2', 'img/test/shield2.png');
-PIXI.loader.add('sword', 'img/test/sword.png');
-PIXI.loader.add('mace', 'img/test/mace.png');
-PIXI.loader.add('staff', 'img/test/staff.png');
+PIXI.loader.add('hand', 'img/parts/hand.png');
+PIXI.loader.add('handwalk0', 'img/parts/handwalk0.png');
+PIXI.loader.add('handwalk1', 'img/parts/handwalk1.png');
+PIXI.loader.add('handwalk2', 'img/parts/handwalk2.png');
+PIXI.loader.add('handwalk3', 'img/parts/handwalk3.png');
+PIXI.loader.add('foot', 'img/parts/foot.png');
+PIXI.loader.add('footwalk5', 'img/parts/footwalk5.png');
+PIXI.loader.add('head', 'img/parts/head.png');
+PIXI.loader.add('hair', 'img/parts/hair.png');
+PIXI.loader.add('hair2', 'img/parts/hair2.png');
+PIXI.loader.add('body', 'img/parts/body.png');
+PIXI.loader.add('bodywalk3', 'img/parts/bodywalk3.png');
+PIXI.loader.add('shield', 'img/parts/shield.png');
+PIXI.loader.add('shield2', 'img/parts/shield2.png');
+PIXI.loader.add('sword', 'img/parts/sword.png');
+PIXI.loader.add('mace', 'img/parts/mace.png');
+PIXI.loader.add('staff', 'img/parts/staff.png');
 
 PIXI.loader.load(function(loader, resources) {
     window.resources = resources;
+    window.recolorManager = new RecolorManager();
 
     var partList = {
         head:[
-            {part:Parts.Head},
-            {part:Parts.Hair, offset:[4,-1]}
+            {part:Parts.Heads.Human},
+            {part:Parts.Hairs.Hair1, offset:[4,-1]}
         ],
-        body:[{part:Parts.Body}],
-        handleft:[{part:Parts.Shield2}],
-        handright:[{part:Parts.Hand}],
-        weaponright:[{part:Parts.Sword, offset:[-2,1]}],
-        footleft:[{part:Parts.Foot}],
-        footright:[{part:Parts.Foot}]
-    };
-    var partList2 = {
-        head:[
-            {part:Parts.Head},
-        ],
-        body:[{part:Parts.Body}],
-        handleft:[{part:Parts.Shield}],
-        handright:[{part:Parts.Hand}],
-        weaponright:[{part:Parts.Staff, offset:[-2,1]}],
-        footleft:[{part:Parts.Foot}],
-        footright:[{part:Parts.Foot}]
+        body:[{part:Parts.Bodies.Human}],
+        handleft:[{part:Parts.Shields.Shield2}],
+        handright:[{part:Parts.Hands.Hand}],
+        weaponright:[{part:Parts.Weapons.Sword, offset:[-2,1]}],
+        footleft:[{part:Parts.Feet.Boot}],
+        footright:[{part:Parts.Feet.Boot}]
     };
 
+    var colorMap = {};
+    applyMaterial(colorMap, Materials.Metals.Steel, 'rightMat');
+    applyMaterial(colorMap, Materials.Metals.Steel, 'leftMat');
+    applyMaterial(colorMap, Materials.Skins.Olive, 'skin');
+    applyMaterial(colorMap, Materials.Hairs.Chestnut, 'hair');
+    applyMaterial(colorMap, Materials.Clothing.Red, 'foot');
+
     var animSet = Animations.man;
-    window.animSprite = new AnimatedSprite(animSet, partList, null);
-    window.animSprite2 = new AnimatedSprite(animSet, partList2, null);
+    window.animSprite = new AnimatedSprite(animSet, partList, colorMap);
     animSprite.render();
-    animSprite2.render();
     var spr = new PIXI.Sprite(animSprite.texture);
-    var spr2 = new PIXI.Sprite(animSprite2.texture);
     spr.scale.x = 5;
     spr.scale.y = 5;
-    spr2.scale.x = 5;
-    spr2.scale.y = 5;
-    spr2.position.y = spr.height;
     stage.addChild(spr);
-    stage.addChild(spr2);
 
     setInterval(function() {
         var frame = animSprite.getFrame('walk', Date.now());
         animSprite.texture.frame = frame.rect;
         spr.x = -frame.origin[0];
         spr.y = -frame.origin[1];
-
-        frame = animSprite2.getFrame('walkhold', Date.now());
-        animSprite2.texture.frame = frame.rect;
-        spr2.x = -frame.origin[0];
-        spr2.y = -frame.origin[1] + spr.height;
         renderer.render(stage);
     },
     50);
