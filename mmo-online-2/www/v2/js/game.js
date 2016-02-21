@@ -67,12 +67,34 @@ function initGame() {
 	game.stage.addChild(game.ui.displayObject);
 	game.ui.status = null;
 
+	//framerate tracking
+	game.framerate = 0;
+	game.frameRenderTimes = [];
+	var frameText = new InterfaceText('0', {id:'framerate'});
+	frameText.addFilter(game.filters.dropShadow);
+	game.ui.addChild(frameText);
+	console.log(frameText);
+
 	//set up the view
 	resizeView();
 	drawStage();
 
 	//load
 	loadTextures();
+}
+
+function updateFramerate(value) {
+	game.frameRenderTimes.push(value);
+	
+	var avg = 0;
+	for (var i = game.frameRenderTimes.length-1; i >= 0 && avg < 1000; i--) {
+		avg += game.frameRenderTimes[i];
+	}
+	avg /= game.frameRenderTimes.length-i;
+	avg = 1000/avg;
+	game.frameRenderTimes.splice(0,i);
+	var s = Math.round(avg).toString() + ' fps';
+	game.ui.findChildById('framerate').changeString(s);
 }
 
 function onLoadTextures() {
@@ -119,6 +141,7 @@ function onMessage(msg) {
 
 function drawStage() {
     requestAnimationFrame(function () { drawStage(); });
+    var frameStart = performance.now();
 
   	game.ui.draw();
   	if (menuBackground !== null)
@@ -134,6 +157,7 @@ function drawStage() {
   	}	
 
     game.renderer.render(game.stage);
+    updateFramerate(performance.now() - frameStart);
 }
 
 function getVolatileGraphics() {
