@@ -64,7 +64,7 @@ var RecolorManager = Class({
 		this.images[key] = image;
 		this.queue.push(key);
 		if (this.queue.length > this.capacity)
-			delete this.images(queue.shift());
+			delete this.images[this.queue.shift()];
 	}
 });
 

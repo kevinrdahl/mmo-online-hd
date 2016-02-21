@@ -153,3 +153,8 @@ Materials.Clothing.LightGrey = {
 	Dark:0x5e5e5e
 };
 Materials.Clothing.LightGray = Materials.Clothing.LightGrey; //thanks english
+Materials.Clothing.White = {
+	'':0xc9c9c9,
+	Light:0xf3f3f3,
+	Dark:0x919191
+};

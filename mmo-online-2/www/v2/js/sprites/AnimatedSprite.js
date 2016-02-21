@@ -164,7 +164,7 @@ var AnimatedSprite = Class({
 });
 
 function testAnimatedSprites() {
-	var testColors = ['Red', 'Yellow', 'Blue', 'Green', 'Turquoise', 'Majenta'];
+	var testColors = ['White', 'Red', 'Yellow', 'Blue', 'Green', 'Turquoise', 'Majenta', 'Black', 'Grey', 'Brown', 'LightGreen'];
 	var testSprites = [];
 	var animSprites = [];
 
@@ -217,8 +217,8 @@ function testAnimatedSprites() {
     		spr = testSprites[i];
     		frame = animSprites[i].getFrame('walkhold', Date.now() + 100*i);
     		animSprites[i].texture.frame = frame.rect;
-	        spr.position.x = 96 + 96*i;
-	        spr.position.y = 144 + 8*i;
+	        spr.position.x = 96 + 72*i;
+	        spr.position.y = 144 + i * (48/testSprites.length);
     	}
     },
     50);
