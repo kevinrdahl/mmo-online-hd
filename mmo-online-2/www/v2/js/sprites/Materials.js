@@ -13,6 +13,19 @@ Materials.Metals.Steel = {
 	'':0x919191,
 	Dark:0x696969
 };
+Materials.Metals.Gold = {
+	'':0xccc159,
+	Light:0xeaff00,
+	VLight:0xf3f3f3,
+	Dark:0x948c41
+};
+
+Materials.Woods = {};
+Materials.Woods.Ash = {
+	'':0x887000,
+	Light:0xb89600,
+	Dark:0x574700
+};
 
 Materials.Skins = {};
 Materials.Skins.Olive = {
@@ -84,6 +97,59 @@ Materials.Hairs.Silver = {
 
 Materials.Clothing = {};
 Materials.Clothing.Red = {
-	'':0x8e2020,
-	Light:0xcf3232
+	Dark:0x8b2f32,
+	'':0xff0000,
+	Light:0xff7578
 };
+Materials.Clothing.Blue = {
+	Dark:0x0b5e87,
+	'':0x0e7cb3,
+	Light:0x3cbcfc
+};
+Materials.Clothing.Yellow = {
+	Dark:0xcaa710,
+	'':0xffd314,
+	Light:0xfff7d4
+};
+Materials.Clothing.Green = {
+	Dark:0x006321,
+	'':0x00852c,
+	Light:0x00ba3e
+};
+Materials.Clothing.LightGreen = {
+	Dark:0x00ba3e,
+	'':0x00ea4e,
+	Light:0x8effb4
+};
+Materials.Clothing.Turquoise = {
+	Dark:0x0c9091,
+	'':0x10c9ca,
+	Light:0x4feffc
+};
+Materials.Clothing.Majenta = {
+	Dark:0x6b0942,
+	'':0x910c59,
+	Light:0xca107c
+};
+Materials.Clothing.Black = {
+	'':0x3d3d3d,
+	Light:0x696969,
+	Dark:0x262626
+};
+Materials.Clothing.Brown = {
+	'':0x887000,
+	Light:0xb89600,
+	Dark:0x5d4b00
+};
+Materials.Clothing.Grey = {
+	'':0x5e5e5e,
+	Light:0x959595,
+	Dark:0x404040
+};
+Materials.Clothing.Gray = Materials.Clothing.Grey; //thanks english
+Materials.Clothing.LightGrey = {
+	'':0x959595,
+	Light:0xacacac,
+	Dark:0x5e5e5e
+};
+Materials.Clothing.LightGray = Materials.Clothing.LightGrey; //thanks english

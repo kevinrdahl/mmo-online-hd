@@ -72,8 +72,7 @@ var AnimatedSprite = Class({
 							partVersion = attached[j].part.basic;
 
 						colorMap = this.getPartColorMap(attached[j].part, partColorMaps);
-						image = recolorManager.getImage(partVersion.image, colorMap);
-						//image = resources[partVersion.image].texture.baseTexture.source;
+						image = game.recolorManager.getImage(partVersion.image, colorMap);
 
 						drawX = x + frameOrigin[0] + point.x - partVersion.attach[0];
 						drawY = y + frameOrigin[1] + point.y - partVersion.attach[1];
@@ -108,8 +107,14 @@ var AnimatedSprite = Class({
 		if (this.colorMap === null)
 			return map;
 
+		//want 'to' to always be in the same order, so identical calls always have the same key
+		//otherwise, object keys are iterated in definition order
 		var to;
-		for (var colorName in part.colors) {
+		var colorNames = Object.keys(part.colors);
+		var colorName;
+		colorNames.sort();
+		for (var i = colorNames.length; i >= 0; i--) {
+			colorName = colorNames[i];
 			to = this.colorMap[colorName];
 			if (!to)
 				continue;
@@ -157,3 +162,64 @@ var AnimatedSprite = Class({
 		};
 	}
 });
+
+function testAnimatedSprites() {
+	var testColors = ['Red', 'Yellow', 'Blue', 'Green', 'Turquoise', 'Majenta'];
+	var testSprites = [];
+	var animSprites = [];
+
+	var animSet = Animations.man;
+	var partList = {
+        head:[
+            {part:Parts.Heads.Human},
+            {part:Parts.Hats.WizHood}
+        ],
+        body:[{part:Parts.Bodies.Human}],
+        handleft:[{part:Parts.Hands.Hand}],
+        handright:[{part:Parts.Hands.Hand}],
+        weaponright:[{part:Parts.Weapons.Staff, offset:[-2,1]}],
+        footleft:[{part:Parts.Feet.Boot}],
+        footright:[{part:Parts.Feet.Boot}]
+    };
+
+	var colorMap = {};
+    applyMaterial(colorMap, Materials.Metals.Steel, 'rightMat');
+    applyMaterial(colorMap, Materials.Metals.Steel, 'leftMat');
+    applyMaterial(colorMap, Materials.Skins.Olive, 'skin');
+    applyMaterial(colorMap, Materials.Hairs.Chestnut, 'hair');
+    applyMaterial(colorMap, Materials.Clothing.Black, 'foot');
+    applyMaterial(colorMap, Materials.Woods.Ash, 'rightMat');
+    colorMap.cloakHem = Materials.Metals.Gold.Light;
+    colorMap.cloakClasp = Materials.Metals.Gold.Light;
+    colorMap.hatMat2 = Materials.Metals.Gold.Light;
+    colorMap.belt = Materials.Clothing.Black[''];
+
+	var color, animSprite, spr;
+	for (var i = 0; i < testColors.length; i++) {
+		color = testColors[i];
+		applyMaterial(colorMap, Materials.Clothing[color], 'hatMat');
+	    applyMaterial(colorMap, Materials.Clothing[color], 'body');
+	    applyMaterial(colorMap, Materials.Clothing[color], 'cloak');
+
+	    animSprite = new AnimatedSprite(animSet, partList, colorMap);
+	    animSprite.render();
+	    spr = new PIXI.Sprite(animSprite.texture);
+	    spr.scale.x = -2;
+	    spr.scale.y = 2;
+	    game.stage.addChild(spr);
+	    testSprites.push(spr);
+	    animSprites.push(animSprite);
+	}
+
+    setInterval(function() {
+    	var frame, spr;
+    	for (var i = 0; i < testSprites.length; i++) {
+    		spr = testSprites[i];
+    		frame = animSprites[i].getFrame('walkhold', Date.now() + 100*i);
+    		animSprites[i].texture.frame = frame.rect;
+	        spr.position.x = 96 + 96*i;
+	        spr.position.y = 144 + 8*i;
+    	}
+    },
+    50);
+}

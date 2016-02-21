@@ -21,6 +21,9 @@ function initGame() {
 	//global texture for masking
 	game.maskTexture = TextureGenerator.rectangle(10, 10, 0xffffff, 0, 0x000000);
 
+	//recolors and caches textures for generating spritesheets
+	game.recolorManager = new RecolorManager();
+
 	//mouse state
 	game.leftMouseDown = null;
 	game.leftClickedIsUI = false;
@@ -88,6 +91,9 @@ function onLoadSounds() {
 function onLoadComplete() {
 	if (urlArgs.testUI)
 		initTestInterface();
+
+	if (urlArgs.testSprites)
+		testAnimatedSprites();
 
 	//connect
 	initMainMenu();

@@ -1,26 +1,3 @@
-window.TEXTURE_LIST = {
-	"character":[
-		"man.png"
-	],
-
-	"terrain":[
-		"grass1.png",
-		"grass2.png",
-		"grass3.png",
-		"grass4.png",
-		"flower1.png",
-		"flower2.png",
-		"flower3.png",
-		"dirt.png",
-		"dirtpatch1.png",
-		"dirtpatch2.png",
-		"dirtpatch3.png",
-		"tree1.png",
-		"tree2.png",
-		"wall.png"
-	]
-};
-
 window.SOUND_LIST = {
 	"music":[
 		"fortress.ogg"
@@ -57,8 +34,27 @@ var Asset = Class({
 	}
 });
 
+//fetch the texture sheet and its json map
 function loadTextures() {
-	var asset;
+	game.textureSheet = null;
+	game.textureMap = null;
+	game.textures = {};
+
+	setStatus('Loading Textures', 'This should be quick.');
+
+	PIXI.loader.add('textureSheet', 'textures.png');
+	PIXI.loader.load(function(loader, resources) {
+		game.textureSheet = resources.textureSheet.texture.baseTexture;
+		onSheetOrMap();
+	});
+
+	$.getJSON('textureMap.json', function(data) {
+		game.textureMap = data.frames;
+		onSheetOrMap();
+	});
+
+
+	/*var asset;
 
 	game.textureList = parseAssetList(TEXTURE_LIST, 'img/');
 	game.numTexturesLoaded = 0;
@@ -69,43 +65,6 @@ function loadTextures() {
 		PIXI.loader.add(asset.name, asset.path);
 	}
 
-	/*var loadPanel = new Panel({
-		id:"loadPanel",
-		width:250,
-		height:60,
-		attach:{
-			where:[0.5, 0],
-			parentWhere:[0.5, 0.5],
-			offset:[0,-60]
-		},
-		parent:game.ui
-	});
-
-	loadPanel.addChild(new InterfaceText("Loading Textures", {
-		id:'loadTitle',
-		font:UIConfig.titleText,
-		attach:{
-			where:[0.5,1],
-			parentWhere:[0.5,0.5],
-			offset:[0,0]
-		},
-		parent:loadPanel
-	}));
-
-	loadPanel.addChild(new InterfaceText("0%", {
-		id:"loadCountText",
-		font:UIConfig.bodyText,
-		attach:{
-			where:[0.5,0],
-			parentWhere:[0.5,0.5],
-			offset:[0,4]
-		},
-		parent:loadPanel
-	}));
-
-	game.ui.addChild(loadPanel);*/
-
-	setStatus('Loading Textures', '0%');
 
     PIXI.loader.on('progress', function() {
         game.numTexturesLoaded++;
@@ -122,7 +81,26 @@ function loadTextures() {
     	}
     	onLoadTextures();
     });
-    PIXI.loader.load();
+    PIXI.loader.load();*/
+}
+
+function onSheetOrMap() {
+	var map = game.textureMap;
+	var sheet = game.textureSheet;
+
+	if (sheet === null || map === null)
+		return;
+
+	//both are loaded
+	var frame, rect;
+
+	for (var texName in map) {
+		frame = map[texName].frame;
+		rect = new PIXI.Rectangle(frame.x, frame.y, frame.w, frame.h);
+		game.textures[texName] = new PIXI.Texture(sheet, rect);
+	}
+
+	onLoadTextures();
 }
 
 function loadSounds() {

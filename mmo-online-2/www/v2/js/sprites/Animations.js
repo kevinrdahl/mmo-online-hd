@@ -11,8 +11,10 @@ Offsets:
 	hands: top left inside
 */
 
+var animTime = ((20/24)*1000) / 6;
+
 Animations.man.walk = {
-	defaultDuration:150,
+	defaultDuration:animTime,
 	defaultOrigin:[11,0],
 	gridSize:[40,40],
 	frames:[

@@ -25,13 +25,14 @@ var RecolorManager = Class({
 	createImage: function(name, colorMap, key) {
 		var canvas = document.createElement('canvas');
 		var ctx = canvas.getContext('2d');
-		var baseTex = resources[name].texture.baseTexture;
-		var width = baseTex.width;
-		var height = baseTex.height;
+		var baseTex = game.textures[name].baseTexture;
+		var frame = game.textures[name].frame;
+		var width = frame.width;
+		var height = frame.height;
 		canvas.width = width;
 		canvas.height = height;
 		ctx.clearRect(0, 0, width, height);
-		ctx.drawImage(baseTex.source, 0, 0);
+		ctx.drawImage(baseTex.source, frame.x, frame.y, frame.width, frame.height, 0, 0, width, height);
 
 		var fromR = [];
 		var toRGB = [];

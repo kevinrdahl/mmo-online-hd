@@ -529,6 +529,9 @@ function menuSpawnColumn () {
 			grassChance += grassAssoc/Math.SQRT2;;
 		}
 
+		if (row > 2 && row < 5 && urlArgs.testSprites)
+			treeChance = 0;
+
 		if (Math.random() < treeChance) {
 			texName = MmooUtil.chooseRandomCumulative (
 				['terrain/tree1', 'terrain/tree2'],
