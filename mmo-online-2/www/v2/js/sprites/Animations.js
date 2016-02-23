@@ -15,7 +15,7 @@ var animTime = ((20/24)*1000) / 6;
 
 Animations.man.walk = {
 	defaultDuration:animTime,
-	defaultOrigin:[11,0],
+	defaultOrigin:[11,2],
 	gridSize:[40,40],
 	frames:[
 		{points:[ //frame 0
@@ -71,7 +71,7 @@ Animations.man.walk = {
 
 Animations.man.walkhold = {
 	defaultDuration:150,
-	defaultOrigin:[11,0],
+	defaultOrigin:[11,2],
 	gridSize:[40,40],
 	frames:[
 		{points:[ //frame 0

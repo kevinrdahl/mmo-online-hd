@@ -165,6 +165,7 @@ var AnimatedSprite = Class({
 
 function testAnimatedSprites() {
 	var testColors = ['White', 'Red', 'Yellow', 'Blue', 'Green', 'Turquoise', 'Majenta', 'Black', 'Grey', 'Brown', 'LightGreen'];
+	var skins = ['Fair', 'Olive', 'SunTouched', 'Cocoa', 'Ebony', 'Slate', 'LapisLazuli', 'Emerald'];
 	var testSprites = [];
 	var animSprites = [];
 
@@ -200,12 +201,15 @@ function testAnimatedSprites() {
 		applyMaterial(colorMap, Materials.Clothing[color], 'hatMat');
 	    applyMaterial(colorMap, Materials.Clothing[color], 'body');
 	    applyMaterial(colorMap, Materials.Clothing[color], 'cloak');
+	    applyMaterial(colorMap, Materials.Skins[skins[i%skins.length]], 'skin');
 
 	    animSprite = new AnimatedSprite(animSet, partList, colorMap);
 	    animSprite.render();
 	    spr = new PIXI.Sprite(animSprite.texture);
 	    spr.scale.x = -2;
 	    spr.scale.y = 2;
+	    spr.position.x = 96 + 72*i;
+	    spr.position.y = 144 + i * (48/testColors.length);
 	    game.stage.addChild(spr);
 	    testSprites.push(spr);
 	    animSprites.push(animSprite);
@@ -217,8 +221,6 @@ function testAnimatedSprites() {
     		spr = testSprites[i];
     		frame = animSprites[i].getFrame('walkhold', Date.now() + 100*i);
     		animSprites[i].texture.frame = frame.rect;
-	        spr.position.x = 96 + 72*i;
-	        spr.position.y = 144 + i * (48/testSprites.length);
     	}
     },
     50);

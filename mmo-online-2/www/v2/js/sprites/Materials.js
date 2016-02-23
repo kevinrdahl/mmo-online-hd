@@ -7,11 +7,23 @@ function applyMaterial(colorMap, material, prefix) {
 }
 
 Materials.Metals = {};
+Materials.Metals.Iron = {
+	VLight:0xa6a6a6,
+	Light:0x919191,
+	'':0x696969,
+	Dark:0x3d3d3d
+};
 Materials.Metals.Steel = {
-	VLight:0xf3f3f3,
-	Light:0xc9c9c9,
+	VLight:0xc9c9c9,
+	Light:0xa6a6a6,
 	'':0x919191,
 	Dark:0x696969
+};
+Materials.Metals.Silver = {
+	VLight:0xffffff,
+	Light:0xe3e3e3,
+	'':0xc9c9c9,
+	Dark:0xa6a6a6
 };
 Materials.Metals.Gold = {
 	'':0xccc159,

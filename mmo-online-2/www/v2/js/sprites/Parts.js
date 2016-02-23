@@ -77,7 +77,7 @@ Parts.Hairs.Hair2 = {
 
 Parts.Hats = {};
 Parts.Hats.WizHood = {
-	name:'hair2',
+	name:'wizhood',
 	colors: {
 		skinDark:0x333333,
 		hatMat:0x444444,
@@ -85,7 +85,42 @@ Parts.Hats.WizHood = {
 		hatMat2:0x666666,
 	},
 	basic: {image:'parts/wizhood', attach:[6,8]}
-}
+};
+Parts.Hats.Helmet = {
+	name:'helmet',
+	colors: {
+		skinDark:0x333333,
+		hatMatDark:0x444444,
+		hatMat:0x555555,
+		hatMatLight:0x666666,
+		hatMat2:0x777777,
+		hatMat2Light:0x888888,
+		hatMat3:0x999999
+	},
+	basic: {image:'parts/helmet', attach:[6,9]}
+};
+Parts.Hats.Hoplite = {
+	name:'hoplite',
+	colors: {
+		hatMat:0x333333,
+		hatMatLight:0x444444,
+		hatMatVLight:0x555555,
+		hatMat2:0x666666
+	},
+	basic: {image:'parts/hoplite', attach:[5,9]}
+};
+Parts.Hats.Hoplite2 = {
+	name:'hoplite2',
+	colors: {
+		hatMat:0x333333,
+		hatMatLight:0x444444,
+		hatMatVLight:0x555555,
+		hatMat2:0x666666,
+		hatMat3:0x777777
+	},
+	basic: {image:'parts/hoplite2', attach:[5,9]}
+};
+
 
 Parts.Shields = {};
 Parts.Shields.Shield1 = {
