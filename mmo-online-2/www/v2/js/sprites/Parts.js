@@ -216,3 +216,12 @@ Parts.Weapons.Staff = {
 	},
 	basic: {image:'parts/staff', attach:[2,13]}
 };
+Parts.Weapons.Spear = {
+	name:'spear',
+	colors: {
+		rightMat:0x333333,
+		rightMatLight:0x444444,
+		rightMat2:0x666666
+	},
+	basic: {image:'parts/spear', attach:[2,14]}
+};

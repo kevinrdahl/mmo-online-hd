@@ -324,7 +324,8 @@ function initMainMenuCharacterCreate() {
         handleft:[{part:Parts.Hands.Hand}],
         handright:[{part:Parts.Hands.Hand}],
         footleft:[{part:Parts.Feet.Boot}],
-        footright:[{part:Parts.Feet.Boot}]
+        footright:[{part:Parts.Feet.Boot}],
+        weaponright:[{part:Parts.Weapons.Spear}]
     };
     if (hairStyle.getValue() != null)
     	partList.head.push({part:hairStyle.getValue()});
@@ -338,10 +339,13 @@ function initMainMenuCharacterCreate() {
     colorMap.belt = Materials.Clothing.Black[''];
     applyMaterial(colorMap, Materials.Clothing.Grey, 'body');
     applyMaterial(colorMap, Materials.Clothing.Blue, 'cloak');
+    applyMaterial(colorMap, Materials.Metals.Steel, 'rightMat');
+    applyMaterial(colorMap, Materials.Woods.Ash, 'rightMat2');
+    console.log(colorMap);
 
 	var spriteSheet = new SpriteSheet(animSet, partList, colorMap);
     spriteSheet.render();
-    var animSprite = new AnimatedSprite(spriteSheet, 'walk');
+    var animSprite = new AnimatedSprite(spriteSheet, 'walkhold');
     animSprite.sprite.scale.x = 5;
     animSprite.sprite.scale.y = 5;
     animSprite.position.x = 12;
