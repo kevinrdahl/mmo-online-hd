@@ -1,16 +1,14 @@
 var Panel = Class(InterfaceElement, {
 	constructor: function(options) {
-		this.bgColor = UIConfig.backgroundColor;
-
-		if (typeof options.borderWidth === "undefined")
-			options.borderWidth = UIConfig.windowBorderWidth;
-		if (typeof options.borderColor === "undefined")
-			options.borderColor = UIConfig.borderColor;
-		this.alpha = 1;
+		MmooUtil.applyProps(options, {
+			borderWidth: UIConfig.windowBorderWidth,
+			borderColor: UIConfig.borderColor,
+			bgColor: UIConfig.backgroundColor,
+			alpha: 1,
+			isClickable: true
+		}, true);
 
 		Panel.$super.call(this, options);
-
-		this.isClickable = true;
 
 		this.renderTexture = new PIXI.RenderTexture(game.renderer, this.width, this.height);
 		this.sprite = new PIXI.Sprite(this.renderTexture);

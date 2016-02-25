@@ -247,6 +247,127 @@ function initMainMenuCharacterCreate() {
 
 	mainMenuBanner('Character Creation', 'Meet the new you.');
 
+	var creationElement = new InterfaceElement({
+		id:'creation',
+		width:800,
+		height:500
+	});
+	creationElement.setAttachX(0.5, 0.5);
+	var appearanceControls = new ElementList({
+		id:'appearance',
+		padding:10
+	});
+	//appearanceControls.setAttachX(0.5, 0.5);
+	creationElement.addChild(appearanceControls);
+
+	var hairStyle = Selector.createLabelled([
+		{name:'Shiny', value:null},
+		{name:'Sharp', value:Parts.Hairs.Hair2},
+		{name:'Slick', value:Parts.Hairs.Hair1}
+	], 'Hair Style', 'hairStyle');
+	hairStyle.setRandom();
+	hairStyle.setAttachX(0.5, 0.5);
+	appearanceControls.addChild(hairStyle);
+
+	var hairColor = Selector.createLabelled([
+		{name:'Coal', 		value:Materials.Hairs.Coal},
+		{name:'Chestnut', 	value:Materials.Hairs.Chestnut},
+		{name:'Pumpkin', 	value:Materials.Hairs.Pumpkin},
+		{name:'Carrot', 	value:Materials.Hairs.Carrot},
+		{name:'Gold', 		value:Materials.Hairs.Gold},
+		{name:'Silver', 	value:Materials.Hairs.Silver}
+	], 'Hair Color', 'hairColor');
+	hairColor.setRandom();
+	hairColor.setAttachX(0.5, 0.5);
+	appearanceControls.addChild(hairColor);
+
+	var skinColor = Selector.createLabelled([
+		{name:'Fair', 			value:Materials.Skins.Fair},
+		{name:'Olive', 			value:Materials.Skins.Olive},
+		{name:'Sun Touched', 	value:Materials.Skins.SunTouched},
+		{name:'Cocoa', 			value:Materials.Skins.Cocoa},
+		{name:'Ebony', 			value:Materials.Skins.Ebony}
+	], 'Skin Tone', 'skinColor');
+	skinColor.setRandom();
+	skinColor.setAttachX(0.5, 0.5);
+	appearanceControls.addChild(skinColor);
+
+	var previewPanel = new Panel({
+		name:'charPreview',
+		isClickable:false,
+		width:144,
+		height:144,
+		attach:{
+			where:[0,0],
+			parentWhere:[0,0],
+			offset:[160,0]
+		},
+		bgColor:0xffffff,
+		borderWidth:0
+	});
+	previewPanel.sprite.alpha = 0.6;
+	creationElement.addChild(previewPanel);
+
+
+	var animSet = Animations.man;
+	var partList = {
+        head:[
+            {part:Parts.Heads.Human}
+        ],
+        body:[{part:Parts.Bodies.Human}],
+        handleft:[{part:Parts.Hands.Hand}],
+        handright:[{part:Parts.Hands.Hand}],
+        footleft:[{part:Parts.Feet.Boot}],
+        footright:[{part:Parts.Feet.Boot}]
+    };
+    if (hairStyle.getValue() != null)
+    	partList.head.push({part:hairStyle.getValue()});
+
+	var colorMap = {};
+    applyMaterial(colorMap, skinColor.getValue(), 'skin');
+    applyMaterial(colorMap, hairColor.getValue(), 'hair');
+    applyMaterial(colorMap, Materials.Clothing.Brown, 'foot');
+    colorMap.cloakHem = Materials.Metals.Gold.Light;
+    colorMap.cloakClasp = Materials.Metals.Gold.Light;
+    colorMap.belt = Materials.Clothing.Black[''];
+    applyMaterial(colorMap, Materials.Clothing.Grey, 'body');
+    applyMaterial(colorMap, Materials.Clothing.Blue, 'cloak');
+
+	var spriteSheet = new SpriteSheet(animSet, partList, colorMap);
+    spriteSheet.render();
+    var animSprite = new AnimatedSprite(spriteSheet, 'stand');
+    animSprite.sprite.scale.x = 5;
+    animSprite.sprite.scale.y = 5;
+    animSprite.position.x = 12;
+    animSprite.position.y = 12;
+
+    animSprite.update(Date.now());
+    setInterval(function() {
+    	animSprite.update(Date.now());
+    },50);
+
+    hairStyle.onChange = function() {
+    	var head = partList.head;
+    	if (head.length > 1)
+    		head.pop();
+    	var val = hairStyle.getValue();
+    	if (val != null)
+    		partList.head.push({part:val});
+    	spriteSheet.render();
+    };
+
+    hairColor.onChange = function() {
+    	applyMaterial(colorMap, hairColor.getValue(), 'hair');
+    	spriteSheet.render();
+    };
+
+    skinColor.onChange = function() {
+    	applyMaterial(colorMap, skinColor.getValue(), 'skin');
+    	spriteSheet.render();
+    };
+
+    previewPanel.displayObject.addChild(animSprite.sprite);
+
 	mainMenu.controls = new ElementList({
 		padding:10,
 		attach: {
@@ -255,6 +376,9 @@ function initMainMenuCharacterCreate() {
 			offset:[0,50]
 		}
 	});
+
+	mainMenu.controls.addChild(creationElement);
+
 	mainMenu.addChild(mainMenu.controls);
 
 	mainMenu.cancelButton = InterfaceText.createMenuButton('Cancel', 'cancel');

@@ -36,6 +36,7 @@ function setMouseEvents() {
 				var element = game.clickedElement;
 				if (element != null) {
 					logger.log("ui", element.getFullName() + " clicked.");
+					element.onClick();
 					//console.log(element.width + ' ' + element.height);
 					//console.log(element.displayObject.getBounds());
 					//console.log(element);
@@ -240,12 +241,20 @@ function initTestInterface() {
 		setTimeout(createElementAdder(i+1),i*1000);
 	}
 
-	var sprite = new PIXI.Sprite(PIXI.loader.resources['character/man'].texture);
-	game.stage.addChild(sprite);
-	sprite.position.x = 200;
-	sprite.position.y = 200;
-	sprite.scale.x = 2;
-	sprite.scale.y = 2;
+	var select = new Selector([
+			{name:'First', value:0},
+			{name:'Second', value:1},
+			{name:'Third', value:2}
+		],
+		{
+			attach:{
+				where:[0.5,0],
+				parentWhere:[0.5,0],
+				offset:[0,5]
+			}
+		}
+	);
+	game.ui.addChild(select);
 }
 
 function setStatus (title, message) {

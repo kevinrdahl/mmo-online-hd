@@ -72,7 +72,7 @@ Parts.Hairs.Hair2 = {
 		hair:0x333333,
 		hairLight:0x444444,
 	},
-	basic: {image:'parts/hair2', attach:[8,5]}
+	basic: {image:'parts/hair2', attach:[4,6]}
 };
 
 Parts.Hats = {};

@@ -73,7 +73,6 @@ function initGame() {
 	var frameText = new InterfaceText('0', {id:'framerate'});
 	frameText.addFilter(game.filters.dropShadow);
 	game.ui.addChild(frameText);
-	console.log(frameText);
 
 	//set up the view
 	resizeView();
@@ -140,7 +139,6 @@ function onMessage(msg) {
 }
 
 function drawStage() {
-    requestAnimationFrame(function () { drawStage(); });
     var frameStart = performance.now();
 
   	game.ui.draw();
@@ -158,6 +156,8 @@ function drawStage() {
 
     game.renderer.render(game.stage);
     updateFramerate(performance.now() - frameStart);
+
+    requestAnimationFrame(function () { drawStage(); });
 }
 
 function getVolatileGraphics() {
