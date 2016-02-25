@@ -250,8 +250,9 @@ function initMainMenuCharacterCreate() {
 	var creationElement = new InterfaceElement({
 		id:'creation',
 		width:800,
-		height:500
+		height:500,
 	});
+	creationElement.attach.offset[1] = 50;
 	creationElement.setAttachX(0.5, 0.5);
 	var appearanceControls = new ElementList({
 		id:'appearance',
@@ -263,9 +264,14 @@ function initMainMenuCharacterCreate() {
 	var hairStyle = Selector.createLabelled([
 		{name:'Shiny', value:null},
 		{name:'Sharp', value:Parts.Hairs.Hair2},
-		{name:'Slick', value:Parts.Hairs.Hair1}
+		{name:'Dashing', value:Parts.Hairs.Hair1},
+		{name:'Flat', value:Parts.Hairs.Hair4},
+		{name:'Round', value:Parts.Hairs.Hair5},
+		{name:'Vlad', value:Parts.Hairs.Hair3},
+		{name:'Wild', value:Parts.Hairs.Hair7},
+		{name:'Sunrise', value:Parts.Hairs.Hair6}
 	], 'Hair Style', 'hairStyle');
-	hairStyle.setRandom();
+	hairStyle.setIndex(1);
 	hairStyle.setAttachX(0.5, 0.5);
 	appearanceControls.addChild(hairStyle);
 
@@ -273,7 +279,7 @@ function initMainMenuCharacterCreate() {
 		{name:'Coal', 		value:Materials.Hairs.Coal},
 		{name:'Chestnut', 	value:Materials.Hairs.Chestnut},
 		{name:'Pumpkin', 	value:Materials.Hairs.Pumpkin},
-		{name:'Carrot', 	value:Materials.Hairs.Carrot},
+		//{name:'Carrot', 	value:Materials.Hairs.Carrot},
 		{name:'Gold', 		value:Materials.Hairs.Gold},
 		{name:'Silver', 	value:Materials.Hairs.Silver}
 	], 'Hair Color', 'hairColor');
@@ -335,7 +341,7 @@ function initMainMenuCharacterCreate() {
 
 	var spriteSheet = new SpriteSheet(animSet, partList, colorMap);
     spriteSheet.render();
-    var animSprite = new AnimatedSprite(spriteSheet, 'stand');
+    var animSprite = new AnimatedSprite(spriteSheet, 'walk');
     animSprite.sprite.scale.x = 5;
     animSprite.sprite.scale.y = 5;
     animSprite.position.x = 12;
@@ -378,8 +384,16 @@ function initMainMenuCharacterCreate() {
 	});
 
 	mainMenu.controls.addChild(creationElement);
+	mainMenu.charname = TextBox.createLabelled('Character Name', 'charname', '', false, TextBox.characterName);
+	mainMenu.charname.maxChars = 25;
+	mainMenu.charname.setAttachX(0.5, 0.5);
+	mainMenu.controls.addChild(mainMenu.charname);
 
 	mainMenu.addChild(mainMenu.controls);
+
+	mainMenu.createButton = InterfaceText.createMenuButton('Create', 'create');
+	mainMenu.createButton.setAttachX(0.5, 0.5);
+	mainMenu.controls.addChild(mainMenu.createButton, 25);
 
 	mainMenu.cancelButton = InterfaceText.createMenuButton('Cancel', 'cancel');
 	mainMenu.cancelButton.setAttachX(0.5, 0.5);

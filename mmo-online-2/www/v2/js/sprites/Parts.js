@@ -74,6 +74,47 @@ Parts.Hairs.Hair2 = {
 	},
 	basic: {image:'parts/hair2', attach:[4,6]}
 };
+Parts.Hairs.Hair3 = {
+	name:'hair3',
+	colors: {
+		hair:0x333333,
+		hairLight:0x444444,
+	},
+	basic: {image:'parts/hair3', attach:[4,6]}
+};
+Parts.Hairs.Hair4 = {
+	name:'hair4',
+	colors: {
+		hair:0x333333,
+		hairLight:0x444444,
+	},
+	basic: {image:'parts/hair4', attach:[5,8]}
+};
+Parts.Hairs.Hair5 = {
+	name:'hair5',
+	colors: {
+		hair:0x333333,
+		hairLight:0x444444,
+	},
+	basic: {image:'parts/hair5', attach:[5,7]}
+};
+Parts.Hairs.Hair6 = {
+	name:'hair6',
+	colors: {
+		hair:0x333333,
+		hairLight:0x444444,
+		skin:0x555555
+	},
+	basic: {image:'parts/hair6', attach:[-2,5]}
+};
+Parts.Hairs.Hair7 = {
+	name:'hair7',
+	colors: {
+		hair:0x333333,
+		hairLight:0x444444,
+	},
+	basic: {image:'parts/hair7', attach:[5,7]}
+};
 
 Parts.Hats = {};
 Parts.Hats.WizHood = {

@@ -62,7 +62,7 @@ Materials.Skins.Cocoa = {
 };
 Materials.Skins.Ebony = {
 	'':0x6f5939,
-	Light:0x6f5939,
+	Light:0xa68b5b,
 	Dark:0x50422b
 };
 Materials.Skins.Slate = {
