@@ -617,7 +617,7 @@ function updateMenuBackground () {
 	var speed = game.TERRAIN_TILE_WIDTH; //pixels/sec
 	var currentTime = Date.now();
 	var timeDelta = currentTime - menuBackground.lastUpdate;
-	var pixelDelta = timeDelta / 1000 * speed;
+	var pixelDelta = Math.round(timeDelta / 1000 * speed);
 	var tileWidth = game.TERRAIN_TILE_WIDTH * game.DEFAULT_SCALE;
 
 	menuBackground.position.x -= pixelDelta;
