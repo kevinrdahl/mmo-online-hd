@@ -26,7 +26,10 @@ function initMainMenu() {
 	mainMenu.music = createjs.Sound.play('music/fortress', {loop:-1});
 	mainMenu.music.volume = 0.3;
 
-	initMainMenuLogin('', '');
+	if (urlArgs.menu == 'charCreate')
+		initMainMenuCharacterCreate();
+	else
+		initMainMenuLogin('', '');
 }
 
 function mainMenuClear() {
@@ -376,6 +379,9 @@ function initMainMenuCharacterCreate() {
     };
 
     previewPanel.displayObject.addChild(animSprite.sprite);
+
+    //class
+    
 
 	mainMenu.controls = new ElementList({
 		padding:10,
