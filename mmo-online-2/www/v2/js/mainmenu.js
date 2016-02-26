@@ -8,6 +8,7 @@ function initMainMenu() {
 	menuBackground.lastUpdate = Date.now();
 	menuBackground.lastSpawnedCol = -1;
 	menuBackground.lastColumn = [];
+	menuBackground.scrollX = 0;
 
 	game.ui.displayObject.addChildAt(menuBackground,0);
 
@@ -617,10 +618,11 @@ function updateMenuBackground () {
 	var speed = game.TERRAIN_TILE_WIDTH; //pixels/sec
 	var currentTime = Date.now();
 	var timeDelta = currentTime - menuBackground.lastUpdate;
-	var pixelDelta = Math.round(timeDelta / 1000 * speed);
+	var pixelDelta = timeDelta / 1000 * speed;
 	var tileWidth = game.TERRAIN_TILE_WIDTH * game.DEFAULT_SCALE;
 
-	menuBackground.position.x -= pixelDelta;
+	menuBackground.scrollX -= pixelDelta;
+	menuBackground.position.x = Math.round(menuBackground.scrollX);
 	menuBackground.lastUpdate = currentTime;
 
 	var child;
