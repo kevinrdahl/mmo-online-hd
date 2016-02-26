@@ -183,6 +183,12 @@ var InterfaceElement = Class({
 		}
 
 		this.updateDisplayObjectPosition();
+		if (this.parent instanceof InterfaceElement)
+			this.parent.onChildResize(this);
+	},
+
+	onChildResize: function(child) {
+
 	},
 
 	reposition: function(firstTime) {

@@ -1,0 +1,5 @@
+Skill 		(SKL): 	Increases defense, and reduces enemy defense.
+Might 		(MGT): 	Increases attack damage and equip capacity.
+Fortitude 	(FOR): 	Increases health, and reduces disable duration.
+Will 		(WIL):	Increases arcane power and resistance.
+Faith 		(FTH):	Increases mana pool, and power of faith-based spells.

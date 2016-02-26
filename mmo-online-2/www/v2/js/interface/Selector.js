@@ -4,7 +4,7 @@ var Selector = Class(Panel, {
 			var select = new Selector(items, {name:name});
 			var labelText = new InterfaceText(label, {
 				name:"label",
-				font: UIConfig.bodyText,
+				font: UIConfig.menuLabelText,
 				parent: select,
 				attach:{
 					where:[0.5,1],

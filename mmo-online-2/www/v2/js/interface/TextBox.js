@@ -17,7 +17,7 @@ var TextBox = Class(Panel, {
 
 			var labelText = new InterfaceText(label, {
 				name:"label",
-				font: UIConfig.bodyText,
+				font: UIConfig.menuLabelText,
 				parent: box,
 				attach:{
 					where:[0,0],

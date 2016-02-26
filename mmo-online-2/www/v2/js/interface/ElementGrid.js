@@ -22,21 +22,24 @@ var ElementGrid = Class(InterfaceElement, {
 			//put in next available cell, assuming no gaps
 			var fail = false;
 			var currentRow = this.rows[this.gridHeight-1];
-			if (this.growAxis === 'x') {
-				if (currentRow.length < this.gridMaxWidth) {
+			if (typeof currentRow === 'undefined') {
+				x = 0;
+				y = 0;
+			} else if (this.growAxis === 'x') {
+				if (currentRow.length < this.gridMaxWidth || this.gridMaxWidth <= 0) {
 					x = currentRow.length;
 					y = this.gridHeight-1;
-				} else if (this.gridHeight < this.gridMaxHeight) {
+				} else if (this.gridHeight < this.gridMaxHeight || this.gridMaxHeight <= 0) {
 					x = 0;
 					y = this.gridHeight;
 				} else {
 					fail = true;
 				}
 			} else {
-				if (this.gridHeight < this.gridMaxHeight) {
+				if (this.gridHeight < this.gridMaxHeight || this.gridMaxHeight <= 0) {
 					x = 0;
 					y = this.gridHeight;
-				} else if (currentRow.length < this.gridMaxWidth) {
+				} else if (currentRow.length < this.gridMaxWidth || this.gridMaxWidth <= 0) {
 					x = currentRow.length;
 					y = this.gridHeight-1;
 				} else {
@@ -63,7 +66,7 @@ var ElementGrid = Class(InterfaceElement, {
 		child.attach.parentWhere = [0,0];
 		child.attach.offset = [x * (this.cellWidth+this.colPadding), y * (this.cellHeight+this.rowPadding)];
 
-		Element.$superp.addChild.call(this, child);
+		ElementGrid.$superp.addChild.call(this, child);
 		this.updateDimensions();
 	},
 
@@ -79,8 +82,8 @@ var ElementGrid = Class(InterfaceElement, {
 		var bounds = new PIXI.Rectangle(globalPosition[0], globalPosition[1], this.width, this.height);
 
 		if (bounds.contains(coords[0], coords[1])) {
-			var localCoords = [coords[0]-this.x, coords[1]-this.y];
-			element = this.getElement(Math.floor(coords[0] / (this.cellWidth+this.rowPadding)), Math.floor(coords[1] / (this.cellHeight+this.rowPadding)));
+			var localCoords = [coords[0]-bounds.x, coords[1]-bounds.y];
+			element = this.getElement(Math.floor(localCoords[0] / (this.cellWidth+this.rowPadding)), Math.floor(localCoords[1] / (this.cellHeight+this.rowPadding)));
 			if (element instanceof InterfaceElement)
 				return element.getElementAtCoords(coords);
 		}
@@ -126,3 +129,60 @@ var ElementGrid = Class(InterfaceElement, {
 		return null;
 	}
 });
+
+var SelectGrid = Class(ElementGrid, {
+	$static: {
+		elementHighlight: function() {this.sprite.tint = UIConfig.highlightColor; createjs.Sound.play('ui/rollover');},
+		elementUnHighlight: function() {this.sprite.tint = 0xffffff;},
+		elementSelect: function() {this.parent.selectChild(this); createjs.Sound.play('ui/click');}
+	},
+
+	constructor: function(options) {
+		this.selectedChild = null;
+		this.onChange = InterfaceElement.NOOP;
+		MmooUtil.applyProps(options, {
+			cellWidth:32, 
+	    	cellHeight:32, 
+	    	rowPadding:3, 
+	    	colPadding:3,
+	    	gridMaxWidth:7,
+	    	gridMaxHeight:-1,
+    	}, true);
+
+    	SelectGrid.$super.call(this, options);
+
+    	var tex = new PIXI.RenderTexture(game.renderer, this.cellWidth+2, this.cellHeight+2);
+    	var graphics = getVolatileGraphics();
+    	graphics.lineStyle(3, 0xffffff, 1);
+    	graphics.drawRect(2, 2, this.cellWidth-1, this.cellHeight-1);
+    	tex.render(graphics);
+    	this.selectSpr = new PIXI.Sprite(tex);
+	},
+
+	addChild: function(child) {
+		child.onHoverStart = SelectGrid.elementHighlight;
+		child.onHoverEnd = SelectGrid.elementUnHighlight;
+		child.onClick = SelectGrid.elementSelect;
+
+		SelectGrid.$superp.addChild.call(this, child);
+
+		if (this.children.length === 1)
+			this.selectChild(child);
+	},
+
+	selectChild: function(child) {
+		if (this.selectedChild !== null)
+			this.selectedChild.displayObject.removeChild(this.selectSpr);
+		this.selectedChild = child;
+		this.selectedChild.displayObject.addChild(this.selectSpr);
+		this.selectSpr.position.x = -1;
+		this.selectSpr.position.y = -1;
+
+		this.onChange();
+	},
+
+	selectRandom: function() {
+		var index = MmooUtil.randomInt(0, this.children.length);
+		this.selectChild(this.children[index]);
+	}
+})

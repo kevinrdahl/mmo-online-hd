@@ -61,6 +61,7 @@ function initGame() {
     	uiBlur:		new PIXI.filters.BlurFilter()
     };
     game.filters.dropShadow.distance = 2;
+    game.filters.dropShadow.blur = 2;
     game.filters.bloom.blur = 4;
     game.filters.uiBlur.blur = 2;
 

@@ -27,3 +27,8 @@ TextureGenerator.text = function(text, font) {
 
 	return renderTex;
 };
+
+TextureGenerator.menuStatBar = function(fillAmount, color) {
+	var width = 100;
+	var height = 20;
+};

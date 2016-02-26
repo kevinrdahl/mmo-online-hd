@@ -253,7 +253,7 @@ function initMainMenuCharacterCreate() {
 
 	var creationElement = new InterfaceElement({
 		id:'creation',
-		width:800,
+		width:900,
 		height:500,
 	});
 	creationElement.attach.offset[1] = 50;
@@ -275,7 +275,7 @@ function initMainMenuCharacterCreate() {
 		{name:'Wild', value:Parts.Hairs.Hair7},
 		{name:'Sunrise', value:Parts.Hairs.Hair6}
 	], 'Hair Style', 'hairStyle');
-	hairStyle.setIndex(1);
+	hairStyle.setRandom();
 	hairStyle.setAttachX(0.5, 0.5);
 	appearanceControls.addChild(hairStyle);
 
@@ -382,7 +382,39 @@ function initMainMenuCharacterCreate() {
     previewPanel.displayObject.addChild(animSprite.sprite);
 
     //class
-    
+    var classGrid = createClassSelect();
+    creationElement.addChild(classGrid);
+    var classText = new InterfaceText('Base Class', {
+    	font:UIConfig.titleText,
+    	attach:{
+    		where:[1,0.5],
+    		parentWhere:[0,0],
+    		offset:[classGrid.x - 7,classGrid.height/2]
+    	}
+    });
+    creationElement.addChild(classText);
+
+    //stats
+    var statsPreview = new ElementList({
+    	id:'stats',
+    	padding:10,
+    	attach:{
+    		where:[0,0],
+    		parentWhere:[0.5,0],
+    		offset:[-135,0]
+    	}
+    });
+    var stats = ['Might', 'Skill', 'Fortitude', 'Will', 'Faith'];
+    for (var i = 0; i < stats.length; i++) {
+    	var t = new InterfaceText(stats[i], {font:UIConfig.menuLabelText});
+    	var tex = TextureGenerator.rectangle(100,20,0x0e7cb3,3,UIConfig.borderColor);
+    	var texEle = new InterfaceTexture(tex, {});
+    	texEle.attach.offset[0] = 75;
+    	t.addChild(texEle);
+    	statsPreview.addChild(t);
+
+    }
+    creationElement.addChild(statsPreview);
 
 	mainMenu.controls = new ElementList({
 		padding:10,
