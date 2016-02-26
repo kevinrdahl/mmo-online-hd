@@ -341,7 +341,6 @@ function initMainMenuCharacterCreate() {
     applyMaterial(colorMap, Materials.Clothing.Blue, 'cloak');
     applyMaterial(colorMap, Materials.Metals.Steel, 'rightMat');
     applyMaterial(colorMap, Materials.Woods.Ash, 'rightMat2');
-    console.log(colorMap);
 
 	var spriteSheet = new SpriteSheet(animSet, partList, colorMap);
     spriteSheet.render();
