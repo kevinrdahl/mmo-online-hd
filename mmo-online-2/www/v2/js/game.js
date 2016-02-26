@@ -83,16 +83,18 @@ function initGame() {
 }
 
 function updateFramerate(value) {
-	game.frameRenderTimes.push(value);
+	var currentTime = Date.now();
+	game.frameRenderTimes.push([Date.now(), value]);
 	
 	var avg = 0;
-	for (var i = game.frameRenderTimes.length-1; i >= 0 && avg < 1000; i--) {
-		avg += game.frameRenderTimes[i];
+	for (var i = game.frameRenderTimes.length-1; i >= 0 
+	&& currentTime - game.frameRenderTimes[i][0] < 1000; i--) {
+		avg += game.frameRenderTimes[i][1];
 	}
 	avg /= game.frameRenderTimes.length-i;
-	avg = 1000/avg;
 	game.frameRenderTimes.splice(0,i);
-	var s = Math.round(avg).toString() + ' fps';
+	var fps = game.frameRenderTimes.length;
+	var s = fps.toString() + ' fps (' + Math.round(avg) + 'ms/frame)';
 	game.ui.findChildById('framerate').changeString(s);
 }
 
