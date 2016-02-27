@@ -171,6 +171,8 @@ var SelectGrid = Class(ElementGrid, {
 	},
 
 	selectChild: function(child) {
+		if (this.selectedChild === child)
+			return;
 		if (this.selectedChild !== null)
 			this.selectedChild.displayObject.removeChild(this.selectSpr);
 		this.selectedChild = child;
