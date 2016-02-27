@@ -29,7 +29,7 @@ MmooUtil.applyProps(UIConfig, {
 	headerText: 	MmooUtil.createFontDef({size:16}),
 	bodyText: 		MmooUtil.createFontDef({size:14}),
 	formText: 		MmooUtil.createFontDef({size:16}),
-	menuLabelText: 	MmooUtil.createFontDef({size:14, bold:true}),
+	menuLabelText: 	MmooUtil.createFontDef({size:14}),
 	titleText: 		MmooUtil.createFontDef({size:20, bold:true}),
 	titleTextHover: MmooUtil.createFontDef({size:20, bold:true, color:UIConfig.fontHighlightColor}),
 	bannerText: 	MmooUtil.createFontDef({size:44, bold:true}),
