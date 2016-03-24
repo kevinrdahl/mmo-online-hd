@@ -265,9 +265,13 @@ Units.Unit = Class({
     },
 
     getPositionDelta: function(noUpdate) {
+        //console.log(this.id + ' last ' + JSON.stringify(this.lastBroadcastPosition));
+
         var v = this.nextPosition.copy().sub(this.lastBroadcastPosition);
         if (!noUpdate)
-            this.lastBroadcastPosition.set(this.nextPosition);
+            this.lastBroadcastPosition.set(this.nextPosition).round();
+
+        //console.log('    delta ' + JSON.stringify(v));
         return v;
     },
 

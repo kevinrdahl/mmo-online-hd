@@ -91,6 +91,8 @@ Connections.Connection = Class({
             for (var propName in Messages.abbreviations) {
                 Messages.expansions[Messages.abbreviations[propName]] = propName;
             }
+
+            Messages.serverRSAKey = obj.rsaKey;
         } catch(e) {
             logger.log('error', 'parsing connection info, ' + err.toString());
         }

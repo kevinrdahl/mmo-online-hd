@@ -536,7 +536,8 @@ function tryLoginUser () {
 		return;
 	}
 
-	game.connection.send(new Messages.LoginUser(username, password).serialize());
+	var msg = new Messages.EncryptedRSA(new Messages.LoginUser(username, password));
+	game.connection.send(msg.serialize());
 
 	setStatus('Logging In', 'Please wait...');
 }
@@ -560,7 +561,7 @@ function tryCreateUser () {
 		return;
 	}
 
-	var msg = new Messages.CreateUser(username, password, mainMenu.email.text);
+	var msg = new Messages.EncryptedRSA(new Messages.CreateUser(username, password, mainMenu.email.text));
 	game.connection.send(msg.serialize());
 }
 

@@ -102,6 +102,14 @@ Messages.CreateCharacter = Class(Messages.Message, {
     }
 });
 
+Messages.EncryptedRSA = Class(Messages.Message, {
+    constructor: function(msg) {
+        Messages.EncryptedRSA.$super.call(this, Messages.TYPES.RSA, {
+            msg:cryptico.encrypt(msg.serialize(), Messages.serverRSAKey).cipher
+        });
+    }
+});
+
 
 /*
 	General purpose transformations are copy-pasted from server messages.js.

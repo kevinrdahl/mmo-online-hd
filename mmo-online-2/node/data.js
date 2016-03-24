@@ -2,6 +2,7 @@ var Data = {};
 module.exports = Data;
 
 var mysql = require('mysql');
+var bcrypt = require('bcrypt-nodejs');
 
 Data.DEFAULT_USER_SETTINGS = {};
 
@@ -120,41 +121,69 @@ Data.DAO = function(config) {
 	};	
 
 	this.login = function(client, name, password, callback) {
-		var queryString = 'SELECT user_id, `name`, settings FROM User WHERE `name`=? and password=?;';
+		var queryString = 'SELECT * FROM User WHERE `name`=?;';
 
-		this.pool.query(queryString, [name, password], function(err, results) {
+		this.pool.query(queryString, [name], function(err, results) {
 			if (err) {
 				console.log('SQL ERROR logging in: ' + err.code);
-				callback(client, null, true);
+				callback(client, null, 'Database error.');
 				return;
 			}
 			
 			if (results.length === 1) {
-				callback(client, results[0]);
+				bcrypt.compare(password, results[0].password, function(err2, res) {
+					if (res) {
+						callback(client, results[0]);	
+					} else if (err2) {
+						callback(client, null, 'Crypto error 1.');
+						console.log(err2.toString());
+						console.log(err2.code);
+					} else {
+						callback(client, null, 'Incorrect password.')
+					}
+					
+				});
 			} else {
-				console.log(results);
-				callback(client, null);
+				callback(client, null, 'No such user.');
 			}
 		});
 	};
 
 	this.createUser = function(client, name, password, email, callback) {
-		var queryString = 'INSERT INTO User SET ?';
-		var queryParams = {name:name, password:password, settings:JSON.stringify(Data.DEFAULT_USER_SETTINGS)};
-		if (typeof email !== 'undefined')
-			queryParams.email = email;
+		var _this = this;
 
-		this.pool.query(queryString, queryParams, function(err, result) {
+		bcrypt.genSalt(8, function(err, salt) {
 			if (err) {
-				var reason = err.code;
-				if (reason == 'ER_DUP_ENTRY') {
-					reason = 'duplicate username';
-				}
-				console.log('SQL ERROR creating user: ' + err.code);
-				callback(client, false, name, reason);
+				callback(client, false, name, 'Crypto error 2.');
 				return;
 			}
-			callback(client, true, name);
+
+			bcrypt.hash(password, salt, null, function(err, hash) {
+				if (err) {
+					callback(client, false, name, 'Crypto error 3.');
+					return;
+				}
+
+				var queryString = 'INSERT INTO User SET ?';
+				var queryParams = {name:name, password:hash, settings:JSON.stringify(Data.DEFAULT_USER_SETTINGS)};
+				if (typeof email !== 'undefined')
+					queryParams.email = email;
+
+				_this.pool.query(queryString, queryParams, function(err, result) {
+					if (err) {
+						var reason = err.code;
+						if (reason == 'ER_DUP_ENTRY') {
+							reason = 'User already exists.';
+						} else {
+							reason = 'Database error.'
+						}
+						console.log('SQL ERROR creating user: ' + err.code);
+						callback(client, false, name, reason);
+						return;
+					}
+					callback(client, true, name);
+				});
+			});
 		});	
 	};
 };

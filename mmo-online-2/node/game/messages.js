@@ -10,6 +10,7 @@ var jsface = require("jsface"),
     LinAlg = require('../../www/js/linalg'),
     MMOOUtil = require('./mmoo-util'),
     Units = require('./units');
+var Crypto = require('../cryptico-node.js');
 
 Messages.TYPES = {
     PING:0,
@@ -30,7 +31,8 @@ Messages.TYPES = {
     JOIN:15,
     DEATH:16,
     PATROL:17,
-    STEP:18
+    STEP:18,
+    RSA:19
 };
 Messages.TYPE_NAMES = [];
 (function() {
@@ -126,7 +128,8 @@ Messages.Handshake = Class(Messages.Message, {
         if (Messages.Handshake.str === null) {
             Messages.Handshake.str = JSON.stringify({
                 types: Messages.TYPES,
-                abbreviations: Messages.abbreviations
+                abbreviations: Messages.abbreviations,
+                rsaKey: Messages.RSAPublicString
             });
         }
         return Messages.Handshake.str;
@@ -169,8 +172,8 @@ Messages.UnitMove = Class(Messages.Message, {
     },
 
     debugString: function() {
-        if (this.params.direction === -1)
-            return 'STOP';
+        //if (this.params.direction === -1)
+            //return 'STOP';
         return Messages.UnitMove.$superp.debugString.call(this);
     }
 });
@@ -223,7 +226,13 @@ Messages.UserResponse = Class(Messages.Message, {
             params.reason = failReason;
         Messages.UserResponse.$super.call(this, Messages.TYPES.USER, params);
     }
-})
+});
+
+Messages.PublicKey = Class(Messages.Message, {
+    constructor: function(key) {
+        Messages.PublicKey.$super.call(this, Messages.TYPES.RSA, {key:key});
+    }
+});
 
 /*************
  * FUNCTIONS *
@@ -322,6 +331,19 @@ Messages.parse = function(s) {
         return null;
     }
     Messages.expand(params);
+
+    if (msgType === Messages.TYPES.RSA) {
+        if (!params.msg)
+            return null;
+
+        try {
+            var plaintext = Crypto.decrypt(params.msg, Messages.RSAKey).plaintext;
+            return Messages.parse(plaintext);
+        } catch (e) {
+            console.log('ERROR decrypting message ' + e.code);
+            return null;
+        }
+    }
 
     return new Messages.Message(msgType, params);
 };

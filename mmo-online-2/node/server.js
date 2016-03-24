@@ -13,6 +13,9 @@ var game = require('./game/game');
 var Messages = require('./game/messages');
 var MMOOUtil = require('./game/mmoo-util');
 var TCP = require('./tcp');
+var Crypto = require('./cryptico-node.js');
+var SecureRandom = require('secure-random');
+var Buffer2Base64 = require('./base64.js');
 
 var Servers = {};
 module.exports = Servers;
@@ -33,6 +36,12 @@ Servers.Server = Class({
         this.dbConfig = JSON.parse(fs.readFileSync('./config/db.json', 'utf8'));
         this.bannerText = fs.readFileSync('./config/banner.txt', 'utf8');
         console.log('Done!');
+
+        console.log('Generating RSA key...');
+        var buffer = SecureRandom.randomBuffer(100);
+        Messages.RSAKey = Crypto.generateRSAKey(Buffer2Base64(buffer), 1024);
+        Messages.RSAPublicString = Crypto.publicKeyString(Messages.RSAKey);
+        console.log(Messages.RSAPublicString + '\n');
 
         console.log('Connecting to database...');
         this.dao = new Data.DAO(this.dbConfig);
@@ -298,7 +307,7 @@ Servers.Server = Class({
         }
     },
 
-    onUserLogin: function(client, results, wasError) {
+    onUserLogin: function(client, results, failReason) {
         var response;
 
         if (results !== null) {
@@ -318,9 +327,8 @@ Servers.Server = Class({
 
             console.log('Client ' + client.id + ' logged in as "' + results.name + '"');
         } else {
-            var reason = (wasError) ? 'Database error' : 'Bad credentials';
-            response = new Messages.UserResponse('loginUser', false, reason);
-            console.log('Client ' + client.id + ' failed to log in.');
+            response = new Messages.UserResponse('loginUser', false, failReason);
+            console.log('Client ' + client.id + ' failed to log in. (' + failReason + ')');
         }
 
         client.send(response.serialize());
