@@ -1,0 +1,103 @@
+ __  ____   __  ___ ___   _   _____   __
+|  \/  \ \ / / |   \_ _| /_\ | _ \ \ / /
+| |\/| |\ V /  | |) | | / _ \|   /\ V / 
+|_|  |_| |_|   |___/___/_/ \_\_|_\ |_|
+========================================
+TODO, musings, etc
+Fancy text: 
+	http://patorjk.com/software/taag/
+========================================
+
+[X] Change message syntax to reduce size.
+
+	Rather than {"type":"order", "order":{whatever}}
+	Just [Orders.TYPES.MOVE, {params}]
+
+	Every order obviously has a type
+		saves |"t":| (4 chars)
+	These can be easily enumerated on both client and server
+		saves a couple of quotes (2 chars)
+
+	Shave the array syntax off entirely
+		saves |[,]| (3 chars)
+	Further, remove the curlies around the object 
+		saves 2 chars, just 1 if using a new delimiter after the number
+		yes, used the delimiter, it's just faster and safer
+
+	NEW NEW SYNTAX:
+		3|"param":"string","param2":num
+
+	TOTAL SAVINGS:
+		About 10 chars per message.
+		Yay!
+
+	NOTE: expect that most messages from client are orders, so the order types can just be among the message types.
+
+	Object keys are compressed with an idPool, which allows nice looking names in other parts of the code. This seems to perform pretty well, see tests/message-compression for NUMBERS. Tried compressing further with a library, but it's just too slow for real time.
+		Currently cutting message size almost in half for a typical UnitMove message, tested with fairly large large coordinates/gamestep/unit count
+
+
+[ ] Seek better ways to encode large ints(coords).
+
+	STATUS: backburner
+	
+	toString(36) saves some chars, but seems to incur a significant performance hit
+	
+	Delta encoding coords would require keeping track of which coords a client has seen while serializing, so one message would be serialized for every client that receives it. EW.
+
+
+[X] Get rid of uses of the propIsVector2 function, since parse creates them now.
+
+
+[~] Projectiles
+
+	There are two types of projectiles, point target and unit target.
+
+	A projectile hitting should trigger an event, given to the projectile at creation. 
+		For an attack, this might be called an AttackHitEvent. 
+		When skills are implemented, it could be a SkillHitEvent, with some param pointing to the skill.
+
+	Accuracy isn't nearly as important as with unit positions, so just announce a projectile when it's created, and anyone who wasn't there can suck it. This means someone too far away who walks into view range before the projectile hits won't see it. This is minor unless the projectile's speed is super slow.
+
+	SIMPLE SOLUTION: don't make projectiles super slow
+
+
+[ ] Reduce repeated computation in unit step logic.
+
+	For instance, if moving to attack, it computes the required position every frame. Instead, it should cache that position, and check on subsequent frames whether it's still a valid position from which to attack the unit. Only then would it recompute.
+
+
+[ ] Finalize how attacking actually works.
+
+	Even if the animation is just moving the sprite, it should appear to do damage at the right time.
+
+
+[ ] Have a good look at vision.
+	
+	I think it was organized decently, even if it doesn't make any actual reasoning about vision.
+
+	Not telling everything to everybody sounds like a WORTHY GOAL for reducing network usage. (It's absolutely essential.)
+
+
+[X] Reduce units[id] lookups on server
+
+	Looking it up many times every frame is a huge waste of cycles. Just give units an "exists" property, which is set to false when removing them from the world. Then, things can store pointers to the unit and check that value. 
+
+	To avoid keeping units in memory too long due to references, objects (mainly orders) should keep their unit ref null until it's actually needed. In the case of orders, when they're the front of the queue.
+
+	Tackled the big culprits.
+	
+
+[ ] Skills
+
+	distant future
+
+
+[ ] Events
+	
+	Without some kind of event system, adding anything is going to become a clusterfuck.
+
+	To start, make an Event class with a bunch of derivatives, like with Messages. Except these are for server use only.
+
+
+[ ] Organize this god damn client holy shit.

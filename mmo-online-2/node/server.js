@@ -4,137 +4,410 @@
 var ws = require('ws');
 var fs = require('fs');
 var net = require('net');
+var jsface = require("jsface"),
+    Class  = jsface.Class,
+    extend = jsface.extend;
 
 var Data = require('./data');
 var game = require('./game/game');
 var Messages = require('./game/messages');
+var MMOOUtil = require('./game/mmoo-util');
 var TCP = require('./tcp');
+var Crypto = require('./cryptico-node.js');
+var SecureRandom = require('secure-random');
+var Buffer2Base64 = require('./base64.js');
 
+var Servers = {};
+module.exports = Servers;
 
-GLOBAL.settings = JSON.parse(fs.readFileSync('./config/settings.json', 'utf8'));
 var CONN_WS = 0;
 var CONN_TCP = 1;
 
-var Server = function() {
-    var _this = this;
-    this.clients = {};
-    this.clientNum = 0;
+Servers.Server = Class({
+    constructor: function() {
+        this.clients = {};
+        this.clientNum = 0;
+    },
 
-    this.start = function() {
+    start: function() {
+        var _this = this;
+
         console.log('Reading config files...');
         this.dbConfig = JSON.parse(fs.readFileSync('./config/db.json', 'utf8'));
         this.bannerText = fs.readFileSync('./config/banner.txt', 'utf8');
         console.log('Done!');
+
+        console.log('Generating RSA key...');
+        var buffer = SecureRandom.randomBuffer(100);
+        Messages.RSAKey = Crypto.generateRSAKey(Buffer2Base64(buffer), 1024);
+        Messages.RSAPublicString = Crypto.publicKeyString(Messages.RSAKey);
+        console.log(Messages.RSAPublicString + '\n');
 
         console.log('Connecting to database...');
         this.dao = new Data.DAO(this.dbConfig);
         this.dao.connect(function() {
             _this.onDbConnect();
         });
-    };
+    },
 
-    this.onDbConnect = function() {
-        console.log('Connected!');
+    onDbConnect: function() {
+        var _this = this;
+
+        console.log('Connected to database!');
+
         this.getGameData(function() {
             _this.startComms();
             _this.startGame();
         });
-    };
+    },
 
-    this.startComms = function() {
+    startComms: function() {
+        var _this = this;
+
         this.wsServer = new ws.Server({port:GLOBAL.settings.wsPort});
-        this.wsServer.on("connection", function(client){
-            client.clientType = CONN_WS; 
-            _this.onConnection(client);
+        this.wsServer.on("connection", function(connection){
+            connection.connectionType = CONN_WS; 
+            _this.onConnection(connection);
         });
 
         console.log('WebSocket server running on port ' + GLOBAL.settings.wsPort);
 
-        this.tcpServer = net.createServer(function(socket) {
-            var client = new TCP.tcpClient(socket);
-            client.clientType = CONN_TCP;
-            _this.onConnection(client);
-        }).listen(GLOBAL.settings.tcpPort);
-    };
+        /*this.tcpServer = net.createServer(function(socket) {
+            var connection = new TCP.tcpClient(socket);
+            connection.connectionType = CONN_TCP;
+            _this.onConnection(connection);
+        }).listen(GLOBAL.settings.tcpPort);*/
+    },
 
-    this.startGame = function() {
-        this.game = new game.Game(function(id, message){
-            _this.sendMessage(id, message);
-        });
-        this.game.start();
-
+    startGame: function() {
         console.log('\n' + this.bannerText + '\n');
-    };
+        this.game = new game.Game(this, "Nova", 1);
+        this.game.start();
+    },
 
-    this.onConnection = function(client) {
+    onConnection: function(connection) {
         var _this = this;
 
-        var id = (this.clientNum++).toString();
-        this.clients[id] = client;
-        client.id = id;
+        var client = new Servers.Client(connection);
+        this.clients[client.id] = client;
 
-        if (client.clientType == CONN_WS) {
-            client.on('close', function() {_this.onDisconnect(this.id)});
-            client.on('message', function(data) {_this.onMessage(this.id, data)});
-            console.log(id + ' CONNECTED (WS)');
-        } else if (client.clientType == CONN_TCP) {
-            client.onMessage = function(data) {_this.onMessage(this.id, data)};
-            client.onDisconnect = function(){_this.onDisconnect(this.id)};
-            console.log(id + ' CONNECTED (TCP)');
+        if (connection.connectionType == CONN_WS) {
+            connection.on('close', function() {_this.onDisconnect(client)});
+            connection.on('message', function(data) {_this.onMessage(client, data)});
+            console.log(client.id + ' CONNECTED (WS)');
+        } else if (connection.connectionType == CONN_TCP) {
+            connection.onMessage = function(data) {_this.onMessage(client, data)};
+            connection.onDisconnect = function(){_this.onDisconnect(client)};
+            console.log(client.id + ' CONNECTED (TCP)');
         } else {
-            console.log('PROBLEM!');
+            console.log('CONNECTION PROBLEM!');
         }
 
-    };
+        //send handshake
+        client.send(new Messages.Handshake().serialize());
+    },
 
-    this.onDisconnect = function(id) {
-        delete this.clients[id];
-        this.game.onDisconnect(id);
-        console.log(id + ' DISCONNECTED');
-    };
+    onDisconnect: function(client) {
+        client.connected = false;
+        delete this.clients[client.id];
+        this.game.onDisconnect(client);
+        console.log(client.id + ' DISCONNECTED');
+    },
 
-    this.onMessage = function(id, data) {
-
-        var msg = Messages.expand(data);
-        /*try {
-            msg = Messages.expand(data);
-        } catch (e) {
-            console.log('ERROR: malformed message from ' + id + ', "' + data + '"');
+    onMessage: function(client, data) {
+        var msg = Messages.parse(data);
+        if (msg == null) {
+            console.log('ERROR parsing message "' + data + '" from client ' + client.id);
             return;
-        }*/
+        }
 
-        if (msg.type === 'dict') {
-            this.sendMessage(id, Messages.dict());
-        } else if (msg.type === 'sync') {
-            this.game.onConnect(id);
-        } else if (msg.type === 'ping') {
-            this.sendMessage(id, Messages.ping());
+        switch(msg.type) {
+            case Messages.TYPES.PING:
+                this.sendString(client, Messages.PING);
+                break;
+
+            case Messages.TYPES.USER:
+                this.onReceiveUserMessage(client, msg);
+
+            default:
+                if (client.game !== null)
+                    client.game.onMessage(client, msg);
+        }
+    },
+
+    onReceiveUserMessage: function(client, msg) {
+        client.userMessages.push(msg);
+        if (client.userMessages.length === 1) {
+            this.processNextUserMessage(client);
         } else {
-            this.game.onMessage(id, msg);
+            console.log('Client ' + client.id + ' has ' + client.userMessages.length-1 + ' pending DAO messages, pushing to queue.');
         }
-    };
+    },
 
-    this.sendMessage = function(id, message) {
-        //console.log('to ' + id + ': ' + message);
-        if (typeof this.clients[id] !== 'undefined') {
-            try {
-                this.clients[id].send(message);
-            } catch (e) {
-                console.log(e);
-                //nop
+    onCompleteUserMessage: function(client) {
+        client.userMessages.shift();
+        if (client.userMessages.length > 0) {
+            this.processNextUserMessage(client);
+        }
+    },
+
+    processNextUserMessage: function(client) {
+        var msg = client.userMessages[0];
+        var discard = true;
+        var responded = false;
+        var sendOK = false;
+        var failReason = 'bad thing';
+
+        if (Messages.assertParams(msg, client.id, ['action'])) {
+            var _this = this;
+            var action = msg.params.action;
+
+            switch(action) {
+                case 'loginUser':
+                    if (!Messages.assertParams(msg, client.id, ['action', 'name', 'password'])) {
+                        failReason = 'missing param';
+                    } else if (client.userId !== null) {
+                        failReason = 'already logged in';
+                    } else {
+                        discard = false;
+                        this.dao.login(client, msg.params.name, msg.params.password, this.onUserLogin.bind(this));
+                    }
+                    break;
+
+                case 'logoutUser':
+                    console.log('User ' + client.userName + ' logged out.');
+                    discard = false;
+                    responded = true; //no confirmation needed for logout
+                    client.userId = null;
+                    client.worldId = null;
+                    client.characterId = null;
+                    client.userName = null;
+                    break;
+
+                case 'createUser':
+                    if (!Messages.assertParams(msg, client.id, ['action', 'name', 'password'])) {
+                        failReason = 'missing param';
+                    } else if (client.userId !== null) {
+                        failReason = 'already logged in';
+                    } else if (!MMOOUtil.isValidUserName(msg.params.name)) { 
+                        failReason = 'invalid user name';
+                    } else {
+                        discard = false;
+                        if (msg.params.email && (typeof msg.params.email !== 'string' || msg.params.email.length < 6))
+                            delete msg.params.email;
+                        this.dao.createUser(client, msg.params.name, msg.params.password, msg.params.email, this.onUserCreated.bind(this));
+                    }
+                    break;
+
+                case 'getWorlds':
+                    if (client.userId === null) {
+                        failReason = 'not logged in';
+                    } else {
+                        discard = false;
+                        client.send(new Messages.WorldList([this.game]).serialize());
+                        responded = true;
+                    }
+                    break;
+
+                case 'loginWorld':
+                    if (!Messages.assertParams(msg, client.id, ['worldId'])) {
+                        failReason = 'missing param';
+                    } else if (client.userId === null) {
+                        failReason = 'not logged in';
+                    } else if (msg.params.worldId != 1) {
+                        failReason = 'world doesn\'t exist';
+                    } else {
+                        discard = false;
+                        sendOK = true;
+                        responded = true;
+
+                        client.worldId = msg.params.worldId;
+                    }
+                    break;
+
+                case 'logoutWorld':
+                    discard = false;
+                    responded = true; //no confirmation needed for logout
+                    client.worldId = null;
+                    client.characterId = null;
+                    break;
+
+                case 'getCharacters':
+                    if (client.userId === null) {
+                        failReason = 'not logged in';
+                    } else if (client.worldId === null) {
+                        failReason = 'no world joined';
+                    } else {
+                        discard = false;
+                        this.dao.getUserCharacters(client, this.onGetUserCharacters.bind(this));
+                    }
+                    break;
+
+                case 'loginCharacter':
+                    if (!Messages.assertParams(msg, client.id, ['characterId'])) {
+                        failReason = 'missing param';
+                    } else if (client.userId === null) {
+                        failReason = 'not logged in';
+                    } else if (client.worldId === null) {
+                        failReason = 'no world joined';
+                    } else if (client.characterId !== null) {
+                        failReason = 'already playing a character';
+                    } else {
+                        discard = false;
+                        this.dao.getCharacter(client, msg.params.characterId, this.onGetCharacter.bind(this));
+                    }
+                    break;
+
+                case 'logoutCharacter':
+                    discard = false;
+                    responded = true; //no confirmation needed for logout
+                    client.characterId = null;
+                    break;
+
+                case 'createCharacter':
+                    if (!Messages.assertParams(msg, client.id, ['name', 'json'])) {
+                        failReason = 'missing param';
+                    } else if (client.userId === null) {
+                        failReason = 'not logged in';
+                    } else if (client.worldId === null) {
+                        failReason = 'no world joined';
+                    } else if (client.characterId !== null) {
+                        failReason = 'already playing a character';
+                    } else {
+                        var character = Characters.fromJSON(msg.params.name, msg.params.json);
+                        if (character === null) {
+                            failReason = 'invalid character json';
+                        } else {
+                            discard = false;
+                            this.dao.createCharacter(client, character.name, msg.params.json, this.onCreateCharacter.bind(this));
+                        }
+                    }
+                    break;
+
+                default:
+                    failReason = 'invalid action';
+                    discard = true;
             }
+        } else {
+            msg.params.action = 'none';
+            failReason = 'no action';
+            discard = true;
         }
-    };
 
-    this.getGameData = function(callback) {
+        if (discard) {
+            client.send(new Messages.UserResponse(msg.params.action, false, failReason).serialize());
+            responded = true;
+        } else if (sendOK) {
+            client.send(new Messages.UserResponse(msg.params.action, true).serialize());
+            responded = true;
+        }
+
+        if (responded) {
+            this.onCompleteUserMessage(client);
+        }
+    },
+
+    onUserLogin: function(client, results, failReason) {
+        var response;
+
+        if (results !== null) {
+            //success!
+            client.userId = results.user_id;
+            client.userName = results.name;
+
+            try {
+                client.settings = JSON.parse(results.settings);
+            } catch (e) {
+                client.settings = {};
+            }
+
+
+            response = new Messages.UserResponse('loginUser', true);
+            response.params.settings = results.settings;
+
+            console.log('Client ' + client.id + ' logged in as "' + results.name + '"');
+        } else {
+            response = new Messages.UserResponse('loginUser', false, failReason);
+            console.log('Client ' + client.id + ' failed to log in. (' + failReason + ')');
+        }
+
+        client.send(response.serialize());
+        this.onCompleteUserMessage(client);
+    },
+
+    onUserCreated: function(client, success, name, failReason) {
+        var response = new Messages.Message(Messages.TYPES.USER, {
+            action:'createUser', 
+            success:success
+        });
+
+        var response;
+
+        if (success) {
+            response = new Messages.UserResponse('createUser', true);
+            console.log('Client ' + client.id + ' created user "' + name + '"');
+        } else {
+            response = new Messages.UserResponse('createUser', false, failReason);
+            console.log('Client ' + client.id + ' failed to create user.');
+        }
+
+        client.send(response.serialize());
+        this.onCompleteUserMessage(client);
+    },
+
+    onGetUserCharacters: function(client, results) {
+        var response = new Messages.Message(Messages.TYPES.CHARACTER, {
+            action:'getCharacters', 
+            characters:results,
+            success:true
+        });
+        client.send(response.serialize());
+        this.onCompleteUserMessage(client);
+    },
+
+    sendString: function(id, s) {
+        //console.log('to ' + id + ': ' + s);
+        if (typeof this.clients[id] !== 'undefined') {
+            this.clients[id].send(s);
+        }
+    },
+
+    getGameData: function(callback) {
         console.log('Retrieving game data...')
         var c = callback;
         this.dao.getGameData(function(data) {
             GLOBAL.gameData = data;
             c();
         });
-    };
-};
+    }
+});
 
-var server = new Server(GLOBAL.settings.port);
-server.start();
+Servers.Client = Class({
+    $static: {
+        count:0
+    },
+
+    constructor: function(connection) {
+        this.id = (Servers.Client.count++).toString();
+        this.connection = connection;
+        this.username = null;
+        this.userId = null;
+        this.worldId = null;
+        this.characterId = null;
+        this.game = null;
+        this.connected = true;
+
+        //to avoid ordering shenanigans, and to prevent one user using multiple db connections
+        //a queue of actions which require SQL queries
+        this.userMessages = [];
+    },
+
+    send: function(s) {
+        try {
+            this.connection.send(s);
+        } catch (e) {
+            console.log("SEND ERROR");
+            console.log(e);
+        }
+    }
+})

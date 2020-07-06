@@ -1,6 +1,8 @@
 var ElementList = Class(InterfaceElement, {
 	constructor: function(options) {
-		this.padding = UIConfig.elementListPadding;
+		this.padding = UIConfig.elementListPadding; //default padding
+		this.paddings = []; //corresponds to children
+
 		this.resizeFrom = -1;
 
 		ElementList.$super.call(this, options);
@@ -14,19 +16,22 @@ var ElementList = Class(InterfaceElement, {
 		ElementList.$superp.draw.call(this);
 	},
 
-	addChild: function(child) {
+	addChild: function(child, padding) {
+		padding = (typeof padding === 'number') ? padding : this.padding;
+		this.paddings.push(padding);
+
 		var y = this.getTotalHeight();
 		if (this.children.length > 0) {
-			y += this.padding;
+			y += padding;
 		}
 
 		ElementList.$superp.addChild.call(this, child);
 
-		child.attach = {
-			where:[0,0],
-			parentWhere:[0,0],
-			offset:[0,y]
-		}
+		//let it do whatever it wants along the x axis
+		child.attach.where[1] = 0;
+		child.attach.parentWhere[1] = 0;
+		child.attach.offset = [0,y];
+
 		child.reposition(true);
 	},
 
@@ -40,15 +45,14 @@ var ElementList = Class(InterfaceElement, {
 		start = (typeof start !== "undefined") ? start : 0;
 		var y = this.getTotalHeight(start);
 		var child;
-		if (start > 0) {
-			y += this.padding;
-		}
 
 		for (var i = start; i < this.children.length; i++) {
+			if (i > 0)
+				y += this.paddings[i];
 			child = this.children[i];
 			child.attach.offset[1] = y;
 			child.reposition(true);
-			y += child.height + this.padding;
+			y += child.displayObject.height;
 		}
 	},
 
@@ -65,16 +69,15 @@ var ElementList = Class(InterfaceElement, {
 
 	getTotalHeight: function(num) {
 		num = (typeof num !== "undefined") ? num : this.children.length;
-		var sum = 0;
+		var h = 0;
 
 		for (var i = 0; i < num; i++) {
-			sum += this.children[i].height;
-		}
-		if (this.children.length > 1) {
-			sum += (num-1) * this.padding;
+			if (i > 0)
+				h += this.paddings[i];
+			h += this.children[i].displayObject.height;
 		}
 
-		return sum;
+		return h;
 	},
 
 	getClassName: function() {

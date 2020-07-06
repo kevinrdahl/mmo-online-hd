@@ -4,217 +4,234 @@
 var LinAlg = require('../../www/js/linalg');
 var Orders = require('./orders');
 var UnitTypes = require('./unit-types');
+var Messages = require('./messages');
+var Projectiles = require('./projectiles');
 
-var Units = {
-    unitNum:0
-};
+var jsface = require("jsface"),
+    Class  = jsface.Class,
+    extend = jsface.extend,
+    MMOOUtil = require('./mmoo-util');
+
+var Units = {};
 module.exports = Units;
 
-Units.Unit = function(properties) {
-    this.id = (Units.unitNum++).toString();
-    this.orders = [];
-    this.orderBroadcast = false;
-    this.messages = [];
+Units.Unit = Class({
+    $static: {
+        idPool: new MMOOUtil.IdPool(),
+        NUM_DIRECTIONS: 16,
+        DIRECTIONS: [],
+        DIRECTION_VECTORS: [],
 
-    this.followThrough = 0;
-    this.attackCoolDown = 0;
+        getDirection: function(angle) {
+            angle = angle % 360;
+            if (angle < 0)
+                angle += 360;
 
-    for (var prop in properties) {
-        this[prop] = properties[prop];
-    }
-    this.nextPosition = this.position.copy();
-    this.dead = false;
-
-    this.update = function(units) {
-        if (this.attackCoolDown > 0) {
-            this.attackCoolDown -= 1;
+            return Math.floor(angle / (360.0/Units.Unit.NUM_DIRECTIONS));
         }
-        if (this.followThrough > 0) {
+    }, 
+    constructor: function(unitType, owner, position) {
+        this.unitType = unitType;
+        this.id = Units.Unit.idPool.get();
+        this.owner = owner;
+
+        this.position = position.copy();
+        this.nextPosition = position.copy();
+        this.lastBroadcastPosition = position.copy();
+        this.direction = -2;
+        this.lastDirection = -2;
+
+        this.cooldowns = {attack:0};
+        this.followThrough = 0;
+        this.windUp = 0;
+
+        this.orders = [];
+        this.messages = [];
+
+        this.moveSpeed = 2000;
+        this.movePerTick = 0;
+        this.radius = 250;
+        this.graphic = null;
+        this.projectileGraphic = null;
+        this.projectileSpeed = -1;
+
+        this.alive = true;
+        this.exists = false;
+
+        this.hp = 100;
+        this.hpMax = 100;
+        this.mp = 100;
+        this.mpMax = 100;
+        this.attackDamage = 20;
+
+        this.attackSpeed = 1;
+        this.attackCooldownFrames = 0;
+        this.attackWindUp = 0.25;
+        this.attackWindUpFrames = 0;
+        this.attackFollowThrough = 0.5;
+        this.attackFollowThroughFrames = 0
+        this.attackRange = 150;
+        this.level = 1;
+
+        this.xp = 0;
+        this.xpNeeded = 100;
+
+        this.updateDerivedStats();
+    },
+
+    updateTimers: function() {
+        var cooldown;
+        for (var name in this.cooldowns) {
+            cooldown = this.cooldowns[name]-1;
+            if (cooldown >= 0)
+                this.cooldowns[name] = cooldown;
+        }
+
+        if (this.followThrough > -1)
             this.followThrough -= 1;
-        }
+        if (this.windUp > -1)
+            this.windUp -= 1;
+    },
 
-        while (true) {
-            var order = this.orders[0];
-            if (typeof order !== 'undefined') {
-                if (order instanceof Orders.MoveOrder) {
-                    var needPath = false;
-                    if (order.step == 0 || order.path.length == 0) {
-                        needPath = true;
-                    } else if (!(order.target instanceof LinAlg.Vector2)) {
-                        if (!(order.target in units)) {
-                            this.discardOrder();
-                            continue;
-                        }
-                        if (order.step > Orders.moveToUnitRefresh) {
-                            var dest = order.path[order.path.length-1];
-                            var unit = units[order.target];
-                            if (dest.x != unit.position.x || dest.y != unit.position.y) {
-                                needPath = true;
-                            }
-                        }
-                    }
+    //Prior to moving or acting, check to make sure the current order is valid.
+    checkOrders: function(game) {
+        //If attack moving, insert attack order on nearby enemy.
+        //Similar for patrol
+        //Actual AI might go in in the future
 
-                    if (needPath) {
-                        var targetPoint = (order.target instanceof LinAlg.Vector2) ? order.target : units[order.target].position;
-                        //find a path!
-                        order.path = [];
-                        order.path.push(targetPoint.copy());
-                        this.orderBroadcast = false;
-                    }
+        //discard orders which can't be fulfilled
+        var order;
+        while (this.orders.length > 0) {
+            order = this.orders[0];
+            if (order instanceof Orders.UnitOrder) {
+                //give the order its unit reference
+                if (order.unit === null)
+                    order.unit = game.getUnit(order.unitId);
 
-                    //announce and carry out the order
-                    if (!this.orderBroadcast) {
-                        //console.log(this.name + ' ' + this.id + ': ' + order.toString());
-
-                        var o = {
-                            type:'order',
-                            unit:this.id,
-                            position:this.position,
-                            order:JSON.parse(JSON.stringify(order)) //otherwise the path points can be consumed before this is stringified
-                                                                    //TODO: find a better way
-                        };
-                        this.messages.push(o);
-
-                        this.orderBroadcast = true;
-                    }
-
-                    var done = this.stepTowards(order.path[0]);
-                    if (order.nextOrder != null) {
-                        if (this.nextPosition.distanceTo(order.path[order.path.length-1]) <= order.offset) {
-                            done = true;
-                        }
-                    }
-
-                    if (done) {
-                        this.orderBroadcast = false;
-                        order.path.shift();
-                        if (order.path.length == 0) {
-                            if (order.nextOrder == null) {
-                                this.discardOrder();
-                            } else {
-                                //remove this move order and place the next thing in front
-                                this.orders.shift();
-                                this.interruptOrder(order.nextOrder);
-                            }
-                        }
-                    } else {
-                        order.step++;
-                    }
-                } else if (order instanceof Orders.AttackOrder) {
-                    var target = units[order.unit];
-
-                    if (typeof target === 'undefined' || target.dead) {
-                        this.discardOrder();
-                        continue;
-                    }
-                    //use nextposition here as we might be coming from a moveto
-                    if (order.windUp == -1 && this.nextPosition.distanceTo(target.position) > this.attackRange + this.radius + target.radius) {
-                        this.moveForOrder(order, {type:'unit', unit:order.unit}, this.attackRange + this.radius + target.radius - 5);
-                        continue;
-                    }
-
-                    if (this.attackCoolDown == 0 && this.followThrough == 0) {
-                        if (order.windUp == -1) {
-                            order.windUp = 5;
-                            this.orderBroadcast = false;
-                        } else if (order.windUp > 0) {
-                            order.windUp -= 1;
-                            if (order.windUp == 0) {
-                                order.windUp = -1;
-                                this.attack(target);
-                            }
-                        }
-                    } else {
-                        //do nothing
-                    }
-
-                    if (!this.orderBroadcast) {
-                        //console.log(this.name + ' ' + this.id + ': ' + order.toString());
-                        var o = {
-                            type:'order',
-                            unit:this.id,
-                            position:this.nextPosition,
-                            order:{type:'attack', unit:'unit.id'}
-                        };
-                        this.messages.push(o);
-                        this.orderBroadcast = true;
-                    }
-                } else {
-                    console.log('unit ' + this.id + ': ' + JSON.stringify(order) + '???');
+                if (order.unit === null 
+                    || !order.unit.exists
+                    || (order.type === Messages.TYPES.ATTACK && !order.unit.alive)) {
+                    this.discardCurrentOrder();
+                    continue;
                 }
-            } else if (!this.orderBroadcast) {
-                //empty order list, better tell my friends
-                this.messages.push({
-                    type:'order',
-                    position:this.position,
-                    unit:this.id,
-                    order:{
-                        type:'stop'
-                    }
-                });
-                this.orderBroadcast = true;
+            } else if (order.type === Messages.TYPES.STOP) {
+                this.stop();
             }
+
             break;
         }
-    };
+    },
 
-    this.stepTowards = function(point) {
-        if (this.position.distanceTo(point) <= this.speed) {
-            this.nextPosition = point.copy();
-            return true;
-        } else {
-            var angle = this.position.angleTo(point);
-            this.nextPosition = this.position.offset(angle, this.speed);
-            return false;
+    move: function(game) {
+        //If current order is move/attack-move, do it
+        //Or if current order is something else and out of range, move closer
+        this.lastDirection = this.direction;
+        this.direction = -1;
+
+        this.checkOrders(game);
+
+        if (this.orders.length > 0 && this.followThrough <= 0) {
+            var order = this.orders[0];
+            var dest = null;
+
+            if (order.isMove()) {
+                dest = order.point;
+            } else if (order.type === Messages.TYPES.ATTACK) {
+                var target = order.unit;
+                var range = this.distanceToAttack(target);
+                if (this.position.distanceTo(target.position) >= range) {
+                    dest = target.position.copy();
+                    dest.offsetTo(this.position, range);
+                }
+            }
+
+            if (dest !== null) {
+                if (this.position.distanceTo(dest) <= this.movePerTick) {
+                    this.nextPosition = dest;
+
+                    if (order.type === Messages.TYPES.MOVE)
+                        this.discardCurrentOrder();
+                } else {
+                    this.direction = Units.Unit.getDirection(this.position.angleTo(dest));
+                    var movement = Units.Unit.DIRECTION_VECTORS[this.direction].copy().scale(this.movePerTick);
+                    this.nextPosition.add(movement);
+                }
+            }
         }
-    };
 
-    this.attack = function(unit) {
-        this.attackCoolDown = (1000/GLOBAL.settings.tickLen) / this.attackSpeed; //attackSpeed is number of attacks per second
-        this.followThrough = 10;
+        if (this.direction !== this.lastDirection) {
+            this.messages.push(new Messages.UnitMove(game.currentStep, this.id, this.direction, this.getPositionDelta()));
+        }
+    },
+
+    updatePosition: function() {
+        this.position.set(this.nextPosition);
+    },
+
+    act: function(game) {
+        //If order is an action and unit is able, DO IT
+        //for now, this is just attacking
+        this.checkOrders(game);
+
+        if (this.orders.length > 0 && this.followThrough <= 0) {
+            var order = this.orders[0];
+            if (order instanceof Orders.UnitOrder) {
+                if (order.type === Messages.TYPES.ATTACK) {
+                    //try to attack
+                    if (this.inAttackRange(order.unit) && this.cooldowns.attack <= 0) {
+                        //if not winding up, do so
+                        if (this.windUp <= -1) {
+                            this.windUp = this.attackWindUpFrames;
+                            this.messages.push(new Messages.UnitAttack(game.currentStep, this.id, order.unit.id));
+                        }
+
+                        //if just completed windUp (or there was none), attack!
+                        if (this.windUp === 0) {
+                            this.attack(game, order.unit);
+                        }
+                    }
+                }
+            }
+        }
+    },
+
+    attack: function(game, unit) {
+        this.followThrough = this.attackFollowThroughFrames;
+        this.cooldowns.attack = this.attackCooldownFrames;
  
-        //announce a hit
-        //TODO: unless it's a projectile then announce a projectile appearing
-        unit.takeDamage(this.id, this.attackDamage, 'poo');
-    };
+        if (this.projectileSpeed > 0) {
+            //spawn projectile
+            game.spawnProjectile(new Projectiles.AttackProjectile(unit,this));
+        } else {
+            unit.takeDamage(this, this.attackDamage, 'physical');
+        }
+    },
 
-    this.takeDamage = function(source, amount, type) {
-        console.log(this.id + ' takes ' + amount + ' ' + type + ' damage from ' + source + '.');
+    takeDamage: function(source, amount, type) {
+        //console.log(this.id + ' takes ' + amount + ' ' + type + ' damage from ' + source.id + '.');
         var alive = (this.hp > 0);
 
         this.hp -= amount;
-        this.messages.push({
-            type:'damage',
-            unit:this.id,
-            source:source,
-            amount:amount,
-            damageType:type
-        });
+        this.messages.push(new Messages.UnitHealth(this.id, source.id, -amount));
 
         if (alive && this.hp <= 0) {
-           this.die();
+           this.die(source);
         }
-    };
+    },
 
-    this.die = function(killer) {
-        console.log(this.id + ' dies.');
+    die: function(killer) {
+        console.log('Unit ' + this.id + ' dies.');
         this.killer = killer;
-        this.decayTime = Math.ceil(GLOBAL.settings.unitDecayTime / GLOBAL.settings.tickLen);
+        this.decayTime = MMOOUtil.secondsToFrames(GLOBAL.settings.unitDecayTime);
 
         this.stop();
 
-        this.messages.push({
-            type:'death',
-            unit:this.id,
-            killer:killer,
-            position:this.nextPosition
-        });
-
-        this.dead = true;
-    };
+        this.messages.push(new Messages.UnitDeath(this.id, killer.id));
+        this.alive = false;
+    },
 
     //adds an order to the end of the queue
-    this.issueOrder = function(order, clear) {
+    issueOrder: function(order, clear) {
         if (this.dead) {
             return;
         }
@@ -223,72 +240,96 @@ Units.Unit = function(properties) {
         }
         this.orders.push(order);
         this.orderBroadcast = false;
-    };
+    },
+
+    discardCurrentOrder: function() {
+        this.orders.shift();
+        this.windUp = -1;
+    },
 
     //places an order at the front of the queue
-    this.interruptOrder = function(order) {
+    interruptOrder: function(order) {
         this.orders.unshift(order);
-        this.orderBroadcast = false;
-    };
+    },
 
-    this.discardOrder = function() {
-        this.orders.shift();
-        this.orderBroadcast = false;
-    };
-
-    this.stop = function() {
+    stop: function() {
+        this.direction = -1;
+        this.windUp = -1;
         this.orders.splice(0,this.orders.length);
-        this.messages.push({
-            type:'order',
-            position:this.nextPosition,
-            unit:this.id,
-            order:{
-                type:'stop'
-            }
-        });
-    };
+    },
 
-    this.getMessages = function() {
+    getMessages: function () {
         var m = this.messages;
         this.messages = [];
         return m;
-    };
+    },
 
-    this.moveForOrder = function(order, target, range) {
-        this.orders.shift();
-        this.interruptOrder(new Orders.MoveOrder(target, range, order));
-    };
+    getPositionDelta: function(noUpdate) {
+        //console.log(this.id + ' last ' + JSON.stringify(this.lastBroadcastPosition));
 
-    this.toJSON = function() {
-        var order = this.orders[0];
-        if (typeof order === 'undefined') {
-            order = null;
-        }
+        var v = this.nextPosition.copy().sub(this.lastBroadcastPosition);
+        if (!noUpdate)
+            this.lastBroadcastPosition.set(this.nextPosition).round();
 
+        //console.log('    delta ' + JSON.stringify(v));
+        return v;
+    },
+
+    updateDerivedStats: function() {
+        var tickLen = GLOBAL.settings.tickLen;
+        var attackFrames = MMOOUtil.secondsToFrames(this.attackSpeed);
+
+        this.movePerTick                = MMOOUtil.rateToDelta(this.moveSpeed);
+        this.attackWindUpFrames         = Math.round(this.attackWindUp * attackFrames);
+        this.attackFollowThroughFrames  = Math.round(this.attackFollowThrough * attackFrames);
+        this.attackCooldownFrames       = attackFrames - this.attackWindUpFrames;
+    },
+
+    distanceToAttack: function(target) {
+        return this.radius + target.radius + this.attackRange;
+    },
+
+    inAttackRange: function(target) {
+        return (this.position.distanceTo(target.position) <= this.distanceToAttack(target));
+    },
+
+    toJSON: function() {
         var props = {
-            id:this.id,
-            name:this.name,
-            level:this.level,
-            position:this.position,
-            sprite:this.sprite,
-            speed:this.speed,
-            maxhp:this.maxhp,
-            hp:this.hp,
-            hpRegen:this.hpRegen,
-            order:order,
-            owner:this.owner,
-            graphic:this.graphic
+            id: this.id,
+            name: this.name,
+            owner: this.owner,
+            graphic: this.graphic,
+            radius: this.radius,
+            position: this.position,
+            direction: this.direction,
+            moveSpeed: this.moveSpeed,
+            hp: this.hp,
+            hpMax: this.hpMax,
+            alive: this.alive,
+            attackDamage: this.attackDamage,
+            attackRange: this.attackRange,
+            attackSpeed: this.attackSpeed
         };
-
-        if (this.dead) {
-            props.dead = true;
-        }
-
         return props;
-    };
-};
+    }
+});
 
+//create directions and vectors
+(function() {
+    var angleDelta = 360.0 / Units.Unit.NUM_DIRECTIONS;
+    var angle = 0;
+    var v;
 
+    for (var i = 0; i < Units.Unit.NUM_DIRECTIONS; i++) {
+        v = new LinAlg.Vector2(0.0, 0.0).offset(angle, 1.0);
+        Units.Unit.DIRECTIONS.push(angle);
+        Units.Unit.DIRECTION_VECTORS.push(v);
+
+        angle += angleDelta;
+    }
+})();
+
+//dunno how this is used anymore, it's ugly wah
 Units.createMobProps = function(mobType, level, owner, position) {
     var props = {};
 

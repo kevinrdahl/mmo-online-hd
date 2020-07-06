@@ -18,19 +18,35 @@ LinAlg.Vector2 = function(x,y) {
     };
 
     this.distanceTo = function (v) {
-        return Math.sqrt(Math.pow(this.x - v.x, 2) + Math.pow(this.y - v.y, 2));
+        return Math.sqrt(this.squaredDistanceTo(v));
     };
 
-    this.offset = function (angle, dist) {
-        var v = new LinAlg.Vector2(this.x, this.y);
-        angle = LinAlg.toRadians(angle);
-        v.x += dist * Math.cos(angle);
-        v.y += dist * Math.sin(angle);
-        return v;
+    this.squaredDistanceTo = function(v) {
+        return Math.pow(this.x - v.x, 2) + Math.pow(this.y - v.y, 2);
+    };
+
+    this.withinDistance = function(v, dist) {
+        return this.squaredDistanceTo(v) <= dist*dist;
     };
 
     this.angleTo = function (v) {
         return LinAlg.toDegrees(Math.atan2(v.y - this.y, v.x - this.x));
+    };
+
+    this.equals = function(v) {
+        return (this.x == v.x && this.y == v.y);
+    };
+
+    this.offset = function (angle, dist) {
+        angle = LinAlg.toRadians(angle);
+        this.x += dist * Math.cos(angle);
+        this.y += dist * Math.sin(angle);
+        return this;
+    };
+
+    this.offsetTo = function(v, dist) {
+        this.offset(this.angleTo(v), dist);
+        return this;
     };
 
     this.midpointTo = function(v) {
@@ -38,44 +54,50 @@ LinAlg.Vector2 = function(x,y) {
     };
 
     this.add = function(v) {
-        return new LinAlg.Vector2(this.x + v.x, this.y + v.y);
+        this.x += v.x;
+        this.y += v.y;
+        return this;
     };
 
     this.sub = function(v) {
-        return new LinAlg.Vector2(this.x - v.x, this.y - v.y);
+        this.x -= v.x;
+        this.y -= v.y;
+        return this;
     };
 
-    this.scaled = function(s) {
-        return new LinAlg.Vector2(this.x * s, this.y * s);
+    this.set = function(v) {
+        this.x = v.x;
+        this.y = v.y;
+        return this;
     };
 
-    this.normalized = function() {
+    this.scale = function(s) {
+        this.x *= s;
+        this.y *= s;
+        return this;
+    };
+
+    this.normalize = function() {
         if (this.x == 0 && this.y == 0) {
-            return new LinAlg.Vector2(1,1);
+            this.x = 1;
+            this.y = 0;
         }
-        return this.scaled(1/this.getLength());
+        this.scale(1/this.getLength());
+        return this;
     };
 
     this.copy = function () {
         return new LinAlg.Vector2(this.x, this.y);
     };
 
-    //don't want to send huge useless floats to clients
-    /*this.toJSON = function(places) {
-        var x = LinAlg.cutFloat(this.x, places);
-        var y = LinAlg.cutFloat(this.y, places);
-        var json = '{"x":'+ x + ',"y":' + y + '}';
-        console.log('JSON: ' + json);
-        console.log(x);
-        console.log(y);
-        return json;
-    };*/
+    this.round = function() {
+        this.x = Math.round(this.x);
+        this.y = Math.round(this.y);
+        return this;
+    };
 
     this.toJSON = function() {
-        return {
-            x:Math.round(this.x*10),
-            y:Math.round(this.y*10)
-        };
+        return [this.x, this.y];
     };
 };
 
@@ -125,6 +147,19 @@ LinAlg.clamp = function(num, min, max) {
     } else {
         return num;
     }
+};
+
+//checks if a property is vector2, converting if possible
+LinAlg.propIsVector2 = function(obj, prop) {
+    var val = obj[prop];
+    if (val instanceof LinAlg.Vector2) {
+        return true;
+    } else if (Array.isArray(val) && val.length === 2 && typeof val[0] === 'number' && typeof val[1] === 'number') {
+        obj[prop] = new LinAlg.Vector2(val[0], val[1]);
+        return true;
+    }
+    obj[prop] = null;
+    return false;
 };
 
 //v flipped across the line x=i

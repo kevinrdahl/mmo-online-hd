@@ -1,17 +1,32 @@
+
 function initGame() {
 	window.game = {};
 	game.viewDiv = $("#viewDiv");
 
-	game.stage = new PIXI.Stage(0x99ff99);
-	game.renderer = new PIXI.autoDetectRenderer(300, 300, null, false, true);
+	game.stage = new PIXI.Container();
+	if (urlArgs.canvas)
+		game.renderer = new PIXI.CanvasRenderer(300,300);	
+	else 
+		game.renderer = new PIXI.autoDetectRenderer(300, 300, null, false, true);
+	
+	game.renderer.backgroundColor = 0x489848; //dawnlike:0x6daa2c
 	game.viewDiv.append(game.renderer.view);
 	$(window).resize(function() { resizeView(); });
+	PIXI.SCALE_MODES.DEFAULT = PIXI.SCALE_MODES.NEAREST;
+	game.TERRAIN_TILE_WIDTH = 24;
+	game.DEFAULT_SCALE = 2;
 
-	game.worldContainer = new PIXI.DisplayObjectContainer();
+	game.worldContainer = new PIXI.Container();
 	game.stage.addChild(game.worldContainer);
 
-	//Have a global graphics for RenderTextures to use
+	//global graphics for RenderTextures to use
 	game.volatileGraphics = new PIXI.Graphics();
+
+	//global texture for masking
+	game.maskTexture = TextureGenerator.rectangle(10, 10, 0xffffff, 0, 0x000000);
+
+	//recolors and caches textures for generating spritesheets
+	game.recolorManager = new RecolorManager();
 
 	//mouse state
 	game.leftMouseDown = null;
@@ -24,129 +39,120 @@ function initGame() {
 	game.clickedElement = null;
 	game.dragElement = null;
 	game.dragElementCoords = null;
+	game.activeElement = null;
+	game.hoverElement = null;
 
-	//TODO: kibo
-
-	//logging
-	game.logger = new Logger();
-
-	game.logger.types["debug"] = new Logger.LogType({
-		textColor:"#999" //grey
+	game.connection = new Connections.Connection({
+		connString: window.serverWs,
+		onConnect: function() {},
+		onDisconnect: function() {},
+		onMessage: onMainMenuMessage,
+		onError: function() {}
 	});
-	game.logger.types["error"] = new Logger.LogType({
-		textColor:"#f00", //red
-		prefix:"ERROR"
-	});
-	game.logger.types["game"] = new Logger.LogType({
-		textColor:"#093", //green
-		prefix:"game"
-	});
-	game.logger.types["conn"] = new Logger.LogType({
-        textColor:"#fff", //white
-        bgColor:"#06c" //blue
-    });
-    game.logger.types["connRecv"] = new Logger.LogType({
-        textColor:"#06c", //blue
-        prefix:"RECV"
-    });
-    game.logger.types["connSend"] = new Logger.LogType({
-        textColor:"#93f", //purple
-        prefix:"SEND"
-    });
-    game.logger.types["ui"] = new Logger.LogType({
-        textColor:"#f90", //orange
-        prefix:"ui"
-    });
 
-    //filters for everyone!
+    //global filters
     game.filters = {
-    	gray: new PIXI.GrayFilter()
-    }
+    	gray: 		new PIXI.filters.GrayFilter(),
+    	bloom: 		new PIXI.filters.BloomFilter(),
+    	dropShadow: new PIXI.filters.DropShadowFilter(),
+    	ascii: 		new PIXI.filters.AsciiFilter(),
+    	noise: 		new PIXI.filters.NoiseFilter(),
+    	pixelate: 	new PIXI.filters.PixelateFilter(),
+    	uiBlur:		new PIXI.filters.BlurFilter()
+    };
+    game.filters.dropShadow.distance = 2;
+    game.filters.dropShadow.blur = 2;
+    game.filters.bloom.blur = 4;
+    game.filters.uiBlur.blur = 2;
 
     //set up base UI
 	game.ui = new InterfaceElement({
 		id:"main"
 	});
 	game.stage.addChild(game.ui.displayObject);
+	game.ui.status = null;
+
+	//framerate tracking
+	game.framerate = 0;
+	game.frameRenderTimes = [];
+	var frameText = new InterfaceText('0', {id:'framerate'});
+	frameText.addFilter(game.filters.dropShadow);
+	game.ui.addChild(frameText);
 
 	//set up the view
 	resizeView();
 	drawStage();
 
 	//load
-	loadAssets();
+	loadTextures();
 }
 
-function loadAssets() {
-	game.assetList = parseAssetList(GAME_ASSETS);
-	game.loader = new PIXI.AssetLoader(game.assetList);
-	game.loader.numLoaded = 0;
+function updateFramerate(value) {
+	var currentTime = Date.now();
+	game.frameRenderTimes.push([Date.now(), value]);
+	
+	var avg = 0;
+	for (var i = game.frameRenderTimes.length-1; i >= 0 
+	&& currentTime - game.frameRenderTimes[i][0] < 1000; i--) {
+		avg += game.frameRenderTimes[i][1];
+	}
+	avg /= game.frameRenderTimes.length-i;
+	game.frameRenderTimes.splice(0,i);
+	var fps = game.frameRenderTimes.length;
+	var s = fps.toString() + ' fps (' + Math.round(avg) + 'ms/frame)';
+	game.ui.findChildById('framerate').changeString(s);
+}
 
-	var loadPanel = new Panel({
-		id:"loadPanel",
-		width:200,
-		height:60,
-		attach:{
-			where:[0.5, 0],
-			parentWhere:[0.5, 0.5],
-			offset:[0,-60]
-		},
-		parent:game.ui
-	});
+function onLoadTextures() {
+	if (soundEnabled)
+		loadSounds();
+	else
+		onLoadComplete();
+}
 
-	loadPanel.addChild(new InterfaceText("LOADING", {
-		font:UIConfig.titleText,
-		attach:{
-			where:[0.5,0],
-			parentWhere:[0.5,0],
-			offset:[0,10]
-		},
-		parent:loadPanel
-	}));
-
-	loadPanel.addChild(new InterfaceText("0/" + game.assetList.length, {
-		id:"loadCountText",
-		font:UIConfig.bodyText,
-		attach:{
-			where:[0.5,1],
-			parentWhere:[0.5,1],
-			offset:[0,-8]
-		},
-		parent:loadPanel
-	}));
-
-	game.ui.addChild(loadPanel);
-
-
-    game.loader.onProgress = function() {
-        game.loader.numLoaded++;
-        game.ui.findChildById("loadCountText").changeString(game.loader.numLoaded + "/" + game.assetList.length);
-    };
-    game.loader.onComplete = function() {
-        onLoadComplete();
-    };
-    game.loader.load();
+function onLoadSounds() {
+	setTimeout(function() {
+		onLoadComplete();
+	}, 500);
 }
 
 function onLoadComplete() {
-	setTimeout(
-		function() {
-			game.ui.removeChild(game.ui.findChildById("loadPanel"));
-		},
-		1000
-	);
+	if (urlArgs.testUI)
+		initTestInterface();
 
-	initTestInterface();
+	if (urlArgs.testSprites)
+		testAnimatedSprites();
 
 	//connect
+	initMainMenu();
+
 	initConnection();
+
+	setStatus('Connecting', 'Establishing connection to game server...');
+}
+
+function initConnection() {
+	game.connection.connect();
+}
+
+function onConnect() {
+
+}
+
+function onMessage(msg) {
+	if (mainMenu !== null) {
+		onMainMenuMessage(msg);
+	}
 }
 
 function drawStage() {
-    requestAnimFrame(function () { drawStage(); });
+    var frameStart = performance.now();
 
   	game.ui.draw();
+  	if (menuBackground !== null)
+  		updateMenuBackground();
 
+  	//testUI
   	var eleList = game.ui.findChildById("eleList");
   	if (eleList != null) {
   		eleList.attach.offset[1] += 1;
@@ -156,7 +162,10 @@ function drawStage() {
   	}	
 
     game.renderer.render(game.stage);
-};
+    updateFramerate(performance.now() - frameStart);
+
+    requestAnimationFrame(function () { drawStage(); });
+}
 
 function getVolatileGraphics() {
 	game.volatileGraphics.clear();

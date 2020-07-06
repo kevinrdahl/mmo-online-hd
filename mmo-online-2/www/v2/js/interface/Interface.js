@@ -12,12 +12,14 @@ function setMouseEvents() {
 			game.leftMouseDown = game.lastMouseCoords;
 
 			var element = game.ui.getElementAtCoords(game.leftMouseDown);
+
 			if (element != null) {
-				game.logger.log("ui", element.getFullName() + " mousedown.");
+				logger.log("ui", element.getFullName() + " mousedown.");
 
-				game.clickedElement = element;
-
-				game.ui.moveChildToTop(element.findTopParent());
+				if (game.ui.status === null) {
+					game.ui.moveChildToTop(element.findTopParent());
+					game.clickedElement = element;	
+				}
 			}
 		}
 	});
@@ -33,11 +35,23 @@ function setMouseEvents() {
 				//click!
 				var element = game.clickedElement;
 				if (element != null) {
-					game.logger.log("ui", element.getFullName() + " clicked.");
+					logger.log("ui", element.getFullName() + " clicked.");
+					element.onClick();
+					//console.log(element.width + ' ' + element.height);
+					//console.log(element.displayObject.getBounds());
+					//console.log(element);
 					if (element.name == "close") {
-						game.logger.log("ui", "close " + element.parent.getFullName());
+						logger.log("ui", "close " + element.parent.getFullName());
 						element.parent.parent.removeChild(element.parent);
+					} else if (element instanceof TextBox) {
+						setElementActive(element);
+					} else if (mainMenu !== null) {
+						onMainMenuClick(element);
+					} else {
+						setElementActive(null);
 					}
+				} else {
+					setElementActive(null);
 				}
 			}
 
@@ -68,6 +82,11 @@ function setMouseEvents() {
 
 			keepElementInView(game.dragElement);
 		}
+
+		if (game.leftMouseDown == null && game.ui.status === null) {
+			var hoverElement = game.ui.getElementAtCoords(coords);
+			setElementHover(hoverElement);
+		}
 	});
 
 	game.viewDiv.mouseleave(function(evt) {
@@ -86,7 +105,7 @@ function getMouseCoords(evt) {
 }
 
 function beginDragElement(element) {
-	game.logger.log("ui", "Begin dragging " + element.getFullName());
+	logger.log("ui", "Begin dragging " + element.getFullName());
 	game.dragElement = element;
 	game.dragElementCoords = [game.dragElement.x, game.dragElement.y];
 }
@@ -94,7 +113,7 @@ function beginDragElement(element) {
 function endDrag() {
 	if (game.dragElement != null) {
 		game.dragElement.toNearestPixel();
-		game.logger.log("ui", "End drag");
+		logger.log("ui", "End drag");
 	}
 
 	game.dragElement = null;
@@ -110,7 +129,7 @@ function keepElementInView(element) {
 	if (diff > 0)
 		element.x += diff;
 
-	diff = position.x - (game.renderer.width - element.displayObject.width);
+	diff = position.x - (game.renderer.width - element.width);
 	if (diff > 0)
 		element.x -= diff;
 
@@ -119,15 +138,41 @@ function keepElementInView(element) {
 	if (diff > 0)
 		element.y += diff;
 
-	diff = position.y - (game.renderer.height - element.displayObject.height);
+	diff = position.y - (game.renderer.height - element.height);
 	if (diff > 0)
 		element.y -= diff;
+}
+
+function setElementActive(element) {
+	if (element !== null) {
+		element.active = true;
+	}
+
+	if (game.activeElement !== null && element != game.activeElement) {
+		game.activeElement.active = false;
+	}
+
+	game.activeElement = element;
+}
+
+function setElementHover(element) {
+	if (element !== null && element != game.hoverElement) {
+		//logger.log('ui', 'hover ' + element.getFullName());
+		element.onHoverStart();
+	}
+
+	if (game.hoverElement !== null && element != game.hoverElement) {
+		//logger.log('ui', 'end hover ' + game.hoverElement.getFullName());
+		game.hoverElement.onHoverEnd();
+	}
+
+	game.hoverElement = element;
 }
 
 function resizeView() {
 	var viewWidth = game.viewDiv.width();
 	var viewHeight = game.viewDiv.height();
-	game.logger.log("debug", "Resize: " + viewWidth + "x" + viewHeight);
+	logger.log("debug", "Resize: " + viewWidth + "x" + viewHeight);
 	game.renderer.resize(viewWidth, viewHeight);
 
 	game.ui.resize(viewWidth, viewHeight);
@@ -138,8 +183,6 @@ function resizeView() {
 }
 
 function initTestInterface() {
-	return; //ayy
-
 	var testWindow = new WindowPanel({
 		id:"testWindow",
 		title:"cmd.exe",
@@ -166,39 +209,126 @@ function initTestInterface() {
 		}
 	}));
 
-	var size = testWindow.getInnerSize();
-	var maskEle = new MaskElement({
+	var bounds = testWindow.getInnerBounds();
+	var eleList = new ElementList({
+		id:"eleList",
 		parent:testWindow,
-		width:size.width - 2*UIConfig.elementListOuterPadding,
-		height:size.height - testWindow.headerBar.height-2,
+		width:bounds.width - 2*UIConfig.elementListOuterPadding,
+		height:bounds.height,
 		attach:{
 			where:[0,0],
 			parentWhere:[0,0],
-			offset:[testWindow.borderWidth + UIConfig.elementListOuterPadding, testWindow.headerBar.height + UIConfig.elementListOuterPadding]
+			offset:[UIConfig.elementListOuterPadding, UIConfig.elementListOuterPadding]
 		}
 	});
-	var eleList = new ElementList({
-		id:"eleList",
-		parent:maskEle,
-		width:maskEle.width,
-		height:maskEle.height
-	});
-	maskEle.addChild(eleList);
-	testWindow.addChild(maskEle);
+	testWindow.addChild(eleList);
+
+	testWindow.applyMask(bounds);
 
 	var textEle = new InterfaceText("Stuff", {font:UIConfig.titleText});
 	eleList.addChild(textEle);
 	textEle.fitToParent();
 
-	for (var i = 0; i < 15; i++) {
-		var j = i;
-		setTimeout(function() {
-			var textEle = new InterfaceText("Message " + (j+1), {font:UIConfig.bodyText});
+	function createElementAdder(num) {
+		return function() {
+			var textEle = new InterfaceText("Message " + num, {font:UIConfig.bodyText});
 			game.ui.findChildById("eleList").addChild(textEle);
 			textEle.fitToParent();
-		},
-		i*1000
-		);
-		
+		}
 	}
+
+	for (var i = 0; i < 15; i++) {
+		setTimeout(createElementAdder(i+1),i*1000);
+	}
+
+	var select = new Selector([
+			{name:'First', value:0},
+			{name:'Second', value:1},
+			{name:'Third', value:2}
+		],
+		{
+			attach:{
+				where:[0.5,0],
+				parentWhere:[0.5,0],
+				offset:[0,5]
+			}
+		}
+	);
+	game.ui.addChild(select);
+}
+
+function setStatus (title, message) {
+	clearStatus();
+	setElementActive(null);
+	setElementHover(null);
+
+	var totalHeight = 0;
+
+	var eleList = new ElementList({
+		padding:UIConfig.alertInnerPadding,
+		attach: {
+			where:[0.5,0],
+			parentWhere:[0.5,0],
+			offset:[0,UIConfig.alertOuterPadding]
+		}
+	});
+
+	var titleText = new InterfaceText(title, {
+		id:'statusTitle',
+		font:UIConfig.titleText,
+		parent:eleList,
+		attach:{
+			where:[0.5,0],
+			parentWhere:[0.5,0],
+			offset:[0,0]
+		}
+	});
+	titleText.fitToWidth(UIConfig.alertWidth - UIConfig.alertOuterPadding*2);
+	eleList.addChild(titleText);
+
+	if (typeof message === 'string') {
+		var messageText = new InterfaceText(message, {
+			id:'statusMessage',
+			font:UIConfig.bodyText,
+			parent:eleList,
+			attach:{
+				where:[0.5,0],
+				parentWhere:[0.5,0],
+				offset:[0,0]
+			}
+		});
+		messageText.fitToWidth(UIConfig.alertWidth - UIConfig.alertOuterPadding*2);
+		eleList.addChild(messageText);
+	}
+
+	game.ui.status = new Panel({
+		id:"status",
+		width:UIConfig.alertWidth,
+		parent:game.ui,
+		attach:{
+			where:[0.5,0.5],
+			parentWhere:[0.5,0.5],
+			offset:[0,0]
+		}
+	});
+	game.ui.addChild(game.ui.status);
+	game.ui.status.addChild(eleList);
+
+	var height = eleList.displayObject.height + UIConfig.alertOuterPadding*2;
+	game.ui.status.resize(game.ui.status.width, height);
+}
+
+function clearStatus () {
+	if (game.ui.status !== null) {
+		game.ui.removeChild(game.ui.status);
+		game.ui.status = null;
+	}
+}
+
+function uiMessage (title, message) {
+	setStatus(title, message);
+	setTimeout(function() {
+		clearStatus();
+	},
+	2000);
 }

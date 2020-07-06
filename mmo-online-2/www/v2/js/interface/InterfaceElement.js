@@ -10,12 +10,18 @@ var InterfaceElement = Class({
 		this.y = 0;
 		this.width = 100;
 		this.height = 100;
-		this.displayObject = new PIXI.DisplayObjectContainer();
+		this.displayObject = new PIXI.Container();
 		this.children = [];
 		this.parent = null;
 		this.isClickable = false;
 		this.draggable = false;
 		this.dragElement = this;
+		this.maskSprite = null;
+		this.enabled = true;
+
+		this.onClick = InterfaceElement.NOOP;
+		this.onHoverStart = InterfaceElement.NOOP;
+		this.onHoverEnd = InterfaceElement.NOOP;
 
 		this.attach = {
 			where:[0,0],
@@ -24,10 +30,14 @@ var InterfaceElement = Class({
 			firstOnly:false
 		}
 
+		//hard override all properties with options
 		if (typeof options !== 'undefined') {
-			for (var prop in options) {
-				this[prop] = options[prop];
-			}	
+			MmooUtil.applyProps(this, options, false);	
+		}
+
+		if (this.maskSprite !== null) {
+			logger.log('ui', 'Specifying a mask is not supported at instantiation. Use the applyMask function instead.');
+			this.maskSprite = null;
 		}
 
 		this.reposition(true);
@@ -62,10 +72,16 @@ var InterfaceElement = Class({
 		return element;
 	},
 
-	addChild: function(child) {
+	addChild: function(child, options) {
+		options = (typeof options === 'object') ? options : {};
+
 		this.children.push(child);
 		this.displayObject.addChild(child.displayObject);
 		child.parent = this;
+		child.reposition(false);
+
+		if (!options.noMask && this.maskSprite !== null)
+			child.displayObject.mask = this.maskSprite;
 	},
 
 	removeChild: function(child) {
@@ -74,6 +90,19 @@ var InterfaceElement = Class({
 
 		if (child.parent == this)
 			child.parent = null;
+
+		child.displayObject.mask = null;
+	},
+
+	removeAllChildren: function(exclude) {
+		exclude = (typeof exclude !== 'undefined') ? exclude : [];
+		var toRemove = this.children.filter(function(x) {
+			return (exclude.indexOf(x) > -1)
+		});
+
+		for (var i = 0; i < toRemove.length; i++) {
+			this.removeChild(toRemove[i]);
+		}
 	},
 
 	findChildById: function(id) {
@@ -116,7 +145,7 @@ var InterfaceElement = Class({
 	findTopParent: function(root) {
 		root = (typeof root !== "undefined") ? root : game.ui;
 		if (this == root || this.parent == null) {
-			game.logger.log("error", "Error in findTopParent on " + this.getFullName());
+			logger.log("error", "Error in findTopParent on " + this.getFullName());
 			return null;
 		}
 
@@ -147,13 +176,19 @@ var InterfaceElement = Class({
 		this.width = w;
 		this.height = h;
 
-		game.logger.log("ui", "resize " + this.getFullName() + " " + w + "x" + h);
+		logger.log("ui", "resize " + this.getFullName() + " " + w + "x" + h);
 
 		for (var i = 0; i < this.children.length; i++) {
 			this.children[i].reposition();
 		}
 
 		this.updateDisplayObjectPosition();
+		if (this.parent instanceof InterfaceElement)
+			this.parent.onChildResize(this);
+	},
+
+	onChildResize: function(child) {
+
 	},
 
 	reposition: function(firstTime) {
@@ -163,19 +198,35 @@ var InterfaceElement = Class({
 			this.updateDisplayObjectPosition();
 			return;
 		}
-			
 
-		var coords = [
-			this.parent.width * this.attach.parentWhere[0] - this.width * this.attach.where[0] + this.attach.offset[0],
-			this.parent.height * this.attach.parentWhere[1] - this.height * this.attach.where[1] + this.attach.offset[1]
-		];
+		var coords = this.getAttachCoords();
 
-		//game.logger.log("ui", "position " + this.getFullName() + " " + JSON.stringify(coords));
+		//logger.log("debug", "position " + this.getFullName() + " " + JSON.stringify(coords));
 
 		this.x = coords[0];
 		this.y = coords[1];
 
 		this.toNearestPixel();
+	},
+
+	getGlobalPosition: function() {
+		var x = this.x;
+		var y = this.y;
+		var parent = this.parent;
+		while (parent != null) {
+			x += parent.x;
+			y += parent.y;
+			parent = parent.parent;
+		}
+
+		return [x,y];
+	},
+
+	getAttachCoords: function() {
+		return [
+			this.parent.width * this.attach.parentWhere[0] - this.width * this.attach.where[0] + this.attach.offset[0],
+			this.parent.height * this.attach.parentWhere[1] - this.height * this.attach.where[1] + this.attach.offset[1]
+		];
 	},
 
 	updateDisplayObjectPosition: function() {
@@ -188,5 +239,102 @@ var InterfaceElement = Class({
 		this.x = Math.round(this.x);
 		this.y = Math.round(this.y);
 		this.updateDisplayObjectPosition();
+	},
+
+	//this will show a big white rectangle if the element has no children
+	applyMask: function(bounds, exclude) {
+		exclude = (typeof exclude !== 'undefined') ? exclude : [];
+
+		this.maskSprite = new PIXI.Sprite(game.maskTexture);
+		this.displayObject.addChild(this.maskSprite);
+		
+		//apply to existing children
+		var child;
+		for (var i = 0; i < this.children.length; i++) {
+			child = this.children[i];
+			if (exclude.indexOf(child) === -1) {
+				child.displayObject.mask = this.maskSprite;
+			}
+		}
+
+		this.maskSprite.position.x = bounds.x;
+		this.maskSprite.position.y = bounds.y;
+		this.maskSprite.scale.x = bounds.width/10;
+		this.maskSprite.scale.y = bounds.height/10;
+	},
+
+	removeMask: function() {
+		//TODO
+		logger.log('ui', '---InterfaceElement.removeMask isn\'t implemented yet!---');
+	},
+
+	addFilter: function(filter) {
+		if (this.displayObject.filters == null || typeof this.displayObject.filters === 'undefined') {
+			this.displayObject.filters = [filter];
+		} else if (this.displayObject.filters.indexOf(filter) === -1) {
+			this.displayObject.filters = this.displayObject.filters.concat([filter]);
+		}
+	},
+
+	removeFilter: function(filter) {
+		if (!Array.isArray(this.displayObject.filters))
+			return;
+
+		try {
+			var index = this.displayObject.filters.indexOf(filter);
+			this.displayObject.filters = this.displayObject.filters.filter(function(val) {
+				return val != filter;
+			});
+
+			if (this.displayObject.filters.length == 0) {
+				this.displayObject.filters = null;
+			}
+		} catch (e) {
+			logger.log('ui', 'removeFilter ' + e.toString());
+		}
+	},
+
+	removeAllFilters: function() {
+		this.displayObject.filters = null;
+	},
+
+	addFilterToChildren: function(filter, exclude) {
+		exclude = (typeof exclude !== 'undefined') ? exclude : [];
+
+		for (var i = 0; i < this.children.length; i++) {
+			if (exclude.indexOf(this.children[i]) === -1)
+				this.children[i].addFilter(filter);
+		}
+	},
+
+	removeFilterFromChildren: function(filter, exclude) {
+		exclude = (typeof exclude !== 'undefined') ? exclude : [];
+		for (var i = 0; i < this.children.length; i++) {
+			if (exclude.indexOf(this.children[i]) === -1)
+				this.children[i].removeFilter(filter);
+		}
+	},
+
+	setAttachDimension: function(dimension, where, parentWhere, offset) {
+		this.attach.where[dimension] = where;
+		this.attach.parentWhere[dimension] = parentWhere;
+		if (typeof offset === 'number')
+			this.attach.offset[dimension] = offset;
+	},
+
+	//convenient alias
+	setAttachX: function(where, parentWhere, offset) {
+		this.setAttachDimension(0, where, parentWhere, offset);
+	},
+
+	//convenient alias
+	setAttachY: function(where, parentWhere, offset) {
+		this.setAttachDimension(1, where, parentWhere, offset);
+	},
+
+	setAttachToPosition: function() {
+		var coords = this.getAttachCoords();
+		this.attach[0] += this.x - coords[0];
+		this.attach[1] += this.y - coords[1];
 	}
 });

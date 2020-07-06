@@ -3,117 +3,79 @@
  */
 
 /*
-TERMS:
-Orders are issued by unit "unit", and will always have a "target", which may be a unit, a point, or in some cases null
-They also have an attribute "queue" which is 0 or 1, denoting whether the order is to be queued or if it is to replace
-all other orders.
-
-MOVE ORDERS:
-The only complicated order. Every move order's target can be either a unit or a point, and the order will store a path
-of points to this target. Since units can move before being reached, if the target of an order is a unit, the path must
-be recalculated if the unit has moved. However, to avoid finding a new path every frame, this can be done at most every
-moveToUnitRefresh frames.
-TODO: when pathfinding is implemented, it should list lines of pathing nodes as only their start and end, to avoid excessive move order broadcasting
-
-MOVING TO DO THINGS:
-If a unit is not close enough to carry out an order, the order is wrapped in a MoveOrder, which may have an "offset",
-which could be attack range etc.
+    ORDER SYNTAX (from client):
+    ["TYPE", {"param":value}]
  */
+
+/* OOP */
+var jsface = require("jsface"),
+    Class  = jsface.Class,
+    extend = jsface.extend;
+
+var LinAlg = require('../../www/js/linalg');
+var Messages = require('./messages');
 
 var Orders = {
     moveToUnitRefresh:10
 };
 module.exports = Orders;
 
-var LinAlg = require('../../www/js/linalg');
+Orders.Order = Class({
+    constructor: function(type) {
+        this.type = type;
+    },
 
-Orders.validUnit = function(o, units) {
-    var ret = ('unit' in o && o.unit in units);
-    return ret;
-};
+    isMove: function() {
+        return false;
+    }
+});
 
-Orders.interpret = function(o, uId, units) {
-    if (!('type' in o))
-        return null;
+Orders.UnitOrder = Class(Orders.Order, {
+    constructor: function(type, unitId) {
+        Orders.UnitOrder.$super.call(this, type);
+        this.unitId = unitId;
+        this.unit = null;
+    }
+});
 
-    if (o.type === 'move') {
-        var target = {};
-        var offset = 0;
-        if ('point' in o && o.point instanceof LinAlg.Vector2) {
-            target.type = 'point';
-            target.point = o.point;
-        } else if (Orders.validUnit(o, units) && o.unit != uId) {
-            target.type = 'unit';
-            target.unit = o.unit;
-            if ('offset' in o && typeof o.offset === 'number' && o%1 === 0) {
-                offset = o.offset;
-            }
-        } else {
+Orders.PointOrder = Class(Orders.Order, {
+    constructor: function(type, point) {
+        Orders.PointOrder.$super.call(this, type);
+        this.point = point;
+    },
+
+    isMove: function() {
+        return (
+            this.type === Messages.TYPES.MOVE 
+            || this.type === Messages.TYPES.ATTACKMOVE
+            || this.type === Messages.TYPES.PATROL
+        );
+    }
+});
+
+//returns a valid order to be queued, or null if the message's order is invalid
+//the order might be meaningless but that's handled in Unit code
+Orders.interpret = function(msg, game) {
+    var order;
+
+    //dun wanna deal with these yet
+    if (msg.type === Messages.TYPES.PATROL)
+        msg.type = Messages.TYPES.MOVE;
+
+
+    if (msg.type === Messages.TYPES.MOVE || msg.type === Messages.TYPES.ATTACKMOVE) {
+        if (!(msg.params.point instanceof LinAlg.Vector2))
             return null;
-        }
-
-        var order = new Orders.MoveOrder(target, offset, null);
-        return order;
-    } else if (o.type === 'attack') {
-        if (Orders.validUnit(o, units) && o.unit != uId) {
-            var order = new Orders.AttackOrder(o.unit);
-            return order;
-        }
-    } else {
-        return null;
-    }
-};
-
-Orders.MoveOrder = function(target, offset, nextOrder) {
-    this.step = 0;
-    this.path = [];
-    this.offset = offset|0;
-    this.nextOrder = (typeof nextOrder !== 'undefined') ? nextOrder : null;
-    if (target.type === 'point') {
-        this.target = target.point;
-    } else {
-        this.target = target.unit;
-    }
-
-    this.toJSON = function() {
-        if (this.path.length == 0) {
+        order = new Orders.PointOrder(msg.type, msg.params.point);
+    } else if (msg.type === Messages.TYPES.ATTACK || msg.type === Messages.TYPES.MOVETO) {
+        if (game.getUnit(msg.params.target) === null)
             return null;
-        } else {
-            return {
-                type:'move',
-                point:this.path[0]
-            };
-        }
-    };
-
-    this.toString = function() {
-        var s = 'move to';
-        if (this.path.length == 0) {
-            s += ' nowhere';
-        } else {
-            s += ' [' + this.path[0].x + ',' + this.path[0].y + ']';
-        }
-
-        if (this.nextOrder != null) {
-            s += ' then ' + this.nextOrder.toString();
-        }
-
-        return s;
-    };
-};
-
-Orders.AttackOrder = function(target) {
-    this.unit = target;
-    this.windUp = -1;
-
-    this.toJSON = function() {
-        return {
-            type:'attack',
-            unit:this.unit
-        };
+        order = new Orders.UnitOrder(msg.type, msg.params.target);
+    } else if (msg.type !== Messages.TYPES.STOP) {
+        return null;
+    } else {
+        order = new Orders.Order(Messages.TYPES.STOP);
     }
 
-    this.toString = function() {
-        return 'attack unit ' + this.unit + ' (windup ' + this.windUp + ')';
-    };
+    return order;
 };
